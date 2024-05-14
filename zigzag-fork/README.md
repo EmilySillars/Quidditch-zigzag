@@ -2,6 +2,10 @@
 
 Run and Test examples on *Verilator Simulating Snitch*.
 
+My examples
+
+- Tiled Matmul running on the DMA Core: [C Code](../runtime/tests/tiled-matmul.c), MLIR
+
 ## Setup
 
 1. Clone the repo with `--recursive` option: 
@@ -35,10 +39,10 @@ Run and Test examples on *Verilator Simulating Snitch*.
 
 ## Build 
 
-Run cmake on the project:
+Run cmake from inside the build directory with:
 
 ```
-cd build && cmake .. -GNinja -DCMAKE_TOOLCHAIN_FILE=../toolchain/ToolchainFile.cmake
+cmake .. -GNinja -DCMAKE_TOOLCHAIN_FILE=../toolchain/ToolchainFile.cmake
 ```
 
 ##### HelloWorld
@@ -47,7 +51,21 @@ cd build && cmake .. -GNinja -DCMAKE_TOOLCHAIN_FILE=../toolchain/ToolchainFile.c
 ninja HelloWorld
 ```
 
+##### TiledMatmul
+
+```
+ninja TiledMatmul
+```
+
 ## Run
+
+##### All Test Cases
+
+From inside build directory with:
+
+```
+ctest
+```
 
 ##### HelloWorld
 
@@ -55,6 +73,14 @@ From inside build directory with:
 
 ```
 ctest -R HelloWorld
+```
+
+##### TiledMatmul
+
+From inside build directory with:
+
+```
+ctest -R TiledMatmul
 ```
 
 ## Test
