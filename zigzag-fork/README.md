@@ -42,22 +42,24 @@ export PATH=/home/hoppip/llvm-project-pistachio/build-riscv/bin:$PATH
 ```
 
 - [MLIR](../runtime/tests/hola-world/matmul-tiled.mlir) calling [C code](../runtime/tests/hola-world/main-no-snrt.c)
-  from inside `runtime/tests/hola-world` directory,
+  
+from inside `runtime/tests/hola-world` directory,
 
   ```
   sh ../run-w-x86.sh matmul-tiled.mlir
   ```
 
 - Regular Matmul ***(not working! need to fix!)***
-  from inside `runtime/tests/matmul` directory,
+  
+from inside `runtime/tests/matmul` directory,
 
   ```
   sh ../run-w-x86.sh matmul.mlir
   ```
 
 - Tiled Matmul (2x16 and 16x2 shaped tiles)  ***(not working! need to fix!)***
-  from inside `runtime/tests/tiled-matmul-2x16` directory,
-
+ 
+ from inside `runtime/tests/tiled-matmul-2x16` directory,
   ```
   sh ../run-w-x86.sh matmul-tiled.mlir
   ```
