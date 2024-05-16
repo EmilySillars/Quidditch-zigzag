@@ -6,6 +6,7 @@ Run and Test examples on *Verilator Simulating Snitch*.
 
 - Hola World (which calls a C function from MLIR runs on verliator and x86 cpu)
 - Regular Matmul and Tiled Matmul are both **segfaulting** on x86 cpu
+
   Best guess of cause: my lowering of MLIR to llvm is not adequate
   - My lowering script: [compile-for-riscv.sh](../runtime/tests/hola-world/compile-for-riscv.sh)
   - Snax-MLIR's lowering script: [run_simple_matmul.sh](https://github.com/EmilySillars/snax-mlir-zigzag/blob/zigzag-to-snax/kernels/simple_matmul2/call-c-from-mlir/run_simple_matmul.sh)
