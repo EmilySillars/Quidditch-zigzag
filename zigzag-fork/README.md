@@ -38,6 +38,7 @@ Before starting, make sure to add your MLIR LLVM build to your path. For example
 
 ```
 export PATH=/home/hoppip/llvm-project-pistachio/build-riscv/bin:$PATH
+export PATH=/home/hoppip/llvm-project-17/build-riscv/bin:$PATH
 ```
 
 - [MLIR](../runtime/tests/hola-world/matmul-tiled.mlir) calling [C code](../runtime/tests/hola-world/main-no-snrt.c)

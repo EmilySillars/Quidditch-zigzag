@@ -83,6 +83,14 @@ void _mlir_ciface_dispatch_to_accelerator(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
   //   (void)snrt_mcycle();
 }
 
+int debugCounter = 0;
+
+void _mlir_ciface_debug(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
+                       TwoDMemrefI32_t *c) {
+  printf("debug: %d\n",debugCounter);
+  debugCounter++;
+}
+
 // ADDING EVEN SMALLER MATRICES TO TEST!
 const int8_t little_A[256] = {
     1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15, 16, 1,  2,  3,

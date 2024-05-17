@@ -5,7 +5,11 @@ add_executable(HelloWorld main.c)
 target_link_libraries(HelloWorld snRuntime)
 
 # Testing tiled matrix multiplication on the DMA core
-add_executable(TiledMatmul tiled-matmul.c)
+add_executable(TiledMatmul tiled-matmul.c
+                           matmul/memref.h 
+                           matmul/data.c
+                           matmul/data.h
+                           matmul/out/matmul-smaller.o)
 target_link_libraries(TiledMatmul snRuntime)
 
 # Testing calling C from MLIR and vice versa 

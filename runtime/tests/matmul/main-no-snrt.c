@@ -73,6 +73,14 @@ void _mlir_ciface_hola(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
   printf("hola world!\n");
 }
 
+int debugCounter = 0;
+
+void _mlir_ciface_debug(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
+                       TwoDMemrefI32_t *c) {
+  printf("debug: %d\n",debugCounter);
+  debugCounter++;
+}
+
 void _mlir_ciface_dispatch_to_accelerator(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
                                           TwoDMemrefI32_t *c) {
   printf("calling tile compute... %d\n", trouble);
@@ -150,13 +158,15 @@ int main() {
   memrefC.aligned_data = memrefC.data;
   memrefC.offset = 0;
 
+  printf("before the call to MLIR...\n");
+
   // -------------------------------------------------- V
   // I want a C function to call an MLIR function
   _mlir_ciface_mlirFunc(&memrefA, &memrefB, &memrefC);
 
   // I want that MLIR function to call a C function
   // -------------------------------------------------- ^
-
+  printf("after the call to MLIR...\n");
   int nerr = 0;
 
   for (int i = 0; i < M_size * N_size; i++) {
