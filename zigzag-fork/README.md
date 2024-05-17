@@ -6,6 +6,7 @@ Run and Test examples on *Verilator Simulating Snitch*.
 
 - Hola World (which calls a C function from MLIR runs on verliator and x86 cpu)
 - Regular Matmul and Tiled Matmul are both **segfaulting** on x86 cpu
+
   Best guess of cause: my lowering of MLIR to llvm is not adequate
   - My lowering script: [compile-for-riscv.sh](../runtime/tests/hola-world/compile-for-riscv.sh)
   - Snax-MLIR's lowering script: [run_simple_matmul.sh](https://github.com/EmilySillars/snax-mlir-zigzag/blob/zigzag-to-snax/kernels/simple_matmul2/call-c-from-mlir/run_simple_matmul.sh)
@@ -42,22 +43,24 @@ export PATH=/home/hoppip/llvm-project-17/build-riscv/bin:$PATH
 ```
 
 - [MLIR](../runtime/tests/hola-world/matmul-tiled.mlir) calling [C code](../runtime/tests/hola-world/main-no-snrt.c)
-  from inside `runtime/tests/hola-world` directory,
+  
+from inside `runtime/tests/hola-world` directory,
 
   ```
   sh ../run-w-x86.sh matmul-tiled.mlir
   ```
 
 - Regular Matmul ***(not working! need to fix!)***
-  from inside `runtime/tests/matmul` directory,
+  
+from inside `runtime/tests/matmul` directory,
 
   ```
   sh ../run-w-x86.sh matmul.mlir
   ```
 
 - Tiled Matmul (2x16 and 16x2 shaped tiles)  ***(not working! need to fix!)***
-  from inside `runtime/tests/tiled-matmul-2x16` directory,
-
+ 
+ from inside `runtime/tests/tiled-matmul-2x16` directory,
   ```
   sh ../run-w-x86.sh matmul-tiled.mlir
   ```
