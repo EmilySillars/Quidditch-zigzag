@@ -20,7 +20,12 @@ add_executable(Matmul matmul/main.c
 target_link_libraries(Matmul snRuntime)
 
 # Testing tiled matrix multiplication on the DMA core
-# TODO
+add_executable(TiledMatmul tiledMatmul/main.c
+                           lib-zigzag/data.c
+                           lib-zigzag/data.h
+                           lib-zigzag/memref.h 
+                           tiledMatmul/out/tiledMatmul.o)
+target_link_libraries(TiledMatmul snRuntime)
 
 add_test(NAME HelloWorld COMMAND HelloWorld)
 
@@ -31,6 +36,11 @@ set_property(TEST HolaWorld PROPERTY
 
 add_test(NAME Matmul COMMAND Matmul)
 set_property(TEST Matmul PROPERTY
+  PASS_REGULAR_EXPRESSION "Output Correct\n"
+)
+
+add_test(NAME TiledMatmul COMMAND TiledMatmul)
+set_property(TEST TiledMatmul PROPERTY
   PASS_REGULAR_EXPRESSION "Output Correct\n"
 )
 

@@ -1,18 +1,9 @@
+#include "stdint.h"
 #include <stdio.h>
 #include <team_decls.h>
-
-
+#include "../lib-zigzag/data.h"
 #include "../lib-zigzag/memref.h"
-#include "stdint.h"
 
-#define N_size 16
-#define K_size 16
-#define M_size 16
-
-extern const int8_t A[256];
-extern const int8_t B[256];
-extern const int32_t C_golden[256];
-extern const int32_t C[256];
 
 /*
  * These libraries are included from github.com/KULeuven-MICAS/snitch_cluster
@@ -22,6 +13,7 @@ extern const int32_t C[256];
  * /target/snitch_cluster/sw/runtime/rtl/src
  * /target/snitch_cluster/sw/runtime/common
  * */
+
 
 /* These libraries are included from github.com/KULeuven-MICAS/snitch_cluster
  * Interested users, might want to look at:
@@ -59,46 +51,36 @@ uint32_t strideB = 0;
 uint32_t strideC = 0;
 
 // Kernel provided via external definition
-extern void _mlir_ciface_tiled_matmul(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
-                                      TwoDMemrefI32_t *c);
-
+                                
 extern void _mlir_ciface_tile_compute(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
-                                      TwoDMemrefI32_t *c);
+                                TwoDMemrefI32_t *c);
 
 extern void _mlir_ciface_mlirFunc(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
-                                  TwoDMemrefI32_t *c);
+                           TwoDMemrefI32_t *c);
 
-int trouble = 0;
+
+
+int trouble = 0; 
 
 void cCodeEquivalentThreeLoops(TwoDMemrefI8_t *x, TwoDMemrefI8_t *y,
                                TwoDMemrefI32_t *z);
 void cCodeEquivalent(TwoDMemrefI8_t *x, TwoDMemrefI8_t *y, TwoDMemrefI32_t *z);
 void print2DMemRefI8_t(TwoDMemrefI8_t *x, int32_t width);
 void print2DMemRefI32_t(TwoDMemrefI32_t *x, int32_t width);
-void print2DMemRefI32_t_notASquare(TwoDMemrefI32_t *x, int32_t stride_x,
-                                   int32_t stride_y);
+void print2DMemRefI32_t_notASquare(TwoDMemrefI32_t *x, int32_t stride_x, int32_t stride_y);
 
-void _mlir_ciface_hola(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
-                       TwoDMemrefI32_t *c) {
+
+void _mlir_ciface_hola(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b, TwoDMemrefI32_t *c){
   printf("hola world!\n");
 }
 
-void _mlir_ciface_dispatch_to_accelerator(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
-                                          TwoDMemrefI32_t *c) {
-  printf("calling tile compute... %d\n", trouble);
+void _mlir_ciface_dispatch_to_accelerator(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b, TwoDMemrefI32_t *c){
+  printf("calling tile compute... %d\n",trouble);
   trouble++;
-  //   (void)snrt_mcycle();
-  //   _mlir_ciface_tile_compute(a, b, c);
-  //   snrt_cluster_hw_barrier();
-  //   (void)snrt_mcycle();
-}
-
-int debugCounter = 0;
-
-void _mlir_ciface_debug(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
-                       TwoDMemrefI32_t *c) {
-  printf("debug: %d\n",debugCounter);
-  debugCounter++;
+//   (void)snrt_mcycle();
+//   _mlir_ciface_tile_compute(a, b, c);
+//   snrt_cluster_hw_barrier();
+//   (void)snrt_mcycle();
 }
 
 // ADDING EVEN SMALLER MATRICES TO TEST!
@@ -149,16 +131,23 @@ const int32_t little_golden[256] = {
     408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408,
     408};
 
+// void tile_compute(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b, TwoDMemrefI32_t *c) {
+//   (void)snrt_mcycle();
+//   _mlir_ciface_simple_matmul(a, b, c);
+//   snrt_cluster_hw_barrier();
+//   (void)snrt_mcycle();
+// }
+
 int main() {
-    // Create memref objects for data stored in L3
+  if (!snrt_is_dm_core()) return 0;
+
+ // printf("PAMPLEMOUSSE VOLCANO: Setting up the data.\n");
+
+  // Create memref objects for data stored in L3
   TwoDMemrefI8_t memrefA;
   memrefA.data = (int8_t *)&little_A;
   memrefA.aligned_data = memrefA.data;
   memrefA.offset = 0;
-  // memrefA.shape[0] = M_size;
-  // memrefA.shape[1] = N_size;
-
- // print2DMemRefI8_t(&memrefA, M_size);
 
   TwoDMemrefI8_t memrefB;
   memrefB.data = (int8_t *)&little_B;
@@ -169,8 +158,8 @@ int main() {
   memrefC.data = (int32_t *)&C;
   memrefC.aligned_data = memrefC.data;
   memrefC.offset = 0;
-  if (!snrt_is_dm_core()) return 0;
 
+  // -------------------------------------------------- V
   // I want a C function to call an MLIR function
   _mlir_ciface_mlirFunc(&memrefA, &memrefB, &memrefC);
 
@@ -191,7 +180,6 @@ int main() {
   }
 
   return nerr;
-
 }
 
 // helper funcs below
@@ -229,11 +217,10 @@ void print2DMemRefI32_t(TwoDMemrefI32_t *x, int32_t width) {
   printf("]\n");
 }
 
-void print2DMemRefI32_t_notASquare(TwoDMemrefI32_t *x, int32_t stride_x,
-                                   int32_t stride_y) {
+void print2DMemRefI32_t_notASquare(TwoDMemrefI32_t *x, int32_t stride_x, int32_t stride_y) {
   printf("[\n");
   int32_t col = 0;
-  for (int i = 0; i < stride_x * stride_y; i++) {
+  for (int i = 0; i < stride_x*stride_y; i++) {
     if (col == stride_x) {
       col = 0;
       printf("\n %d ", x->aligned_data[i]);
@@ -256,6 +243,10 @@ void cCodeEquivalent(TwoDMemrefI8_t *x, TwoDMemrefI8_t *y, TwoDMemrefI32_t *z) {
 
 void cCodeEquivalentThreeLoops(TwoDMemrefI8_t *x, TwoDMemrefI8_t *y,
                                TwoDMemrefI32_t *z) {
+  // printf("M_size is %d and N_size is %d\n",M_size, N_size);
+  // for (int i = 0; i < M_size * N_size; i++) {
+  //   z->aligned_data[i] = x->aligned_data[i] * y->aligned_data[i];
+  // }
   int z_index, x_index, y_index = 0;
   for (int d0 = 0; d0 < M_size; d0++) {
     for (int d1 = 0; d1 < M_size; d1++) {
