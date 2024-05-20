@@ -5,10 +5,10 @@ add_executable(HelloWorld main.c)
 target_link_libraries(HelloWorld snRuntime)
 
 # Testing calling C from MLIR and vice versa 
-add_executable(HolaWorld hola-world/main.c 
+add_executable(HolaWorld holaWorld/main.c 
                          lib-zigzag/data.c 
                          lib-zigzag/data.h 
-                         hola-world/out/matmul-tiled.o)
+                         holaWorld/out/holaWorld.o)
 target_link_libraries(HolaWorld snRuntime)
 
 # Testing matrix multiplication on the DMA core

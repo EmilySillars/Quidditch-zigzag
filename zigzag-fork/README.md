@@ -15,31 +15,25 @@ Run and Test examples on *Verilator Simulating Snitch*.
 
 ### on Verilator Simulating Snitch
 
-```
-cd runtime/build/tests/<Test-name>
-sh ../compile-for-riscv.sh <test-name>.mlir
-cd ../../
-cmake .. -GNinja -DCMAKE_TOOLCHAIN_FILE=../toolchain/ToolchainFile.cmake
-ninja <Test-name>
-../../toolchain/bin/snitch_cluster.vlt tests/<Test-name>
-```
+1) navigate to the tests directory: `cd runtime/tests`
 
-- [MLIR](../runtime/tests/hola-world/matmul-tiled.mlir) calling [C code](../runtime/tests/hola-world/main.c)
-  from inside `runtime/tests/hola-world`,
+2) run the following script with the name of the kernel's mlir source file; for example, `holaWorld.mlir`
+   ```
+   sh zigzAG-build-and-run.sh holaWorld.mlir
+   ```
 
-  ```
-  sh compile-for-riscv.sh matmul-tiled.mlir 
-  ```
+#### Examples
 
-  Then from inside build directory, do
+- HolaWorld: [MLIR](../runtime/tests/hola-world/matmul-tiled.mlir) calling [C code](../runtime/tests/hola-world/main.c)
 
   ```
-  cmake .. -GNinja -DCMAKE_TOOLCHAIN_FILE=../toolchain/ToolchainFile.cmake
-  ninja HolaWorld
-  ../../toolchain/bin/snitch_cluster.vlt tests/HolaWorld
+  sh zigzag-build-and-run.sh holaWorld.mlir
   ```
 
-- Regular Matmul??
+- Matmul
+  ```
+  sh zigzag-build-and-run.sh matmul.mlir
+  ```
 - Tiled Matmul??
 
 ### on x86 CPU (Reality Check)
@@ -121,12 +115,6 @@ cmake .. -GNinja -DCMAKE_TOOLCHAIN_FILE=../toolchain/ToolchainFile.cmake
 ninja HelloWorld
 ```
 
-##### HolaWorld
-
-```
-ninja HolaWorld
-```
-
 ## Test
 
 ##### All Test Cases
@@ -143,14 +131,6 @@ From inside build directory with:
 
 ```
 ctest -R HelloWorld
-```
-
-##### HolaWorld
-
-From inside build directory with:
-
-```
-ctest -R HolaWorld
 ```
 
 ## Run
