@@ -1,6 +1,7 @@
 #!/bin/sh
 # echo "MLIR to object file."
 basename=`basename $1 | sed 's/[.][^.]*$//'`
+
 mlir-opt $basename.mlir  --one-shot-bufferize='bufferize-function-boundaries' -test-lower-to-llvm > out/$basename-in-llvm-dialect.mlir
 mlir-translate --mlir-to-llvmir -o out/$basename.ll out/$basename-in-llvm-dialect.mlir
 
@@ -26,6 +27,8 @@ clang \
 -x ir \
 -c out/$basename.ll \
 -o out/$basename.o
+
+
 
 # clang \
 # -fuse-ld=/usr/bin/ld.lld \

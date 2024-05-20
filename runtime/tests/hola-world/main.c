@@ -1,8 +1,8 @@
 #include "stdint.h"
 #include <stdio.h>
 #include <team_decls.h>
-#include "data.h"
-#include "memref.h"
+#include "../lib-zigzag/data.h"
+#include "../lib-zigzag/memref.h"
 
 
 /*

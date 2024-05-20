@@ -2,7 +2,7 @@
 #include <team_decls.h>
 
 
-#include "memref.h"
+#include "../lib-zigzag/memref.h"
 #include "stdint.h"
 
 #define N_size 16
