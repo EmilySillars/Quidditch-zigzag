@@ -1,4 +1,4 @@
-# Quidditch ZigZag Fork
+# ZigZag Manual Transformations
 
 Run and Test examples with *Verilator and Spike Simulating Snitch*.
 
