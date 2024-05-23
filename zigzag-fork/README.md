@@ -2,13 +2,6 @@
 
 Run and Test MLIR examples with *Verilator and Spike Simulating Snitch*.
 
-##### Quick Links
-
-- [Setup](#Setup)
-- [Run Examples](#Build + Run + Test)
-- [Run Examples (more manual steps, fewer shell scripts)](Build + Run + Test (more steps, fewer shell scripts))
-- [Troubleshooting](#Troubleshooting)
-
 ##### Current Status
 
 - this repo deals with everything inside the blue box
@@ -19,7 +12,7 @@ Run and Test MLIR examples with *Verilator and Spike Simulating Snitch*.
 
 ## Example Programs
 
-*Before doing anything, remember to [set your environment variables correctly](#3. Set Environment Variables ), manually or using [setup.sh](./setup.sh)*
+*Before doing anything, remember to [set your environment variables correctly](#Setup), manually or using [setup.sh]([../../zigzag-fork/setup.sh](https://github.com/EmilySillars/Quidditch-zigzag/blob/manual-transformations/zigzag-fork/setup.sh))*
 
 ```
 cd runtime/tests
@@ -132,12 +125,6 @@ cd runtime/tests
    ../configure --with-target=riscv32-unknown-elf --with-isa=RV32IMAFD --prefix=/home/hoppip/riscv-isa-sim/build
    make
    make install
-   ```
-
-3. Set the SPIKE environment variable to the location of your build directory:
-
-   ```
-   export SPIKE=/home/hoppip/riscv-isa-sim/build
    ```
 
 ### 3. Set Environment Variables 
