@@ -15,7 +15,7 @@ Run and Test MLIR examples with *Verilator and Spike Simulating Snitch*.
 - red text means WIP/next steps
 - Check [ZigZig Integration Status Slides](https://docs.google.com/presentation/d/1-YQwx20RkEFZoqrMr_WQOjtFaXDR8e_lfNbEfbl83HA/edit?usp=sharing) for more info
 
-![this repo deals with everything in the blue box](/home/hoppip/Quidditch-zigzag/zigzag-fork/blue-box.png)
+![this repo deals with everything in the blue box](blue-box.png)
 
 ## Example Programs
 
