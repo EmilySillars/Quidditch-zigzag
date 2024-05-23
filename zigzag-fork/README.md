@@ -19,7 +19,7 @@ Run and Test MLIR examples with *Verilator and Spike Simulating Snitch*.
 
 ## Example Programs
 
-*Before doing anything, remember to [set your environment variables correctly](#3. Set Environment Variables ), manually or using [setup.sh](../../zigzag-fork/setup.sh)*
+*Before doing anything, remember to [set your environment variables correctly](#3. Set Environment Variables ), manually or using [setup.sh](./setup.sh)*
 
 ```
 cd runtime/tests
@@ -42,6 +42,8 @@ cd runtime/tests
   ```
   sh zigzag-spike-build-and-run.sh tiledMatmul.mlir
   ```
+
+- [Tiled Matrix Multiplication 2 (WIP)](../runtime/tests/tiledMatmul2/README.md)
 
 ## Build + Run + Test
 
