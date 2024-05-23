@@ -5,8 +5,8 @@ Run and Test MLIR examples with *Verilator and Spike Simulating Snitch*.
 ##### Quick Links
 
 - [Setup](#Setup)
-- [Run Examples](#Build + Run + Test)
-- [Run Examples (more manual steps, fewer shell scripts)](Build + Run + Test (more steps, fewer shell scripts))
+- [Run Examples](#Build-+-Run-+-Test)
+- [Run Examples (more manual steps, fewer shell scripts)](Build-+-Run-+-Test-(more-steps,-fewer-shell-scripts))
 - [Troubleshooting](#Troubleshooting)
 
 ##### Current Status
