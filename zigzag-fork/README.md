@@ -1,67 +1,60 @@
-# ZigZag Manual Transformations
+# Quidditch-Zigzag Forked Repo
 
-Run and Test examples with *Verilator and Spike Simulating Snitch*.
+Run and Test MLIR examples with *Verilator and Spike Simulating Snitch*.
 
-Before doing anything,
+##### Quick Links
 
-- remember to add your MLIR LLVM build to your install path, for example:
+- [Setup](#Setup)
+- [Run Examples](#Build + Run + Test)
+- [Run Examples (more manual steps, fewer shell scripts)](Build + Run + Test (more steps, fewer shell scripts))
+- [Troubleshooting](#Troubleshooting)
+
+##### Current Status
+
+- this repo deals with everything inside the blue box
+- red text means WIP/next steps
+- Check [ZigZig Integration Status Slides](https://docs.google.com/presentation/d/1-YQwx20RkEFZoqrMr_WQOjtFaXDR8e_lfNbEfbl83HA/edit?usp=sharing) for more info
+
+![this repo deals with everything in the blue box](/home/hoppip/Quidditch-zigzag/zigzag-fork/blue-box.png)
+
+## Example Programs
+
+*Before doing anything, remember to [set your environment variables correctly](#3. Set Environment Variables ), manually or using [setup.sh](../../zigzag-fork/setup.sh)*
+
+```
+cd runtime/tests
+```
+
+- **HolaWorld** ([MLIR](../runtime/tests/hola-world/matmul-tiled.mlir) calling [C code](../runtime/tests/hola-world/main.c) which prints a greeting)
+
   ```
-  export PATH=/home/hoppip/llvm-project-pistachio/build-riscv/bin:$PATH # or
-  export PATH=/home/hoppip/llvm-project-17/build-riscv/bin:$PATH
+  sh zigzag-spike-build-and-run.sh holaWorld.mlir
   ```
 
-- remember to set the RISCV environment variable to your risc-v toolchain install path, for example:
-  ```
-  export PATH="/home/hoppip/riscv/bin:$PATH"
-  ```
+- **Matrix Multiplication**
 
-- remember to set the SPIKE environment variable to your spike riscv-isa-sim build directory, for example:
   ```
-  export SPIKE="/home/hoppip/riscv-isa-sim/build"
-  export SPIKE="/home/hoppip/riscv-32/bin" # not this
-  export SPIKE="/home/hoppip/riscv-isa-sim"
+  sh zigzag-verilator-build-and-run.sh matmul.mlir
   ```
 
-  
+- **Tiled Matrix Multiplication** (runs slow on verilator)
 
-## Current Status
+  ```
+  sh zigzag-spike-build-and-run.sh tiledMatmul.mlir
+  ```
 
-- Hola World (which calls a C function from MLIR) runs with snitch verliator and non-snitch x86 cpu
-- Regular Matmul and Tiled Matmul both run with snitch verilator but  **segfault** on non-snitch x86 cpu
+## Build + Run + Test
 
-  Best guess of cause: my lowering of MLIR to llvm is not adequate
-  - My lowering script: [compile-for-riscv.sh](../runtime/tests/compile-for-riscv.sh)
-  - Snax-MLIR's lowering script: [run_simple_matmul.sh](https://github.com/EmilySillars/snax-mlir-zigzag/blob/zigzag-to-snax/kernels/simple_matmul2/call-c-from-mlir/run_simple_matmul.sh)
-
-## Build + Run MLIR DNN Kernels
-
-### 1. with Verilator Simulating Snitch (cycle accurate)
+### 1. with Verilator Simulating Snitch (slow, cycle accurate)
 
 1) navigate to the tests directory: `cd runtime/tests`
 
 2) run the following script with the name of the kernel's mlir source file; for example, `holaWorld.mlir`
    ```
-   sh zigzAG-build-and-run.sh holaWorld.mlir
+   sh zigzag-build-and-run.sh holaWorld.mlir
    ```
 
-#### Examples
-
-- HolaWorld: [MLIR](../runtime/tests/hola-world/matmul-tiled.mlir) calling [C code](../runtime/tests/hola-world/main.c)
-
-  ```
-  sh zigzag-verilator-build-and-run.sh holaWorld.mlir
-  ```
-
-- Matmul
-  ```
-  sh zigzag-verilator-build-and-run.sh matmul.mlir
-  ```
-- Tiled Matmul (but runs slow)
-  ```
-  sh zigzag-verilator-build-and-run.sh tiledMatmul.mlir
-  ```
-
-### 2. with Spike Simulating Snitch (faster)
+### 2. with Spike Simulating Snitch (faster, not cycle accurate)
 
 1. navigate to the tests directory: `cd runtime/tests`
 
@@ -72,37 +65,19 @@ Before doing anything,
 
 ### 3. on x86 CPU (Reality Check) (segfaults! need to debug!)
 
-Before starting, make sure to add your MLIR LLVM build to your path. For example,
+1) navigate to the tests directory: `cd runtime/tests`
 
-```
-export PATH=/home/hoppip/llvm-project-pistachio/build-riscv/bin:$PATH # for regulr  mlir-opt
-export PATH=/home/hoppip/llvm-project-17/build-riscv/bin:$PATH
-```
-
-- [MLIR](../runtime/tests/hola-world/matmul-tiled.mlir) calling [C code](../runtime/tests/hola-world/main-no-snrt.c)
-  
-
-from inside `runtime/tests/hola-world` directory,
+2) run the following script with the name of the kernel's mlir source file; for example, `holaWorld.mlir`
 
   ```
   sh ../run-w-x86.sh matmul-tiled.mlir
   ```
 
-- Regular Matmul ***(not working! need to fix!)***
-  
+**Tests Not Working**
 
-from inside `runtime/tests/matmul` directory,
+- `sh run-w-x86.sh matmul.mlir` (not working! need to fix!)
 
-  ```
-  sh ../run-w-x86.sh matmul.mlir
-  ```
-
-- Tiled Matmul (2x16 and 16x2 shaped tiles)  ***(not working! need to fix!)***
-
- from inside `runtime/tests/tiled-matmul-2x16` directory,
-  ```
-  sh ../run-w-x86.sh matmul-tiled.mlir
-  ```
+- `sh run-w-x86.sh matmul-tiled.mlir` (not working! need to fix!)
 
 ## Setup
 
@@ -138,37 +113,24 @@ from inside `runtime/tests/matmul` directory,
    cd runtime && mkdir build
    ```
 
-### 2. Set up Spike
+### 2. Set up Snitch-Specific Spike
 
-1. [clone the repo](https://github.com/opencompl/riscv-isa-sim/tree/CSR-Barrier):
+1. [clone the repo](https://github.com/opencompl/riscv-isa-sim/tree/CSR-Barrier) and switch to the  `origin/CSR-Barrier` branch:
 
    ```
    git clone https://github.com/opencompl/riscv-isa-sim.git
+   git switch origin/CSR-Barrier
    ```
 
 2. ```
-   $ apt-get install device-tree-compiler libboost-regex-dev
-   $ cd riscv-isa-sim
-   $ mkdir build
-   $ cd build
-   $ ../configure --prefix=/home/hoppip/riscv-isa-sim/build
-   $ make
-   $ [sudo] make install
+   apt-get install device-tree-compiler libboost-regex-dev
+   cd riscv-isa-sim
+   mkdir build
+   cd build
+   ../configure --with-target=riscv32-unknown-elf --with-isa=RV32IMAFD --prefix=/home/hoppip/riscv-isa-sim/build
+   make
+   make install
    ```
-
-Instead of the above instructions, I ran:
-
-```
-$ apt-get install device-tree-compiler libboost-regex-dev
-$ cd riscv-isa-sim
-$ mkdir build
-$ cd build
-$ ../configure --with-target=riscv32-unknown-elf --with-isa=RV32IMAFD --prefix=/home/hoppip/riscv-isa-sim/build
-$ make
-$ make install
-```
-
-
 
 3. Set the SPIKE environment variable to the location of your build directory:
 
@@ -176,10 +138,40 @@ $ make install
    export SPIKE=/home/hoppip/riscv-isa-sim/build
    ```
 
-## Build + Run + Test
+### 3. Set Environment Variables 
+
+Before running any examples,
+
+- remember to add your MLIR LLVM build to your install path, for example:
+
+  ```
+  export PATH=/home/hoppip/llvm-project-pistachio/build-riscv/bin:$PATH # for regular mlir-opt
+  export PATH=/home/hoppip/llvm-project-17/build-riscv/bin:$PATH        # for mlir-opt-17
+  ```
+
+- remember to set the RISCV environment variable to your risc-v toolchain install path, for example:
+
+  ```
+  export PATH="/home/hoppip/riscv/bin:$PATH"
+  ```
+
+- remember to set the SPIKE environment variable to your spike `riscv-isa-sim` build directory, for example:
+
+  ```
+  export SPIKE="/home/hoppip/riscv-isa-sim/build"
+  ```
+
+Automate this step by running [setup.sh](setup.sh)
+
+```
+sh setup.sh
+```
+
+## Build + Run + Test (more steps, fewer shell scripts)
 
 1. Run cmake from inside the build directory
    ```
+   cd build
    cmake .. -GNinja -DCMAKE_TOOLCHAIN_FILE=../toolchain/ToolchainFile.cmake
    ```
 
@@ -190,27 +182,32 @@ $ make install
    cd .. # return to build directory
    ```
 
-3. Build the test case
+3. Build 
 
    ```ninja <TestCaseName>
    ninja <TestCaseName>
    ```
 
-4. Run regularly with
-   ```
-   ../../toolchain/bin/snitch_cluster.vlt tests/<TestCaseName>
-   ```
+4. Run 
+   a. using verilator: `../../toolchain/bin/snitch_cluster.vlt tests/<TestCaseName>`
+   b. using spike: `$SPIKE/spike -m0x10000000:0x40000,0x80000000:0x80000000 --disable-dtb -p9 tests/<TestCaseName> ` 
 
-5. Run as an official test case with
-   ```
-   ctest -R <TestCaseName>
-   ```
+5. Test
+
+   using ctest: `ctest -R <TestCaseName>`
 
 Example:
 
 ```
-ninja HelloWorld
-ctest -R HelloWorld
+cd build
+cmake .. -GNinja -DCMAKE_TOOLCHAIN_FILE=../toolchain/ToolchainFile.cmake
+cd tests
+sh compile-for-riscv.sh holaWorld.mlir
+cd ..
+ninja HolaWorld
+../../toolchain/bin/snitch_cluster.vlt tests/HolaWorld                                    # verilator
+$SPIKE/spike -m0x10000000:0x40000,0x80000000:0x80000000 --disable-dtb -p9 tests/HolaWorld # spike
+ctest -R HolaWorld                                                                        # as a test
 ```
 
 # Troubleshooting
@@ -251,14 +248,13 @@ Solution:
 sudo yum install dtc
 ```
 
-Error:
-```
-Error: cannot execute 32-bit program on RV64 hart
-```
+## Old notes to delete later
 
-Potential Solution: Using [this source](https://stackoverflow.com/questions/74948567/the-32-bit-program-cannot-be-executed-with-risc-v-spike-cant-execute-32-bit-pr) as a guide, I tried adding the flag `--isa=rv32i` to the spike command:
+- Hola World (which calls a C function from MLIR) runs with snitch verliator and non-snitch x86 cpu
 
-```
-$SPIKE/spike -m0x10000000:0x40000,0x80000000:0x80000000 --isa=RV32IMAFDC --disable-dtb -p9 tests/${basename^}
-```
+- Regular Matmul and Tiled Matmul both run with snitch verilator but  **segfault** on non-snitch x86 cpu
 
+  Best guess of cause: my lowering of MLIR to llvm is not adequate
+
+  - My lowering script: [compile-for-riscv.sh](../runtime/tests/compile-for-riscv.sh)
+  - Snax-MLIR's lowering script: [run_simple_matmul.sh](https://github.com/EmilySillars/snax-mlir-zigzag/blob/zigzag-to-snax/kernels/simple_matmul2/call-c-from-mlir/run_simple_matmul.sh)
