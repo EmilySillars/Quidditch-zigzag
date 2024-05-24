@@ -36,13 +36,13 @@ cd runtime/tests
   sh zigzag-spike-build-and-run.sh tiledMatmul.mlir
   ```
 
-- **Tiled Matrix Multiplication 2** [(details here)](../runtime/tests/tiledMatmul2/README.md) 
+- **Tiled Matrix Multiplication 2** [(details here)](../runtime/tests/tiledMatmul2/README.md) 16 x 16 2D matrices
 
   ```
   sh zigzag-spike-build-and-run.sh tiledMatmul2.mlir
   ```
 
-- **Tiled Matrix Multiplication 3** (TODO!)
+- **Tiled Matrix Multiplication 3** [(details here)](../runtime/tests/tiledMatmul3/README.md) 2048 x 2048 2D matrices
 
 ## Build + Run + Test
 
