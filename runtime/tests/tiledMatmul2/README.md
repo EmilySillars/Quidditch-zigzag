@@ -78,7 +78,7 @@ Spatial Loops
 SpatialMapping({'O': [[('D2', 8.0)], [], [], []], 'W': [[('D2', 8.0)], [], []], 'I': [[('D2', 8.0)], [], []]})
 ```
 
-## III. Manual Tranformation
+## III. Manual Transformation
 
 #### a. C code transformed
 
@@ -118,17 +118,74 @@ void mlir_qmat_transformed(squareMat *a, squareMat *b, squareMat *c,
 #### b. MLIR transformed
 
 ```
-todo fill in!!
+"func.func"() <{function_type = (memref<16x16xi8>, memref<16x16xi8, strided<[1, 16]>>, memref<16x16xi32, strided<[16,1]>>) -> (), sym_name = "tiled_matmul"}> ({
+  ^bb0(%arg0: memref<16x16xi8>, %arg1: memref<16x16xi8, strided<[1,16]>>, %arg2: memref<16x16xi32, strided<[16,1]>>):
+    // block sizes
+    %d0_1_bk_sz = arith.constant 4 : index
+    %d1_1_bk_sz = arith.constant 8 : index
+    %d1_2_bk_sz = arith.constant 4 : index
+    %d2_1_bk_sz = arith.constant 8 : index
+
+    // indices
+    %zero = arith.constant 0 : index
+    %one = arith.constant 1: index
+    %two = arith.constant 2 : index
+    %four = arith.constant 4 : index
+    %eight = arith.constant 8 : index
+    %sixteen = arith.constant 16 : index
+
+    // enter scf nested FOR LOOP
+    scf.for %d0_1 = %zero to %four step %one iter_args() -> () {
+    scf.for %d0_2 = %zero to %four step %one iter_args() -> () {    
+    scf.for %d1_1 = %zero to %two step %one iter_args() -> () {  
+    scf.for %d1_2 = %zero to %two step %one iter_args () -> () { 
+    scf.for %d1_3 = %zero to %four step %one iter_args () -> () {
+    scf.for %d2_1 = %zero to %two step %one iter_args () -> () {
+    scf.for %d2_2 = %zero to %eight step %one iter_args () -> () {
+      //  size_t d0 = d0_1 * d0_1_bk_sz + d0_2;
+      %prod0 = arith.muli %d0_1, %d0_1_bk_sz : index
+      %d0 = arith.addi %prod0, %d0_2 : index
+      // size_t d1 = d1_1 * d1_1_bk_sz + d1_2 * d1_2_bk_sz + d1_3;
+      %prod1 = arith.muli %d1_1, %d1_1_bk_sz : index
+      %prod1_2 = arith.muli %d1_2, %d1_2_bk_sz : index
+      %sum1 = arith.addi %prod1, %prod1_2 : index
+      %d1 = arith.addi %sum1, %d1_3 : index
+      // size_t d2 = d2_1 * d2_1_bk_sz + d2_2;
+      %prod2 = arith.muli %d2_1, %d2_1_bk_sz : index
+      %d2 = arith.addi %prod2, %d2_2 : index
+      // MAC c->mat[d0][d1] += a->mat[d0][d2] * b->mat[d2][d1];
+      %inputElt = memref.load %arg0[%d0, %d2] : memref<16x16xi8>
+      %inputEltCasted = arith.extsi  %inputElt : i8 to i32 
+      %weightElt = memref.load %arg1[%d2, %d1] : memref<16x16xi8, strided<[1,16]>>
+      %weightEltCasted = arith.extsi  %weightElt : i8 to i32 
+      %prod = arith.muli %inputEltCasted, %weightEltCasted : i32
+      %outputElt = memref.load %arg2[%d0, %d1] : memref<16x16xi32, strided<[16,1]>> 
+      %newOutputElt = arith.addi %prod, %outputElt : i32 
+      memref.store %newOutputElt, %arg2[%d0, %d1] : memref<16x16xi32, strided<[16,1]>>
+    } // end of d2_2 for
+    } // end of d2_1 for
+    } // end of d1_3 for
+    } // end of d1_2 for
+    } // end of d1_1 for
+    } // end of d0_2 for
+    } // end of d0_1 for
+    "func.return"() : () -> ()
+  }) {llvm.emit_c_interface}: () -> ()
 ```
 
 ## IV. Running the transformed MLIR on Snitch
 
 ```
 cd runtime/tests
+```
+
+spike: 
+```
 sh zigzag-spike-build-and-run.sh tiledMatmul2.mlir
 ```
 
-
-
-
+verilator:
+```
+sh zigzag-verilator-build-and-run.sh tiledMatmul2.mlir
+```
 

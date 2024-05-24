@@ -12,7 +12,7 @@ Run and Test MLIR examples with *Verilator and Spike Simulating Snitch*.
 
 ## Example Programs
 
-*Before doing anything, remember to [set your environment variables correctly](#Setup), manually or using [setup.sh]([./setup.sh](https://github.com/EmilySillars/Quidditch-zigzag/blob/manual-transformations/zigzag-fork/setup.sh))*
+*Before doing anything, remember to [set your environment variables correctly](#Setup), manually or by editing [setup.sh]([./setup.sh](https://github.com/EmilySillars/Quidditch-zigzag/blob/manual-transformations/zigzag-fork/setup.sh))* + `. setup.sh` 
 
 ```
 cd runtime/tests
@@ -153,7 +153,7 @@ Before running any examples,
 Automate this step by running [setup.sh](setup.sh)
 
 ```
-sh setup.sh
+. setup.sh
 ```
 
 ## Build + Run + Test (more steps, fewer shell scripts)
