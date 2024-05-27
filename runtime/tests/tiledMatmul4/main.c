@@ -84,61 +84,104 @@ void _mlir_ciface_dispatch_to_accelerator(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b, 
 //   (void)snrt_mcycle();
 }
 
-#define MAT_WIDTH 16
-#define MAT_WIDTH_SQUARED (MAT_WIDTH * MAT_WIDTH)
+// ADDING EVEN SMALLER MATRICES TO TEST!
+const int8_t little_A[256] = {
+    1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15, 16, 1,  2,  3,
+    4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15, 16, 1,  2,  3,  4,  5,  6,
+    7,  8,  9,  10, 11, 12, 13, 14, 15, 16, 1,  2,  3,  4,  5,  6,  7,  8,  9,
+    10, 11, 12, 13, 14, 15, 16, 1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12,
+    13, 14, 15, 16, 1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15,
+    16, 1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15, 16, 1,  2,
+    3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15, 16, 1,  2,  3,  4,  5,
+    6,  7,  8,  9,  10, 11, 12, 13, 14, 15, 16, 1,  2,  3,  4,  5,  6,  7,  8,
+    9,  10, 11, 12, 13, 14, 15, 16, 1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11,
+    12, 13, 14, 15, 16, 1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14,
+    15, 16, 1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15, 16, 1,
+    2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15, 16, 1,  2,  3,  4,
+    5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15, 16, 1,  2,  3,  4,  5,  6,  7,
+    8,  9,  10, 11, 12, 13, 14, 15, 16};
+const int8_t little_B[256] = {
+    3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+    3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+    3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+    3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+    3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+    3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+    3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+    3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+    3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+    3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+    3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3};
+const int32_t little_golden[256] = {
+    408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408,
+    408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408,
+    408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408,
+    408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408,
+    408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408,
+    408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408,
+    408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408,
+    408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408,
+    408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408,
+    408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408,
+    408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408,
+    408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408,
+    408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408,
+    408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408,
+    408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408,
+    408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408,
+    408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408,
+    408};
+
+// void tile_compute(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b, TwoDMemrefI32_t *c) {
+//   (void)snrt_mcycle();
+//   _mlir_ciface_simple_matmul(a, b, c);
+//   snrt_cluster_hw_barrier();
+//   (void)snrt_mcycle();
+// }
+
+// extern const int8_t A[256];
+// extern const int8_t B[256];
+// extern const int32_t C_golden[256];
+// extern const int32_t C[256];
+
+#define MAT_WIDTH 2048
 
 int main() {
   if (!snrt_is_dm_core()) return 0;
 
+ // printf("PAMPLEMOUSSE VOLCANO: Setting up the data.\n");
+
   // Create memref objects for data stored in L3
   TwoDMemrefI8_t memrefA;
-  memrefA.data = (int8_t *) malloc(sizeof(int8_t)*MAT_WIDTH_SQUARED); 
+  memrefA.data = (int8_t *) malloc(sizeof(int8_t)*MAT_WIDTH); 
   memrefA.aligned_data = memrefA.data;
   memrefA.offset = 0;
   
 
   TwoDMemrefI8_t memrefB;
-  memrefB.data = (int8_t *) malloc(sizeof(int8_t)*MAT_WIDTH_SQUARED);
+  memrefB.data = (int8_t *) malloc(sizeof(int8_t)*MAT_WIDTH);
   memrefB.aligned_data = memrefB.data;
   memrefB.offset = 0;
 
   TwoDMemrefI32_t memrefC;
-  memrefC.data = (int32_t *) malloc(sizeof(int32_t)*MAT_WIDTH_SQUARED);
+  memrefC.data = (int32_t *) malloc(sizeof(int32_t)*MAT_WIDTH);
   memrefC.aligned_data = memrefC.data;
   memrefC.offset = 0;
 
   TwoDMemrefI32_t memrefGolden;
-  memrefGolden.data = (int32_t *) malloc(sizeof(int32_t)*MAT_WIDTH_SQUARED);
+  memrefGolden.data = (int32_t *) malloc(sizeof(int32_t)*MAT_WIDTH);
   memrefGolden.aligned_data = memrefGolden.data;
   memrefGolden.offset = 0;
 
-  // printf("Size of int8_t is %d\n", sizeof(int8_t));
-  // printf("Size of int32_t is %d\n", sizeof(int32_t));
-  // printf("sizeof(int8_t)*MAT_WIDTH is %u\n",sizeof(int8_t)*MAT_WIDTH_SQUARED);
-  // printf("sizeof(int32_t)*MAT_WIDTH is %u\n\n",sizeof(int32_t)*MAT_WIDTH_SQUARED);
-
-  // printf("memrefA.data: %x \nmemrefB.data %x \nmemrefC.data %x \ngolden.data %x\n", memrefA.data, memrefB.data, memrefC.data, memrefGolden.data);
-  // printf("memrefA.data: %u \nmemrefB.data %u \nmemrefC.data %u \ngolden.data %u\n", memrefA.data, memrefB.data, memrefC.data, memrefGolden.data);
-
-  // printf("PAMPLEMOUSSE VOLCANO: Initializing each matrix.\n");
-
   // initialize the matrices
-  for (size_t i = 0; i < MAT_WIDTH_SQUARED; i++){
-    memrefA.aligned_data[i] = (int8_t) 2;
+  for (size_t i = 0; i < MAT_WIDTH; i++){
+    memrefA.aligned_data[i] = 2;
+    memrefB.aligned_data[i] = 3;
+    memrefC.aligned_data[i] = 0;
+    memrefGolden.aligned_data[i] = 0;
   }
-
-  for (size_t i = 0; i < MAT_WIDTH_SQUARED; i++){
-    memrefB.aligned_data[i] = (int8_t) 3;
-  }
-
-  // print2DMemRefI8_t(&memrefA,16);
-  // print2DMemRefI8_t(&memrefB,16);
-  // print2DMemRefI32_t(&memrefC,16);
-
-  // printf("PAMPLEMOUSSE VOLCANO: Calculating Golden Value.\n");
   cCodeEquivalentThreeLoops(&memrefA, &memrefB, &memrefGolden);
 
-  // printf("PAMPLEMOUSSE VOLCANO: Calling MLIR matmul.\n");
   // -------------------------------------------------- V
   // I want a C function to call an MLIR function
   _mlir_ciface_mlirFunc(&memrefA, &memrefB, &memrefC);

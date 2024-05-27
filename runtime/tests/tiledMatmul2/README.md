@@ -1,5 +1,10 @@
 # TiledMatmul2
 
+This example runs tiled matrix multiplication on the snitch DMA core.
+Tiling scheme is chosen by ZigZag.
+
+[back to all tests](../../../zigzag-fork/README.md#Examples)
+
 ## I. Input to ZigZag
 
 #### a. MLIR (use linalg-to-stream tool)

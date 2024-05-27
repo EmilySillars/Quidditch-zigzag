@@ -10,7 +10,7 @@ Run and Test MLIR examples with *Verilator and Spike Simulating Snitch*.
 
 ![this repo deals with everything in the blue box](blue-box.png)
 
-## Example Programs
+## Examples
 
 *Before doing anything, remember to [set your environment variables correctly](#Setup), either manually or by editing [setup.sh]([./setup.sh](https://github.com/EmilySillars/Quidditch-zigzag/blob/manual-transformations/zigzag-fork/setup.sh))* and then running `. setup.sh` 
 
@@ -18,69 +18,15 @@ Run and Test MLIR examples with *Verilator and Spike Simulating Snitch*.
 cd runtime/tests
 ```
 
-- **HolaWorld** ([MLIR](../runtime/tests/hola-world/matmul-tiled.mlir) calling [C code](../runtime/tests/hola-world/main.c) which prints a greeting)
-
-  ```
-  sh zigzag-spike-build-and-run.sh holaWorld.mlir
-  ```
-
-- **Matrix Multiplication** 16 x 16 2D matrices; statically allocated
-
-  ```
-  sh zigzag-verilator-build-and-run.sh matmul.mlir
-  ```
-
-- **Tiled Matrix Multiplication** 16 x 16 2D matrices; statically allocated (runs slow on verilator)
-
-  ```
-  sh zigzag-spike-build-and-run.sh tiledMatmul.mlir
-  ```
-
-- **Tiled Matrix Multiplication 2** [(details here)](../runtime/tests/tiledMatmul2/README.md) 16 x 16 2D matrices; statically allocated; zizag tiled
-
-  ```
-  sh zigzag-spike-build-and-run.sh tiledMatmul2.mlir
-  ```
-
-- **Tiled Matrix Multiplication 3** ([details here](../runtime/tests/tiledMatmul3/README.md) 16 x 16 2D matrices; dynamically allocated; zizag tiled
-
-- ~~**Tiled Matrix Multiplication 3** [(details here)](../runtime/tests/tiledMatmul3/README.md) 2048 x 2048 2D matrices~~
-
-## Build + Run + Test
-
-### 1. with Verilator Simulating Snitch (slow, cycle accurate)
-
-1) navigate to the tests directory: `cd runtime/tests`
-
-2) run the following script with the name of the kernel's mlir source file; for example, `holaWorld.mlir`
-   ```
-   sh zigzag-build-and-run.sh holaWorld.mlir
-   ```
-
-### 2. with Spike Simulating Snitch (faster, not cycle accurate)
-
-1. navigate to the tests directory: `cd runtime/tests`
-
-2. run the following script with the name of the kernel's mlir source file; for example, `holaWorld.mlir`
-   ```
-   sh zigzag-spike-build-and-run.sh holaWorld.mlir
-   ```
-
-### 3. on x86 CPU (Reality Check) (segfaults! need to debug!)
-
-1) navigate to the tests directory: `cd runtime/tests`
-
-2) run the following script with the name of the kernel's mlir source file; for example, `holaWorld.mlir`
-
-  ```
-  sh ../run-w-x86.sh matmul-tiled.mlir
-  ```
-
-**Tests Not Working**
-
-- `sh run-w-x86.sh matmul.mlir` (not working! need to fix!)
-
-- `sh run-w-x86.sh matmul-tiled.mlir` (not working! need to fix!)
+| Test + Description                                           | Matrix Size | Allocation | Tiling Method  | Verilator  | Spike |
+| :----------------------------------------------------------- | ----------- | ---------- | -------------- | ---------- | ----- |
+| **Hola World**<br />```sh zigzag-spike-build-and-run.sh holaWorld.mlir```<br />Full details [here](../runtime/tests/holaWorld/README.md) | n/a         | static     | n/a            | yes        | yes   |
+| **Matrix Multiplication**<br />```sh zigzag-verilator-build-and-run.sh matmul.mlir```<br />Full details [here](../runtime/tests/matmul/README.md) | 16 x 16     | static     | n/a            | yes        | yes   |
+| **Tiled Matrix Multiplication**<br />```sh zigzag-spike-build-and-run.sh tiledMatmul.mlir```<br />Full details [here](../runtime/tests/tiledMatmul/README.md) | 16 x 16     | static     | 2x16 and 16x2  | yes (slow) | yes   |
+| **Tiled Matrix Multiplication 2**<br />```sh zigzag-spike-build-and-run.sh tiledMatmul2.mlir```<br />Full details [here](../runtime/tests/tiledMatmul2/README.md) | 16 x 16     | static     | ZigZag w/ gemm | yes (slow) | yes   |
+| **Tiled Matrix Multiplication 3**<br />```sh zigzag-spike-build-and-run.sh tiledMatmul3.mlir```<br />Full details [here](../runtime/tests/tiledMatmul3/README.md) | 16 x 16     | dynamic    | ZigZag w/ gemm | yes (slow) | yes   |
+| **Tiled Matrix Multiplication 4**<br />```sh zigzag-spike-build-and-run.sh tiledMatmul4.mlir```<br />Full details [here](../runtime/tests/tiledMatmul4.md) | 27 x 27     | dynamic    | ZigZag w/ gemm |            |       |
+|                                                              |             |            | ZigZag w/ gemm |            |       |
 
 ## Setup
 
@@ -103,11 +49,13 @@ cd runtime/tests
    ```
 
 4. Install python requirements:
+
    ```
    python -m pip install -r runtime/requirements.txt
    ```
 
 5. Install blender: 
+
    ```
    cargo install bender
    ```
@@ -163,6 +111,42 @@ Automate this step by running [setup.sh](setup.sh)
 ```
 . setup.sh
 ```
+
+## Build + Run + Test
+
+### 1. with Verilator Simulating Snitch (slow, cycle accurate)
+
+1) navigate to the tests directory: `cd runtime/tests`
+
+2) run the following script with the name of the kernel's mlir source file; for example, `holaWorld.mlir`
+   ```
+   sh zigzag-build-and-run.sh holaWorld.mlir
+   ```
+
+### 2. with Spike Simulating Snitch (faster, not cycle accurate)
+
+1. navigate to the tests directory: `cd runtime/tests`
+
+2. run the following script with the name of the kernel's mlir source file; for example, `holaWorld.mlir`
+   ```
+   sh zigzag-spike-build-and-run.sh holaWorld.mlir
+   ```
+
+### 3. on x86 CPU (Reality Check) (segfaults! need to debug!)
+
+1) navigate to the tests directory: `cd runtime/tests`
+
+2) run the following script with the name of the kernel's mlir source file; for example, `holaWorld.mlir`
+
+  ```
+  sh ../run-w-x86.sh matmul-tiled.mlir
+  ```
+
+**Tests Not Working**
+
+- `sh run-w-x86.sh matmul.mlir` (not working! need to fix!)
+
+- `sh run-w-x86.sh matmul-tiled.mlir` (not working! need to fix!)
 
 ## Build + Run + Test (more steps, fewer shell scripts)
 
