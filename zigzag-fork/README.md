@@ -2,6 +2,10 @@
 
 Run and Test MLIR examples with *Verilator and Spike Simulating Snitch*.
 
+Currently: All examples run on the snitch DMA core
+
+Someday: Run examples on Snitch *Cluster*!
+
 ##### Current Status
 
 - this repo deals with everything inside the blue box
@@ -18,15 +22,15 @@ Run and Test MLIR examples with *Verilator and Spike Simulating Snitch*.
 cd runtime/tests
 ```
 
-| Test + Description                                           | Matrix Size | Allocation | Tiling Method  | Verilator  | Spike |
-| :----------------------------------------------------------- | ----------- | ---------- | -------------- | ---------- | ----- |
-| **Hola World**<br />```sh zigzag-spike-build-and-run.sh holaWorld.mlir```<br />Full details [here](../runtime/tests/holaWorld/README.md) | n/a         | static     | n/a            | yes        | yes   |
-| **Matrix Multiplication**<br />```sh zigzag-verilator-build-and-run.sh matmul.mlir```<br />Full details [here](../runtime/tests/matmul/README.md) | 16 x 16     | static     | n/a            | yes        | yes   |
-| **Tiled Matrix Multiplication**<br />```sh zigzag-spike-build-and-run.sh tiledMatmul.mlir```<br />Full details [here](../runtime/tests/tiledMatmul/README.md) | 16 x 16     | static     | 2x16 and 16x2  | yes (slow) | yes   |
-| **Tiled Matrix Multiplication 2**<br />```sh zigzag-spike-build-and-run.sh tiledMatmul2.mlir```<br />Full details [here](../runtime/tests/tiledMatmul2/README.md) | 16 x 16     | static     | ZigZag w/ gemm | yes (slow) | yes   |
-| **Tiled Matrix Multiplication 3**<br />```sh zigzag-spike-build-and-run.sh tiledMatmul3.mlir```<br />Full details [here](../runtime/tests/tiledMatmul3/README.md) | 16 x 16     | dynamic    | ZigZag w/ gemm | yes (slow) | yes   |
-| **Tiled Matrix Multiplication 4**<br />```sh zigzag-spike-build-and-run.sh tiledMatmul4.mlir```<br />Full details [here](../runtime/tests/tiledMatmul4.md) | 27 x 27     | dynamic    | ZigZag w/ gemm |            |       |
-|                                                              |             |            | ZigZag w/ gemm |            |       |
+| Test + Description                                           | Matrix Size | Allocation | Values | Tiling Method  | Verilator  | Spike      |
+| :----------------------------------------------------------- | ----------- | ---------- | ------ | -------------- | ---------- | ---------- |
+| **Hola World**<br />```sh zigzag-spike-build-and-run.sh holaWorld.mlir```<br />Full details [here](../runtime/tests/holaWorld/README.md) | n/a         | static     | Fixed  | n/a            | yes        | yes        |
+| **Matrix Multiplication**<br />```sh zigzag-verilator-build-and-run.sh matmul.mlir```<br />Full details [here](../runtime/tests/matmul/README.md) | 16 x 16     | static     | Fixed  | n/a            | yes        | yes        |
+| **Tiled Matrix Multiplication**<br />```sh zigzag-spike-build-and-run.sh tiledMatmul.mlir```<br />Full details [here](../runtime/tests/tiledMatmul/README.md) | 16 x 16     | static     | Fixed  | 2x16 and 16x2  | yes (slow) | yes        |
+| **Tiled Matrix Multiplication 2**<br />```sh zigzag-spike-build-and-run.sh tiledMatmul2.mlir```<br />Full details [here](../runtime/tests/tiledMatmul2/README.md) | 16 x 16     | static     | Fixed  | ZigZag w/ gemm | yes (slow) | yes        |
+| **Tiled Matrix Multiplication 3**<br />```sh zigzag-spike-build-and-run.sh tiledMatmul3.mlir```<br />Full details [here](../runtime/tests/tiledMatmul3/README.md) | 16 x 16     | dynamic    | Fixed  | ZigZag w/ gemm | yes (slow) | yes        |
+| **Tiled Matrix Multiplication 4**<br />```sh zigzag-spike-build-and-run.sh tiledMatmul4.mlir```<br />Full details [here](../runtime/tests/tiledMatmul4/README.md) | 17 x 17     | dynamic    | Fixed  | ZigZag w/ gemm | ***TODO*** | ***TODO*** |
+| **Tiled Matrix Multiplication 5**<br />```sh zigzag-spike-build-and-run.sh tiledMatmul5.mlir```<br />Full details [here](../runtime/tests/tiledMatmul5/README.md) | 104 x 104   | dynamic    | Fixed  | ZigZag w/ gemm | TODO       | yes        |
 
 ## Setup
 
@@ -170,9 +174,11 @@ Automate this step by running [setup.sh](setup.sh)
    ```
 
 4. Run 
+   
    a. using verilator: `../../toolchain/bin/snitch_cluster.vlt tests/<TestCaseName>`
-   b. using spike: `$SPIKE/spike -m0x10000000:0x40000,0x80000000:0x80000000 --disable-dtb -p9 tests/<TestCaseName> ` 
 
+   b. using spike: `$SPIKE/spike -m0x10000000:0x40000,0x80000000:0x80000000 --disable-dtb -p9 tests/<TestCaseName> ` 
+   
 5. Test
 
    using ctest: `ctest -R <TestCaseName>`
@@ -229,32 +235,3 @@ Solution:
 sudo yum install dtc
 ```
 
-## Old notes to delete later
-
-- Hola World (which calls a C function from MLIR) runs with snitch verliator and non-snitch x86 cpu
-
-- Regular Matmul and Tiled Matmul both run with snitch verilator but  **segfault** on non-snitch x86 cpu
-
-  Best guess of cause: my lowering of MLIR to llvm is not adequate
-
-  - My lowering script: [compile-for-riscv.sh](../runtime/tests/compile-for-riscv.sh)
-  - Snax-MLIR's lowering script: [run_simple_matmul.sh](https://github.com/EmilySillars/snax-mlir-zigzag/blob/zigzag-to-snax/kernels/simple_matmul2/call-c-from-mlir/run_simple_matmul.sh)
-
-1) From section quarter it says: "Corresponde al inquilino el pago de los gastos que se ocasionen por la
-   utilización de los servicios y suministros de la vivienda."
-
-Does this refer to utilities? If it does, could the lease list them explicitly, something like, "El inquilino se hace cargo del pago de los gastos de agua y luz." instead?
-
-2) Also from section quarter, it says: "También son responsables de pagar los servicios que puedan contratar a su propio nombre". What does this mean? Does this mean if the sink were to leak, the homeowners could hire a plumber to fix the problem and then I would be responsible to pay for it? Could we remove this line from the lease?
-
-3) From section seven, it says: "La vivienda y el mobiliario se encuentran en perfecto estado de uso, limpieza y conservación. El inquilino se obliga a conservarla y devolverla en el mismo estado."
-
-Could this line be replaced with, "Los muebles están en perfectas condiciones de uso pero no son nuevos y serán devueltos en el mismo estado."
-
-4. When I visited the apartment, I noticed that the bathroom was smelly. Could we add the following to the bottom of section 7? "Al visitar el apartamento, el inquilino notó un olor a humedad que salía del baño, especialmente de debajo del lavabo. Ella cree que con una limpieza más profunda el olor desaparecerá (y planea realizar dicha limpieza cuando se mude), pero si descubre que hay un problema de plomería relacionado con este olor, no es responsable del costo de la reparación."
-
-   
-
-5. 
-
-6. Upon visiting the apartment, the tenant noticed a musty oder coming from the bathroom, especially from under the sink. She believes with some more deep cleaning the smell will subside (and she plans to perform such cleaning when she moves in) but if she discovers there is a plumbing problem related to this smell, she is not responsible for the cost of repair.

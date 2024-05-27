@@ -4,21 +4,21 @@
 #map3 = affine_map<(d0, d1, d2) -> (d0, d1)>
 "builtin.module"() ({
  
-  "func.func"() <{function_type = (memref<2048x2048xi8>, memref<2048x2048xi8, strided<[1, 2048]>>, memref<2048x2048xi32>) -> (), sym_name = "simple_matmul"}> ({
-  ^bb0(%arg0: memref<2048x2048xi8>, %arg1: memref<2048x2048xi8, strided<[1, 2048]>>, %arg2: memref<2048x2048xi32>):
+"func.func"() <{function_type = (memref<17x17xi8>, memref<17x17xi8, strided<[1, 17]>>, memref<17x17xi32>) -> (), sym_name = "simple_matmul"}> ({
+  ^bb0(%arg0: memref<17x17xi8>, %arg1: memref<17x17xi8, strided<[1, 17]>>, %arg2: memref<17x17xi32>):
     %0 = "arith.constant"() <{value = 0 : i32}> : () -> i32
-    "linalg.generic"(%arg0, %arg1, %0, %0, %arg2) <{indexing_maps = [#map, #map1, #map2, #map2, #map3], iterator_types = [#linalg.iterator_type<parallel>, #linalg.iterator_type<parallel>, #linalg.iterator_type<reduction>], operandSegmentSizes = array<i32: 4, 1>}> ({
+    "linalg.generic"(%arg0, %arg1, %0, %0, %arg2) <{indexing_maps = [affine_map<(d0, d1, d2) -> (d0, d2)>, affine_map<(d0, d1, d2) -> (d2, d1)>, affine_map<(d0, d1, d2) -> ()>, affine_map<(d0, d1, d2) -> ()>, affine_map<(d0, d1, d2) -> (d0, d1)>], iterator_types = [#linalg.iterator_type<parallel>, #linalg.iterator_type<parallel>, #linalg.iterator_type<reduction>], operandSegmentSizes = array<i32: 4, 1>}> ({
     ^bb0(%arg3: i8, %arg4: i8, %arg5: i32, %arg6: i32, %arg7: i32):
       %1 = "arith.extsi"(%arg3) : (i8) -> i32
-      %2 = "arith.subi"(%1, %arg5) : (i32, i32) -> i32
+      %2 = "arith.subi"(%1, %arg5)  : (i32, i32) -> i32
       %3 = "arith.extsi"(%arg4) : (i8) -> i32
-      %4 = "arith.subi"(%3, %arg6) : (i32, i32) -> i32
-      %5 = "arith.muli"(%2, %4) : (i32, i32) -> i32
+      %4 = "arith.subi"(%3, %arg6)  : (i32, i32) -> i32
+      %5 = "arith.muli"(%2, %4)  : (i32, i32) -> i32
       %6 = "arith.addi"(%arg7, %5) : (i32, i32) -> i32
       "linalg.yield"(%6) : (i32) -> ()
-    }) : (memref<2048x2048xi8>, memref<2048x2048xi8, strided<[1, 2048]>>, i32, i32, memref<2048x2048xi32>) -> ()
+    }) : (memref<17x17xi8>, memref<17x17xi8, strided<[1, 17]>>, i32, i32, memref<17x17xi32>) -> ()
     "func.return"() : () -> ()
-  }) {llvm.emit_c_interface} : () -> ()
+  }) {llvm.emit_c_interface}: () -> ()
 
   // "func.func"() <{function_type = (memref<2048x2048xi8>, memref<2048x2048xi8, strided<[1, 2048]>>, memref<2048x2048xi32>) -> (), sym_name = "simple_matmul"}> ({
   // ^bb0(%arg0: memref<2048x2048xi8>, %arg1: memref<2048x2048xi8, strided<[1, 2048]>>, %arg2: memref<2048x2048xi32>):
@@ -279,11 +279,11 @@
   }) {llvm.emit_c_interface} : () -> ()
 
   // an MLIR func that we would like to have eventually call C code
-  "func.func"() <{function_type = (memref<2048x2048xi8>, memref<2048x2048xi8, strided<[1, 2048]>>, memref<2048x2048xi32>) -> (), sym_name = "mlirFunc"}> ({
-  ^bb0(%arg0: memref<2048x2048xi8, 0 : i32>, %arg1: memref<2048x2048xi8, strided<[1,2048]>, 0 : i32>, %arg2: memref<2048x2048xi32>):
-    %arg2_diff_stride = memref.cast %arg2 : memref<2048x2048xi32> to memref<2048x2048xi32, strided<[2048, 1]>>
-    func.call @simple_matmul(%arg0, %arg1, %arg2) : (memref<2048x2048xi8>, memref<2048x2048xi8, strided<[1, 2048]>>, memref<2048x2048xi32>) -> ()
-    //func.call @tiled_matmul(%arg0, %arg1, %arg2_diff_stride) : (memref<2048x2048xi8>, memref<2048x2048xi8, strided<[1, 2048]>>, memref<2048x2048xi32, strided<[2048, 1]>>) -> ()
+  "func.func"() <{function_type = (memref<17x17xi8>, memref<17x17xi8, strided<[1, 17]>>, memref<17x17xi32>) -> (), sym_name = "mlirFunc"}> ({
+  ^bb0(%arg0: memref<17x17xi8, 0 : i32>, %arg1: memref<17x17xi8, strided<[1,17]>, 0 : i32>, %arg2: memref<17x17xi32>):
+    %arg2_diff_stride = memref.cast %arg2 : memref<17x17xi32> to memref<17x17xi32, strided<[17, 1]>>
+    func.call @simple_matmul(%arg0, %arg1, %arg2) : (memref<17x17xi8>, memref<17x17xi8, strided<[1, 17]>>, memref<17x17xi32>) -> ()
+    //func.call @tiled_matmul(%arg0, %arg1, %arg2_diff_stride) : (memref<17x17xi8>, memref<17x17xi8, strided<[1, 17]>>, memref<17x17xi32, strided<[17, 1]>>) -> ()
  "func.return"() : () -> ()
   }) {llvm.emit_c_interface} : () -> ()
 

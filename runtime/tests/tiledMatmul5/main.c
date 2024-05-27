@@ -84,7 +84,7 @@ void _mlir_ciface_dispatch_to_accelerator(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b, 
 //   (void)snrt_mcycle();
 }
 
-#define MAT_WIDTH 17
+#define MAT_WIDTH 104
 #define MAT_WIDTH_SQUARED (MAT_WIDTH * MAT_WIDTH)
 
 int main() {

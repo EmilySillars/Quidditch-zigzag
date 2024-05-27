@@ -43,6 +43,22 @@ add_executable(TiledMatmul3 tiledMatmul3/main.c
                            tiledMatmul3/out/tiledMatmul3.o)
 target_link_libraries(TiledMatmul3 snRuntime)
 
+# Testing another tiled matrix multiplication on the DMA core
+add_executable(TiledMatmul4 tiledMatmul4/main.c
+                           lib-zigzag/data.c
+                           lib-zigzag/data.h
+                           lib-zigzag/memref.h 
+                           tiledMatmul4/out/tiledMatmul4.o)
+target_link_libraries(TiledMatmul4 snRuntime)
+
+# Testing another tiled matrix multiplication on the DMA core
+add_executable(TiledMatmul5 tiledMatmul5/main.c
+                           lib-zigzag/data.c
+                           lib-zigzag/data.h
+                           lib-zigzag/memref.h 
+                           tiledMatmul5/out/tiledMatmul5.o)
+target_link_libraries(TiledMatmul5 snRuntime)
+
 add_test(NAME HelloWorld COMMAND HelloWorld)
 
 add_test(NAME HolaWorld COMMAND HolaWorld)
@@ -67,5 +83,15 @@ set_property(TEST TiledMatmul2 PROPERTY
 
 add_test(NAME TiledMatmul3 COMMAND TiledMatmul3)
 set_property(TEST TiledMatmul3 PROPERTY
+  PASS_REGULAR_EXPRESSION "Output Correct\n"
+)
+
+add_test(NAME TiledMatmul4 COMMAND TiledMatmul4)
+set_property(TEST TiledMatmul4 PROPERTY
+  PASS_REGULAR_EXPRESSION "Output Correct\n"
+)
+
+add_test(NAME TiledMatmul5 COMMAND TiledMatmul5)
+set_property(TEST TiledMatmul5 PROPERTY
   PASS_REGULAR_EXPRESSION "Output Correct\n"
 )
