@@ -142,17 +142,21 @@ void mlir_qmat_transformed(squareMat *a, squareMat *b, squareMat *c,
     scf.for %d1_3 = %zero to %four step %one iter_args () -> () {
     scf.for %d2_1 = %zero to %two step %one iter_args () -> () {
     scf.for %d2_2 = %zero to %eight step %one iter_args () -> () {
+
       //  size_t d0 = d0_1 * d0_1_bk_sz + d0_2;
       %prod0 = arith.muli %d0_1, %d0_1_bk_sz : index
       %d0 = arith.addi %prod0, %d0_2 : index
+
       // size_t d1 = d1_1 * d1_1_bk_sz + d1_2 * d1_2_bk_sz + d1_3;
       %prod1 = arith.muli %d1_1, %d1_1_bk_sz : index
       %prod1_2 = arith.muli %d1_2, %d1_2_bk_sz : index
       %sum1 = arith.addi %prod1, %prod1_2 : index
       %d1 = arith.addi %sum1, %d1_3 : index
+
       // size_t d2 = d2_1 * d2_1_bk_sz + d2_2;
       %prod2 = arith.muli %d2_1, %d2_1_bk_sz : index
       %d2 = arith.addi %prod2, %d2_2 : index
+      
       // MAC c->mat[d0][d1] += a->mat[d0][d2] * b->mat[d2][d1];
       %inputElt = memref.load %arg0[%d0, %d2] : memref<16x16xi8>
       %inputEltCasted = arith.extsi  %inputElt : i8 to i32 

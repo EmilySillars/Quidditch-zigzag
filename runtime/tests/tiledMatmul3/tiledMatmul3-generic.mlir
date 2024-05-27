@@ -3,8 +3,8 @@
 #map2 = affine_map<(d0, d1, d2) -> ()>
 #map3 = affine_map<(d0, d1, d2) -> (d0, d1)>
 "builtin.module"() ({
-  "func.func"() <{function_type = (memref<2048x2048xi8>, memref<2048x2048xi8, strided<[1, 2048]>>, memref<2048x2048xi32>) -> (), sym_name = "simple_matmul"}> ({
-  ^bb0(%arg0: memref<2048x2048xi8>, %arg1: memref<2048x2048xi8, strided<[1, 2048]>>, %arg2: memref<2048x2048xi32>):
+  "func.func"() <{function_type = (memref<27x27xi8>, memref<27x27xi8, strided<[1, 27]>>, memref<27x27xi32>) -> (), sym_name = "simple_matmul"}> ({
+  ^bb0(%arg0: memref<27x27xi8>, %arg1: memref<27x27xi8, strided<[1, 27]>>, %arg2: memref<27x27xi32>):
     %0 = "arith.constant"() <{value = 0 : i32}> : () -> i32
     "linalg.generic"(%arg0, %arg1, %0, %0, %arg2) <{indexing_maps = [#map, #map1, #map2, #map2, #map3], iterator_types = [#linalg.iterator_type<parallel>, #linalg.iterator_type<parallel>, #linalg.iterator_type<reduction>], operandSegmentSizes = array<i32: 4, 1>}> ({
     ^bb0(%arg3: i8, %arg4: i8, %arg5: i32, %arg6: i32, %arg7: i32):
@@ -15,9 +15,10 @@
       %5 = "arith.muli"(%2, %4) : (i32, i32) -> i32
       %6 = "arith.addi"(%arg7, %5) : (i32, i32) -> i32
       "linalg.yield"(%6) : (i32) -> ()
-    }) : (memref<2048x2048xi8>, memref<2048x2048xi8, strided<[1, 2048]>>, i32, i32, memref<2048x2048xi32>) -> ()
+    }) : (memref<27x27xi8>, memref<27x27xi8, strided<[1, 27]>>, i32, i32, memref<27x27xi32>) -> ()
     "func.return"() : () -> ()
   }) {llvm.emit_c_interface} : () -> ()
+
   "func.func"() <{function_type = (memref<16x16xi8>, memref<16x16xi8, strided<[1, 16]>>, memref<16x16xi32, strided<[16, 1]>>) -> (), sym_name = "tiled_matmul"}> ({
   ^bb0(%arg0: memref<16x16xi8>, %arg1: memref<16x16xi8, strided<[1, 16]>>, %arg2: memref<16x16xi32, strided<[16, 1]>>):
     %0 = "arith.constant"() <{value = 4 : index}> : () -> index
@@ -76,6 +77,7 @@
     }) : (index, index, index) -> ()
     "func.return"() : () -> ()
   }) {llvm.emit_c_interface} : () -> ()
+ 
   "func.func"() <{function_type = (memref<2x16xi8>, memref<16x2xi8, strided<[1, 16]>>, memref<2x2xi32, strided<[16, 1]>>) -> (), sym_name = "tile_compute"}> ({
   ^bb0(%arg0: memref<2x16xi8>, %arg1: memref<16x2xi8, strided<[1, 16]>>, %arg2: memref<2x2xi32, strided<[16, 1]>>):
     %0 = "arith.constant"() <{value = 0 : i32}> : () -> i32
@@ -91,10 +93,13 @@
     }) : (memref<2x16xi8>, memref<16x2xi8, strided<[1, 16]>>, i32, i32, memref<2x2xi32, strided<[16, 1]>>) -> ()
     "func.return"() : () -> ()
   }) {llvm.emit_c_interface} : () -> ()
+ 
   "func.func"() <{function_type = (memref<2x16xi8>, memref<16x2xi8, strided<[1, 16]>>, memref<2x2xi32, strided<[16, 1]>>) -> (), sym_name = "dispatch_to_accelerator", sym_visibility = "private"}> ({
   }) {llvm.emit_c_interface} : () -> ()
+ 
   "func.func"() <{function_type = (memref<2x16xi8>, memref<16x2xi8, strided<[1, 16]>>, memref<2x2xi32, strided<[16, 1]>>) -> (), sym_name = "hola", sym_visibility = "private"}> ({
   }) {llvm.emit_c_interface} : () -> ()
+
   "func.func"() <{function_type = (memref<16x16xi8>, memref<16x16xi8, strided<[1, 16]>>, memref<16x16xi32, strided<[16, 1]>>) -> (), sym_name = "break_mats_into_tiles"}> ({
   ^bb0(%arg0: memref<16x16xi8>, %arg1: memref<16x16xi8, strided<[1, 16]>>, %arg2: memref<16x16xi32, strided<[16, 1]>>):
     %0 = "arith.constant"() <{value = 0 : i32}> : () -> i32
@@ -123,6 +128,7 @@
     }) : (index, index, index) -> ()
     "func.return"() : () -> ()
   }) {llvm.emit_c_interface} : () -> ()
+  
   "func.func"() <{function_type = (memref<16x16xi8>, memref<16x16xi8, strided<[1, 16]>>, memref<16x16xi32, strided<[16, 1]>>) -> (), sym_name = "break_mats_into_tiles2"}> ({
   ^bb0(%arg0: memref<16x16xi8>, %arg1: memref<16x16xi8, strided<[1, 16]>>, %arg2: memref<16x16xi32, strided<[16, 1]>>):
     %0 = "arith.constant"() <{value = 0 : i32}> : () -> i32
@@ -142,10 +148,11 @@
     "func.call"(%9, %11, %13) <{callee = @hola}> : (memref<2x16xi8>, memref<16x2xi8, strided<[1, 16]>>, memref<2x2xi32, strided<[16, 1]>>) -> ()
     "func.return"() : () -> ()
   }) {llvm.emit_c_interface} : () -> ()
-  "func.func"() <{function_type = (memref<16x16xi8>, memref<16x16xi8, strided<[1, 16]>>, memref<16x16xi32>) -> (), sym_name = "mlirFunc"}> ({
-  ^bb0(%arg0: memref<16x16xi8>, %arg1: memref<16x16xi8, strided<[1, 16]>>, %arg2: memref<16x16xi32>):
-    %0 = "memref.cast"(%arg2) : (memref<16x16xi32>) -> memref<16x16xi32, strided<[16, 1]>>
-    "func.call"(%arg0, %arg1, %0) <{callee = @tiled_matmul}> : (memref<16x16xi8>, memref<16x16xi8, strided<[1, 16]>>, memref<16x16xi32, strided<[16, 1]>>) -> ()
+
+  "func.func"() <{function_type = (memref<27x27xi8>, memref<27x27xi8, strided<[1, 27]>>, memref<27x27xi32>) -> (), sym_name = "mlirFunc"}> ({
+  ^bb0(%arg0: memref<27x27xi8>, %arg1: memref<27x27xi8, strided<[1, 27]>>, %arg2: memref<27x27xi32>):
+    %0 = "memref.cast"(%arg2) : (memref<27x27xi32>) -> memref<27x27xi32, strided<[27, 1]>>
+    "func.call"(%arg0, %arg1, %0) <{callee = @tiled_matmul}> : (memref<27x27xi8>, memref<27x27xi8, strided<[1, 27]>>, memref<27x27xi32, strided<[27, 1]>>) -> ()
     "func.return"() : () -> ()
   }) {llvm.emit_c_interface} : () -> ()
 }) : () -> ()

@@ -24,25 +24,27 @@ cd runtime/tests
   sh zigzag-spike-build-and-run.sh holaWorld.mlir
   ```
 
-- **Matrix Multiplication**
+- **Matrix Multiplication** 16 x 16 2D matrices; statically allocated
 
   ```
   sh zigzag-verilator-build-and-run.sh matmul.mlir
   ```
 
-- **Tiled Matrix Multiplication** (runs slow on verilator)
+- **Tiled Matrix Multiplication** 16 x 16 2D matrices; statically allocated (runs slow on verilator)
 
   ```
   sh zigzag-spike-build-and-run.sh tiledMatmul.mlir
   ```
 
-- **Tiled Matrix Multiplication 2** [(details here)](../runtime/tests/tiledMatmul2/README.md) 16 x 16 2D matrices
+- **Tiled Matrix Multiplication 2** [(details here)](../runtime/tests/tiledMatmul2/README.md) 16 x 16 2D matrices; statically allocated; zizag tiled
 
   ```
   sh zigzag-spike-build-and-run.sh tiledMatmul2.mlir
   ```
 
-- **Tiled Matrix Multiplication 3** [(details here)](../runtime/tests/tiledMatmul3/README.md) 2048 x 2048 2D matrices
+- **Tiled Matrix Multiplication 3** ([details here](../runtime/tests/tiledMatmul3/README.md) 16 x 16 2D matrices; dynamically allocated; zizag tiled
+
+- ~~**Tiled Matrix Multiplication 3** [(details here)](../runtime/tests/tiledMatmul3/README.md) 2048 x 2048 2D matrices~~
 
 ## Build + Run + Test
 
@@ -253,3 +255,22 @@ sudo yum install dtc
 
   - My lowering script: [compile-for-riscv.sh](../runtime/tests/compile-for-riscv.sh)
   - Snax-MLIR's lowering script: [run_simple_matmul.sh](https://github.com/EmilySillars/snax-mlir-zigzag/blob/zigzag-to-snax/kernels/simple_matmul2/call-c-from-mlir/run_simple_matmul.sh)
+
+1) From section quarter it says: "Corresponde al inquilino el pago de los gastos que se ocasionen por la
+   utilización de los servicios y suministros de la vivienda."
+
+Does this refer to utilities? If it does, could the lease list them explicitly, something like, "El inquilino se hace cargo del pago de los gastos de agua y luz." instead?
+
+2) Also from section quarter, it says: "También son responsables de pagar los servicios que puedan contratar a su propio nombre". What does this mean? Does this mean if the sink were to leak, the homeowners could hire a plumber to fix the problem and then I would be responsible to pay for it? Could we remove this line from the lease?
+
+3) From section seven, it says: "La vivienda y el mobiliario se encuentran en perfecto estado de uso, limpieza y conservación. El inquilino se obliga a conservarla y devolverla en el mismo estado."
+
+Could this line be replaced with, "Los muebles están en perfectas condiciones de uso pero no son nuevos y serán devueltos en el mismo estado."
+
+4. When I visited the apartment, I noticed that the bathroom was smelly. Could we add the following to the bottom of section 7? "Al visitar el apartamento, el inquilino notó un olor a humedad que salía del baño, especialmente de debajo del lavabo. Ella cree que con una limpieza más profunda el olor desaparecerá (y planea realizar dicha limpieza cuando se mude), pero si descubre que hay un problema de plomería relacionado con este olor, no es responsable del costo de la reparación."
+
+   
+
+5. 
+
+6. Upon visiting the apartment, the tenant noticed a musty oder coming from the bathroom, especially from under the sink. She believes with some more deep cleaning the smell will subside (and she plans to perform such cleaning when she moves in) but if she discovers there is a plumbing problem related to this smell, she is not responsible for the cost of repair.
