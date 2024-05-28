@@ -59,8 +59,6 @@ add_executable(TiledMatmul5 tiledMatmul5/main.c
                            tiledMatmul5/out/tiledMatmul5.o)
 target_link_libraries(TiledMatmul5 snRuntime)
 
-add_test(NAME HelloWorld COMMAND HelloWorld)
-
 add_test(NAME HolaWorld COMMAND HolaWorld)
 set_property(TEST HolaWorld PROPERTY
   PASS_REGULAR_EXPRESSION "hola world!\n"
@@ -95,3 +93,11 @@ add_test(NAME TiledMatmul5 COMMAND TiledMatmul5)
 set_property(TEST TiledMatmul5 PROPERTY
   PASS_REGULAR_EXPRESSION "Output Correct\n"
 )
+
+macro(test_executable target_name)
+  file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${target_name}.test)
+  add_test(NAME ${target_name} COMMAND ${target_name} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${target_name}.test)
+endmacro()
+
+test_executable(HelloWorld)
+test_executable(IREE_HelloWorld)

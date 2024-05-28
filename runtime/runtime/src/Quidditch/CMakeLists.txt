@@ -1,11 +1,5 @@
-add_subdirectory(registration)
-
-iree_cc_library(
-        NAME
-        device
-        SRCS
-        device.c
-        DEPS
-        iree::base
-        PUBLIC
-)
+add_subdirectory(command_buffer)
+add_subdirectory(device)
+add_subdirectory(dispatch)
+add_subdirectory(executable)
+add_subdirectory(loader)
