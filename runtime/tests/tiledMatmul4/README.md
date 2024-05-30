@@ -92,42 +92,6 @@ Spatial Loops
 
 ## III. Manual Transformation
 
-```
-for reference:
-void matmul_transformed(squareMat *a, squareMat *b, squareMat *c,
-                           squareMat *dummy) {
-  transposeSquareMat(b, dummy);
-  // only square matrices allowed
-  size_t d0_1_bk_sz = a->len / 4;
-  size_t d1_1_bk_sz = a->len / 2;
-  size_t d1_2_bk_sz = d1_1_bk_sz / 2;
-  size_t d2_1_bk_sz = a->len / 2;
-
-  for (size_t d0_1 = 0; d0_1 < 4; d0_1++) {
-    for (size_t d0_2 = 0; d0_2 < 4; d0_2++) {
-      for (size_t d1_1 = 0; d1_1 < 2; d1_1++) {
-        for (size_t d1_2 = 0; d1_2 < 2; d1_2++) {
-          for (size_t d1_3 = 0; d1_3 < 4; d1_3++) {
-            for (size_t d2_1 = 0; d2_1 < 2; d2_1++) {
-              for (size_t d2_2 = 0; d2_2 < 8;
-                   d2_2++) { // technically spacially unrolled, but won't show
-                             // that here
-                size_t d0 = d0_1 * d0_1_bk_sz + d0_2;
-                size_t d1 = d1_1 * d1_1_bk_sz + d1_2 * d1_2_bk_sz + d1_3;
-                size_t d2 = d2_1 * d2_1_bk_sz + d2_2;
-                c->mat[d0][d1] += a->mat[d0][d2] * b->mat[d2][d1];
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
-```
-
-
-
 #### a. C code transformed
 
 ```

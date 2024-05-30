@@ -29,8 +29,12 @@ cd runtime/tests
 | **Tiled Matrix Multiplication**<br />```sh zigzag-spike-build-and-run.sh tiledMatmul.mlir```<br />Full details [here](../runtime/tests/tiledMatmul/README.md) | 16 x 16     | static     | Fixed  | 2x16 and 16x2  | yes (slow) | yes        |
 | **Tiled Matrix Multiplication 2**<br />```sh zigzag-spike-build-and-run.sh tiledMatmul2.mlir```<br />Full details [here](../runtime/tests/tiledMatmul2/README.md) | 16 x 16     | static     | Fixed  | ZigZag w/ gemm | yes (slow) | yes        |
 | **Tiled Matrix Multiplication 3**<br />```sh zigzag-spike-build-and-run.sh tiledMatmul3.mlir```<br />Full details [here](../runtime/tests/tiledMatmul3/README.md) | 16 x 16     | dynamic    | Fixed  | ZigZag w/ gemm | yes (slow) | yes        |
-| **Tiled Matrix Multiplication 4**<br />```sh zigzag-spike-build-and-run.sh tiledMatmul4.mlir```<br />Full details [here](../runtime/tests/tiledMatmul4/README.md) | 17 x 17     | dynamic    | Fixed  | ZigZag w/ gemm | ***TODO*** | ***TODO*** |
+| ~~Tiled Matrix Multiplication 4~~<br />```sh zigzag-spike-build-and-run.sh tiledMatmul4.mlir```<br />Full details [here](../runtime/tests/tiledMatmul4/README.md) | 17 x 17     | dynamic    | Fixed  | ZigZag w/ gemm | ***TODO*** | ***TODO*** |
 | **Tiled Matrix Multiplication 5**<br />```sh zigzag-spike-build-and-run.sh tiledMatmul5.mlir```<br />Full details [here](../runtime/tests/tiledMatmul5/README.md) | 104 x 104   | dynamic    | Fixed  | ZigZag w/ gemm | TODO       | yes        |
+| ~~Tiled Matrix Multiplication 6~~<br />```sh zigzag-spike-build-and-run.sh tiledMatmul6.mlir```<br /><br />Uses MLIR Subviews!<br />Full details [here](../runtime/tests/tiledMatmul6/README.md) | 104 x 104   | dynamic    | Fixed  | ZigZag w/ gemm | ***TODO*** | ***TODO*** |
+| ~~Tiled Matrix Multiplication 7~~<br />```sh zigzag-spike-build-and-run.sh tiledMatmul7.mlir```<br /><br />Full details [here](../runtime/tests/tiledMatmul7/README.md) |             |            |        |                | ***TODO*** | ***TODO*** |
+| ~~Tiled Matrix Multiplication 8~~<br />```sh zigzag-spike-build-and-run.sh tiledMatmul8.mlir```<br />Full details [here](../runtime/tests/tiledMatmul8/README.md) | 19 x 19     | dynamic    | Fixed  | ZigZag w/ gemm | ***TODO*** | ***TODO*** |
+|                                                              |             |            |        |                |            |            |
 
 ## Setup
 
@@ -235,3 +239,14 @@ Solution:
 sudo yum install dtc
 ```
 
+Error:
+```
+CMake Error at cmake/quidditch_module.cmake:2 (find_program):
+  Could not find IREE_COMPILE_PATH using the following names: iree-compile
+Call Stack (most recent call first):
+  samples/CMakeLists.txt:2 (include)
+```
+
+Solution:
+
+Comment out the contents of `Quidditch-zigzag/runtime/samples/CMakeLists.txt`
