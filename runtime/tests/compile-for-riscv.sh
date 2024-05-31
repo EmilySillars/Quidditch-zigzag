@@ -3,6 +3,9 @@ basename=`basename $1 | sed 's/[.][^.]*$//'`
 # remove previously generated files
 sh clean-out.sh $basename
 
+# make an output directory if doesn't already exist
+mkdir -p $basename/out
+
 # lower mlir to llvm
 mlir-opt $basename/$basename.mlir  --one-shot-bufferize='bufferize-function-boundaries' -test-lower-to-llvm > $basename/out/$basename-in-llvm-dialect.mlir
 mlir-translate --mlir-to-llvmir -o $basename/out/$basename.ll $basename/out/$basename-in-llvm-dialect.mlir

@@ -34,7 +34,7 @@ cd runtime/tests
 | ~~Tiled Matrix Multiplication 6~~<br />```sh zigzag-spike-build-and-run.sh tiledMatmul6.mlir```<br /><br />Uses MLIR Subviews!<br />Full details [here](../runtime/tests/tiledMatmul6/README.md) | 104 x 104   | dynamic    | Fixed  | ZigZag w/ gemm | ***TODO*** | ***TODO*** |
 | ~~Tiled Matrix Multiplication 7~~<br />```sh zigzag-spike-build-and-run.sh tiledMatmul7.mlir```<br /><br />Full details [here](../runtime/tests/tiledMatmul7/README.md) |             |            |        |                | ***TODO*** | ***TODO*** |
 | ~~Tiled Matrix Multiplication 8~~<br />```sh zigzag-spike-build-and-run.sh tiledMatmul8.mlir```<br />Full details [here](../runtime/tests/tiledMatmul8/README.md) | 19 x 19     | dynamic    | Fixed  | ZigZag w/ gemm | ***TODO*** | ***TODO*** |
-|                                                              |             |            |        |                |            |            |
+| **Tiled Matrix Multiplication 9**<br />```sh zigzag-spike-build-and-run.sh tiledMatmul9.mlir```<br />Full details [here](../runtime/tests/tiledMatmul9/README.md) | 600x600     | dynamic    | Fixed  | ZigZag w/ gemm | TODO       | TODO       |
 
 ## Setup
 
@@ -201,9 +201,30 @@ $SPIKE/spike -m0x10000000:0x40000,0x80000000:0x80000000 --disable-dtb -p9 tests/
 ctest -R HolaWorld                                                                        # as a test
 ```
 
+## How does Clang's -O3 Effect ZigZag transformations?
+
+### Prequisites
+
+Make sure to [install GraphViz](https://graphviz.org/download/) to inspect the control flow graphs emitted by opt.
+
+On fedora, do `sudo yum install graphviz`
+
+### Compare Before and After -O3
+
+1. navigate to the tests directory: `cd runtime/tests`
+
+2. run the following script with the name of the kernel's mlir source file, for example, `tiledMatmul5.mlir` and
+   the name of the mlir function you would like to compare, for example, `tiled_matmul`
+
+   ```
+   sh was-it-all-worth-it.sh tiledMatmul5.mlir tiled_matmul
+   ```
+
+   
+
 # Troubleshooting
 
-Error:
+- Error:
 
 ```
 In file included from main.c:1:
@@ -223,7 +244,8 @@ sudo yum install glibc-devel.i686
 
 from this link: https://superuser.com/questions/491504/how-do-i-install-package-libc6-dev-i386-on-fedora
 
-Error:
+- Error:
+
 ```
 sudo apt-get install device-tree-compiler libboost-regex-dev
 Reading package lists... Done
@@ -239,7 +261,8 @@ Solution:
 sudo yum install dtc
 ```
 
-Error:
+- Error:
+
 ```
 CMake Error at cmake/quidditch_module.cmake:2 (find_program):
   Could not find IREE_COMPILE_PATH using the following names: iree-compile
@@ -250,3 +273,19 @@ Call Stack (most recent call first):
 Solution:
 
 Comment out the contents of `Quidditch-zigzag/runtime/samples/CMakeLists.txt`
+
+- Error about test case you are not interested in running
+  ```
+  CMake Error at tests/CMakeLists.txt:79 (add_executable):
+    Cannot find source file:
+  
+      tiledMatmul8/out/tiledMatmul8.o
+  ```
+
+  Solution:
+
+  ```
+  sh compile-all-mlir-tests-for-riscv.sh
+  ```
+
+  

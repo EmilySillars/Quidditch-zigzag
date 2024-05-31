@@ -1,7 +1,7 @@
 #include <stdio.h>
 
-#include "../lib-zigzag/data.h"
-#include "../lib-zigzag/memref.h"
+#include "data.h"
+#include "memref.h"
 #include "stdint.h"
 
 /*
@@ -73,14 +73,6 @@ void _mlir_ciface_hola(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
   printf("hola world!\n");
 }
 
-int debugCounter = 0;
-
-void _mlir_ciface_debug(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
-                       TwoDMemrefI32_t *c) {
-  printf("debug: %d\n",debugCounter);
-  debugCounter++;
-}
-
 void _mlir_ciface_dispatch_to_accelerator(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
                                           TwoDMemrefI32_t *c) {
   printf("calling tile compute... %d\n", trouble);
@@ -89,6 +81,14 @@ void _mlir_ciface_dispatch_to_accelerator(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
   //   _mlir_ciface_tile_compute(a, b, c);
   //   snrt_cluster_hw_barrier();
   //   (void)snrt_mcycle();
+}
+
+int debugCounter = 0;
+
+void _mlir_ciface_debug(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
+                       TwoDMemrefI32_t *c) {
+  printf("debug: %d\n",debugCounter);
+  debugCounter++;
 }
 
 // ADDING EVEN SMALLER MATRICES TO TEST!
@@ -139,12 +139,37 @@ const int32_t little_golden[256] = {
     408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408, 408,
     408};
 
+// void tile_compute(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b, TwoDMemrefI32_t *c) {
+//   (void)snrt_mcycle();
+//   _mlir_ciface_simple_matmul(a, b, c);
+//   snrt_cluster_hw_barrier();
+//   (void)snrt_mcycle();
+// }
+
+// int nerr = 0;
+//  for (int i = 0; i < M_size * N_size; i++) {
+//    int32_t error = memrefC.aligned_data[i] - little_golden[i]; //
+//    C_golden[i]; if (error != 0)
+//      nerr += 1;
+//  }
+
+// // print2DMemRefI32_t(&memrefC, M_size);
+
+// if (nerr != 0) {
+//   printf("Output does not match the golden value!\n");
+//   return nerr;
+// } else {
+//   printf("correct!\n");
+// }
+
 int main() {
   // Create memref objects for data stored in L3
   TwoDMemrefI8_t memrefA;
   memrefA.data = (int8_t *)&little_A;
   memrefA.aligned_data = memrefA.data;
   memrefA.offset = 0;
+  // memrefA.shape[0] = M_size;
+  // memrefA.shape[1] = N_size;
 
   print2DMemRefI8_t(&memrefA, M_size);
 
@@ -158,15 +183,13 @@ int main() {
   memrefC.aligned_data = memrefC.data;
   memrefC.offset = 0;
 
-  printf("before the call to MLIR...\n");
-
   // -------------------------------------------------- V
   // I want a C function to call an MLIR function
   _mlir_ciface_mlirFunc(&memrefA, &memrefB, &memrefC);
 
   // I want that MLIR function to call a C function
   // -------------------------------------------------- ^
-  printf("after the call to MLIR...\n");
+
   int nerr = 0;
 
   for (int i = 0; i < M_size * N_size; i++) {
@@ -184,6 +207,7 @@ int main() {
 
   return nerr;
 }
+
 
 
 
