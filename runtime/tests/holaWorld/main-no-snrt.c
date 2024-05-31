@@ -1,7 +1,7 @@
 #include "stdint.h"
 #include <stdio.h>
-#include "data.h"
-#include "memref.h"
+#include "../lib-zigzag/data.h"
+#include "../lib-zigzag/memref.h"
 
 
 /*
@@ -151,7 +151,7 @@ int main() {
   memrefA.shape[0] = M_size;
   memrefA.shape[1] = M_size;
 
-  printf("M_SIZE is %d", M_size)
+  printf("M_SIZE is %d", M_size);
 
   TwoDMemrefI8_t memrefB;
   memrefB.data = (int8_t *)&little_B;
