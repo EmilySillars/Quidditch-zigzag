@@ -53,9 +53,10 @@ cd runtime/tests
 
 3. ```
    sudo chmod 666 /var/run/docker.sock
+   docker run --rm ghcr.io/opencompl/quidditch/toolchain:main
    docker run --rm ghcr.io/opencompl/quidditch/toolchain:main tar -cC /opt/quidditch-toolchain . | tar -xC ./toolchain
    ```
-
+   
 4. Install python requirements:
 
    ```
@@ -72,24 +73,36 @@ cd runtime/tests
    cd runtime && mkdir build
    ```
 
+7. switch to the manual-transformations branch :)
+   ```
+   git switch manual-transformations
+   ```
+
 ### 2. Set up Snitch-Specific Spike
 
 1. [clone the repo](https://github.com/opencompl/riscv-isa-sim/tree/CSR-Barrier) and switch to the  `origin/CSR-Barrier` branch:
 
    ```
    git clone https://github.com/opencompl/riscv-isa-sim.git
-   git switch origin/CSR-Barrier
+   cd riscv-isa-sim
+   git switch CSR-Barrier
    ```
 
 2. ```
    apt-get install device-tree-compiler libboost-regex-dev
-   cd riscv-isa-sim
    mkdir build
    cd build
-   ../configure --with-target=riscv32-unknown-elf --with-isa=RV32IMAFD --prefix=/home/hoppip/riscv-isa-sim/build
+   ```
+
+3. Set the `--prefix` to the location of your [riscv toolchain install](https://github.com/riscv-collab/riscv-gnu-toolchain), for example: `--prefix=/opt/riscv/bin`
+
+   ```
+   ../configure --with-target=riscv32-unknown-elf --with-isa=RV32IMAFD --prefix=/opt/riscv/bin
    make
    make install
    ```
+
+   
 
 ### 3. Set Environment Variables 
 
@@ -286,6 +299,27 @@ Comment out the contents of `Quidditch-zigzag/runtime/samples/CMakeLists.txt`
 
   ```
   sh compile-all-mlir-tests-for-riscv.sh
+  ```
+
+
+- Error:
+  ```
+  configure: error: Could not find a version of the Boost::Asio library!
+  ```
+
+  Solution: 
+  ```
+  sudo apt install libboost-all-dev
+  ```
+
+- Error:
+  ```
+  zigzag-spike-build-and-run.sh: 12: Bad substitution
+  ```
+
+  Instead of running the script with `sh`, try `bash`, for ex:
+  ```
+  bash zigzag-spike-build-and-run.sh matmul.mlir
   ```
 
   
