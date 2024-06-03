@@ -4,6 +4,10 @@
 #include <team_decls.h>
 #include "../lib-zigzag/data.h"
 #include "../lib-zigzag/memref.h"
+#include <Quidditch/janky_dispatch/janky_dispatch.h>
+#include <snitch_cluster_defs.h>
+//#include "dispatch.h"
+// /home/hoppip/Quidditch-zigzag/runtime/runtime/src/Quidditch/janky_dispatch/dispatch.h
 
 
 /*
@@ -88,66 +92,52 @@ void _mlir_ciface_dispatch_to_accelerator(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b, 
 #define MAT_WIDTH_SQUARED (MAT_WIDTH * MAT_WIDTH)
 
 int main() {
-  if (!snrt_is_dm_core()) return 0;
+  //if (!snrt_is_dm_core()) return 0;
 
+  // If I am a compute core, standby for kernel execution.
+  if (!snrt_is_dm_core()) return quidditch_dispatch_enter_worker_loop();
+
+  // If I reach after the above if-statement, I am the DMA core.
+  printf("SNRT_CLUSTER_CORE_NUM is %d\n",SNRT_CLUSTER_CORE_NUM);
+  printf("snrt_cluster_compute_core_num() is %d\n", snrt_cluster_compute_core_num());
   // Create memref objects for data stored in L3
   TwoDMemrefI8_t memrefA;
   memrefA.data = (int8_t *) malloc(sizeof(int8_t)*MAT_WIDTH_SQUARED); 
   memrefA.aligned_data = memrefA.data;
   memrefA.offset = 0;
-  
-
   TwoDMemrefI8_t memrefB;
   memrefB.data = (int8_t *) malloc(sizeof(int8_t)*MAT_WIDTH_SQUARED);
   memrefB.aligned_data = memrefB.data;
   memrefB.offset = 0;
-
   TwoDMemrefI32_t memrefC;
   memrefC.data = (int32_t *) malloc(sizeof(int32_t)*MAT_WIDTH_SQUARED);
   memrefC.aligned_data = memrefC.data;
   memrefC.offset = 0;
-
   TwoDMemrefI32_t memrefGolden;
   memrefGolden.data = (int32_t *) malloc(sizeof(int32_t)*MAT_WIDTH_SQUARED);
   memrefGolden.aligned_data = memrefGolden.data;
   memrefGolden.offset = 0;
 
-  // printf("Size of int8_t is %d\n", sizeof(int8_t));
-  // printf("Size of int32_t is %d\n", sizeof(int32_t));
-  // printf("sizeof(int8_t)*MAT_WIDTH is %u\n",sizeof(int8_t)*MAT_WIDTH_SQUARED);
-  // printf("sizeof(int32_t)*MAT_WIDTH is %u\n\n",sizeof(int32_t)*MAT_WIDTH_SQUARED);
-
-  // printf("memrefA.data: %x \nmemrefB.data %x \nmemrefC.data %x \ngolden.data %x\n", memrefA.data, memrefB.data, memrefC.data, memrefGolden.data);
-  // printf("memrefA.data: %u \nmemrefB.data %u \nmemrefC.data %u \ngolden.data %u\n", memrefA.data, memrefB.data, memrefC.data, memrefGolden.data);
-
-  // printf("PAMPLEMOUSSE VOLCANO: Initializing each matrix.\n");
-
   // initialize the matrices
   for (size_t i = 0; i < MAT_WIDTH_SQUARED; i++){
     memrefA.aligned_data[i] = (int8_t) 2;
   }
-
   for (size_t i = 0; i < MAT_WIDTH_SQUARED; i++){
     memrefB.aligned_data[i] = (int8_t) 3;
   }
 
-  // print2DMemRefI8_t(&memrefA,16);
-  // print2DMemRefI8_t(&memrefB,16);
-  // print2DMemRefI32_t(&memrefC,16);
-
-  // printf("PAMPLEMOUSSE VOLCANO: Calculating Golden Value.\n");
+  // Caculate the correct answer
   cCodeEquivalentThreeLoops(&memrefA, &memrefB, &memrefGolden);
 
-  // printf("PAMPLEMOUSSE VOLCANO: Calling MLIR matmul.\n");
   // -------------------------------------------------- V
-  // I want a C function to call an MLIR function
+  // Run the computation on a compute core??
   _mlir_ciface_mlirFunc(&memrefA, &memrefB, &memrefC);
 
   // I want that MLIR function to call a C function
   // -------------------------------------------------- ^
 
+  // Check for correctness
   int nerr = 0;
-
   for (int i = 0; i < M_size * N_size; i++) {
     int32_t error = memrefC.aligned_data[i] - memrefGolden.aligned_data[i];  // C_golden[i];
     if (error != 0){
@@ -156,22 +146,21 @@ int main() {
       break;
     }
   }
-
   if (nerr != 0) {
     printf("Output does not match the golden value!\n");
     // print2DMemRefI32_t(&memrefC,16);
   } else {
     printf("Output Correct\n");
   }
-  // print2DMemRefI32_t(&memrefC,20);
-  // // cCodeEquivalentThreeLoops(&memrefA, &memrefB, &memrefC );
-  // print2DMemRefI32_t(&memrefGolden,20);
 
   // free everything before exiting!
   free(memrefA.data);
   free(memrefB.data);
   free(memrefC.data);
   free(memrefGolden.data);
+
+  // release all compute cores from the work loop
+  quidditch_dispatch_quit(); 
   return nerr;
 }
 
@@ -228,10 +217,6 @@ void print2DMemRefI32_t_notASquare(TwoDMemrefI32_t *x, int32_t stride_x, int32_t
 
 void cCodeEquivalentThreeLoops(TwoDMemrefI8_t *x, TwoDMemrefI8_t *y,
                                TwoDMemrefI32_t *z) {
-  // printf("M_size is %d and N_size is %d\n",M_size, N_size);
-  // for (int i = 0; i < M_size * N_size; i++) {
-  //   z->aligned_data[i] = x->aligned_data[i] * y->aligned_data[i];
-  // }
   int z_index, x_index, y_index = 0;
   for (int d0 = 0; d0 < MAT_WIDTH; d0++) {
     for (int d1 = 0; d1 < MAT_WIDTH; d1++) {
@@ -246,3 +231,18 @@ void cCodeEquivalentThreeLoops(TwoDMemrefI8_t *x, TwoDMemrefI8_t *y,
     }
   }
 }
+
+
+  // print2DMemRefI8_t(&memrefA,16);
+  // print2DMemRefI8_t(&memrefB,16);
+  // print2DMemRefI32_t(&memrefC,16);
+  
+  // printf("Size of int8_t is %d\n", sizeof(int8_t));
+  // printf("Size of int32_t is %d\n", sizeof(int32_t));
+  // printf("sizeof(int8_t)*MAT_WIDTH is %u\n",sizeof(int8_t)*MAT_WIDTH_SQUARED);
+  // printf("sizeof(int32_t)*MAT_WIDTH is %u\n\n",sizeof(int32_t)*MAT_WIDTH_SQUARED);
+
+  // printf("memrefA.data: %x \nmemrefB.data %x \nmemrefC.data %x \ngolden.data %x\n", memrefA.data, memrefB.data, memrefC.data, memrefGolden.data);
+  // printf("memrefA.data: %u \nmemrefB.data %u \nmemrefC.data %u \ngolden.data %u\n", memrefA.data, memrefB.data, memrefC.data, memrefGolden.data);
+
+  // printf("PAMPLEMOUSSE VOLCANO: Initializing each matrix.\n");

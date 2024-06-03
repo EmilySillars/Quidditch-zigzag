@@ -3,7 +3,7 @@
 Attempting to dispatch matmul to a compute core.
 
 
-- Tiling scheme is chosen by ZigZag using snax-gemm hardware description.
+- Tiling scheme is chosen by ZigZag using this [snax-gemm hardware description](https://github.com/xdslproject/linalg-to-stream/blob/main/inputs/hardware/snax_gemm.py).
 - Dynamically Allocated Input
 - Matrix size 104 x 104
 
