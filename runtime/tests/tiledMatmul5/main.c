@@ -5,7 +5,6 @@
 #include "../lib-zigzag/data.h"
 #include "../lib-zigzag/memref.h"
 
-
 /*
  * These libraries are included from github.com/KULeuven-MICAS/snitch_cluster
  * Interested users, might want to look at:
@@ -24,71 +23,43 @@
  *
  * */
 
-// meshRow, tileSize and meshCol are defined in snax-gemm-params.h v v v
-// Copyright 2023 KU Leuven.
-// Licensed under the Apache License, Version 2.0, see LICENSE for details.
-// SPDX-License-Identifier: Apache-2.0
-//
-// Xiaoling Yi <xiaoling.yi@esat.kuleuven.be>
-#define tileSize 8
-#define meshRow 8
-#define meshCol 8
-// meshRow, tileSize and meshCol are defined in snax-gemm-params.h ^ ^ ^
-
-uint8_t Batch = 1;
-// meshRow, tileSize and meshCol are defined in snax-gemm-params.h
-uint8_t M_param = M_size / meshRow;
-uint8_t K_param = K_size / tileSize;
-uint8_t N_param = N_size / meshCol;
-// Extracted from datagen.py in snitch_cluster repo
-uint32_t strideInnermostA = 256;
-uint32_t strideInnermostB = 256;
-uint32_t strideInnermostC = 256;
-uint32_t ldA = 512;
-uint32_t ldB = 512;
-uint32_t ldC = 512;
-uint32_t strideA = 0;
-uint32_t strideB = 0;
-uint32_t strideC = 0;
-
 // Kernel provided via external definition
                                 
-extern void _mlir_ciface_tile_compute(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
-                                TwoDMemrefI32_t *c);
-
 extern void _mlir_ciface_mlirFunc(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
                            TwoDMemrefI32_t *c);
-
-
-
-int trouble = 0; 
-
+// this tile_compute function is not used in this program
+extern void _mlir_ciface_tile_compute(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
+                                TwoDMemrefI32_t *c);
+// compute mat mul
 void cCodeEquivalentThreeLoops(TwoDMemrefI8_t *x, TwoDMemrefI8_t *y,
                                TwoDMemrefI32_t *z);
+// helper functions
 void cCodeEquivalent(TwoDMemrefI8_t *x, TwoDMemrefI8_t *y, TwoDMemrefI32_t *z);
 void print2DMemRefI8_t(TwoDMemrefI8_t *x, int32_t width);
 void print2DMemRefI32_t(TwoDMemrefI32_t *x, int32_t width);
 void print2DMemRefI32_t_notASquare(TwoDMemrefI32_t *x, int32_t stride_x, int32_t stride_y);
-
-
+// some more c functions that the mlir code has access to - not used in this program
 void _mlir_ciface_hola(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b, TwoDMemrefI32_t *c){
   printf("hola world!\n");
 }
-
+int trouble = 0; // bad global integer - TODO: get rid of this
 void _mlir_ciface_dispatch_to_accelerator(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b, TwoDMemrefI32_t *c){
   printf("calling tile compute... %d\n",trouble);
-  trouble++;
+  trouble ++;
 //   (void)snrt_mcycle();
 //   _mlir_ciface_tile_compute(a, b, c);
 //   snrt_cluster_hw_barrier();
 //   (void)snrt_mcycle();
 }
 
+// we assume square matrices
 #define MAT_WIDTH 104
 #define MAT_WIDTH_SQUARED (MAT_WIDTH * MAT_WIDTH)
 
 int main() {
-  if (!snrt_is_dm_core()) return 0;
+  if (!snrt_is_dm_core()) {
+    return 0;
+  }
 
   // Create memref objects for data stored in L3
   TwoDMemrefI8_t memrefA;
@@ -112,16 +83,6 @@ int main() {
   memrefGolden.aligned_data = memrefGolden.data;
   memrefGolden.offset = 0;
 
-  // printf("Size of int8_t is %d\n", sizeof(int8_t));
-  // printf("Size of int32_t is %d\n", sizeof(int32_t));
-  // printf("sizeof(int8_t)*MAT_WIDTH is %u\n",sizeof(int8_t)*MAT_WIDTH_SQUARED);
-  // printf("sizeof(int32_t)*MAT_WIDTH is %u\n\n",sizeof(int32_t)*MAT_WIDTH_SQUARED);
-
-  // printf("memrefA.data: %x \nmemrefB.data %x \nmemrefC.data %x \ngolden.data %x\n", memrefA.data, memrefB.data, memrefC.data, memrefGolden.data);
-  // printf("memrefA.data: %u \nmemrefB.data %u \nmemrefC.data %u \ngolden.data %u\n", memrefA.data, memrefB.data, memrefC.data, memrefGolden.data);
-
-  // printf("PAMPLEMOUSSE VOLCANO: Initializing each matrix.\n");
-
   // initialize the matrices
   for (size_t i = 0; i < MAT_WIDTH_SQUARED; i++){
     memrefA.aligned_data[i] = (int8_t) 2;
@@ -131,23 +92,16 @@ int main() {
     memrefB.aligned_data[i] = (int8_t) 3;
   }
 
-  // print2DMemRefI8_t(&memrefA,16);
-  // print2DMemRefI8_t(&memrefB,16);
-  // print2DMemRefI32_t(&memrefC,16);
-
-  // printf("PAMPLEMOUSSE VOLCANO: Calculating Golden Value.\n");
+  // perform C code matmul to get the ground truth
   cCodeEquivalentThreeLoops(&memrefA, &memrefB, &memrefGolden);
 
-  // printf("PAMPLEMOUSSE VOLCANO: Calling MLIR matmul.\n");
-  // -------------------------------------------------- V
-  // I want a C function to call an MLIR function
+
+  // Call the MLIR tiled matmul function
   _mlir_ciface_mlirFunc(&memrefA, &memrefB, &memrefC);
 
-  // I want that MLIR function to call a C function
-  // -------------------------------------------------- ^
-
   int nerr = 0;
-
+  
+  // check for correctness
   for (int i = 0; i < M_size * N_size; i++) {
     int32_t error = memrefC.aligned_data[i] - memrefGolden.aligned_data[i];  // C_golden[i];
     if (error != 0){
@@ -159,13 +113,10 @@ int main() {
 
   if (nerr != 0) {
     printf("Output does not match the golden value!\n");
-    // print2DMemRefI32_t(&memrefC,16);
+    // print2DMemRefI32_t(&memrefC,16); // debugging
   } else {
     printf("Output Correct\n");
   }
-  // print2DMemRefI32_t(&memrefC,20);
-  // // cCodeEquivalentThreeLoops(&memrefA, &memrefB, &memrefC );
-  // print2DMemRefI32_t(&memrefGolden,20);
 
   // free everything before exiting!
   free(memrefA.data);

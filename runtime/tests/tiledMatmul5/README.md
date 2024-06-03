@@ -67,6 +67,12 @@ for d2; d2 < 104; d2++;
   arg7[d0][d1] += arg3[d0][d2] * arg4[d2][d1]; // and this is a MAC!
 ```
 
+#### d. SNAX Gemm Accelerator Hardware Description
+
+- [This is the hardware description fed to ZigZag](https://github.com/xdslproject/linalg-to-stream/blob/main/inputs/hardware/snax_gemm.py)
+
+- Eventually we want a snitch cluster hardware description, because that is the actual target we are running on in this repo
+
 ## II. Output from ZigZag
 
 ```
