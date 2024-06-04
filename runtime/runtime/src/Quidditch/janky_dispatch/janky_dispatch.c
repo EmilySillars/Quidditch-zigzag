@@ -29,7 +29,7 @@ bool imDone(){
 
 bool iShouldExit(){
   uint32_t hoodle = snrt_cluster_core_idx();
-  return exitNow[hoodle]==1;
+  return (exitNow[hoodle]==1);
 }
 
 void computeCoreGo(uint32_t id){
@@ -62,17 +62,17 @@ static struct worker_metadata_t {
 // TODO: All of this synchronization in this file could use hardware barriers
 // which might be more efficient.
 static void park_worker() {
-  worker_metadata.workers_waiting++;
-  asm volatile("wfi");
-  snrt_int_cluster_clr(1 << snrt_cluster_core_idx());
-  worker_metadata.workers_waiting--;
+  // worker_metadata.workers_waiting++;
+  // asm volatile("wfi");
+  // snrt_int_cluster_clr(1 << snrt_cluster_core_idx());
+  // worker_metadata.workers_waiting--;
 }
 
 static void wake_all_workers() {
-  assert(snrt_is_dm_core() && "DM core is currently our host");
-  uint32_t compute_cores = snrt_cluster_compute_core_num();
+  // assert(snrt_is_dm_core() && "DM core is currently our host");
+  // uint32_t compute_cores = snrt_cluster_compute_core_num();
  // Compute cores are indices 0 to compute_cores.
-  snrt_int_cluster_set((1 << compute_cores) - 1); 
+  // snrt_int_cluster_set((1 << compute_cores) - 1); 
 }
 
 void quidditch_dispatch_wait_for_workers() {
@@ -110,8 +110,11 @@ int quidditch_dispatch_enter_worker_loop() {
   //   int thiscore = snrt_cluster_core_idx();
   // if (thiscore != 0)
   //   return 0;
-  snrt_interrupt_enable(IRQ_M_CLUSTER);
+  // snrt_interrupt_enable(IRQ_M_CLUSTER);
+  //printf("addr of exits is %x\n",&exitNow);
   while(!iShouldExit()){
+     //printf("inside iShouldExit: %d, %d, %d, %d, %d, %d, %d, %d\n", exitNow[0], exitNow[1], exitNow[2], exitNow[3], exitNow[4], exitNow[5], exitNow[6], exitNow[7]);
+    // printf("addr of exits is %x\n",&exitNow); //80004a58  
     //printf("waiting to exit %d\n",snrt_cluster_core_idx());
     // if(!imDone()){
     //   printf("going %d\n",snrt_cluster_core_idx());
@@ -146,9 +149,10 @@ void quidditch_dispatch_quit() {
   quidditch_dispatch_wait_for_workers();
   printf("telling cores to exit\n");
   tellCoresToExit();
-  printf("exit now: %d, %d, %d, %d, %d, %d, %d, %d\n", exitNow[0], exitNow[1], exitNow[2], exitNow[3], exitNow[4], exitNow[5], exitNow[6], exitNow[7]);
-  
-  worker_metadata.exit = true;
+  printf("exit now %x: %d, %d, %d, %d, %d, %d, %d, %d\n", &exitNow, exitNow[0], exitNow[1], exitNow[2], exitNow[3], exitNow[4], exitNow[5], exitNow[6], exitNow[7]);
+  // DMA core says exits array is at: 80004a18
+  // compute core says exits array is at: 80004a58
+  //worker_metadata.exit = true;
   //wake_all_workers();
 }
 
