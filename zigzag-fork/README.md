@@ -32,7 +32,7 @@ cd runtime/tests
 | ~~Tiled Matrix Multiplication 4~~<br />```sh zigzag-spike-build-and-run.sh tiledMatmul4.mlir```<br />Full details [here](../runtime/tests/tiledMatmul4/README.md) | 17 x 17     | dynamic    | Fixed  | ZigZag w/ gemm | ***TODO*** | ***TODO*** |
 | **Tiled Matrix Multiplication 5**<br />```sh zigzag-spike-build-and-run.sh tiledMatmul5.mlir```<br />Full details [here](../runtime/tests/tiledMatmul5/README.md) | 104 x 104   | dynamic    | Fixed  | ZigZag w/ gemm | TODO       | yes        |
 | ~~Tiled Matrix Multiplication 6~~<br />```sh zigzag-spike-build-and-run.sh tiledMatmul6.mlir```<br /><br />Uses MLIR Subviews!<br />Full details [here](../runtime/tests/tiledMatmul6/README.md) | 104 x 104   | dynamic    | Fixed  | ZigZag w/ gemm | ***TODO*** | ***TODO*** |
-| ~~Tiled Matrix Multiplication 7~~<br />```sh zigzag-spike-build-and-run.sh tiledMatmul7.mlir```<br /><br />Full details [here](../runtime/tests/tiledMatmul7/README.md) |             |            |        |                | ***TODO*** | ***TODO*** |
+| ~~Tiled Matrix Multiplication 7~~<br />```sh zigzag-spike-build-and-run.sh tiledMatmul7.mlir```<br /><br />Trying to dispatch to accelerator<br />Full details [here](../runtime/tests/tiledMatmul7/README.md) |             |            |        |                | ***TODO*** | ***TODO*** |
 | ~~Tiled Matrix Multiplication 8~~<br />```sh zigzag-spike-build-and-run.sh tiledMatmul8.mlir```<br />Full details [here](../runtime/tests/tiledMatmul8/README.md) | 19 x 19     | dynamic    | Fixed  | ZigZag w/ gemm | ***TODO*** | ***TODO*** |
 | **Tiled Matrix Multiplication 9**<br />```sh zigzag-spike-build-and-run.sh tiledMatmul9.mlir```<br />Full details [here](../runtime/tests/tiledMatmul9/README.md) | 600x600     | dynamic    | Fixed  | ZigZag w/ gemm | TODO       | TODO       |
 
@@ -53,10 +53,9 @@ cd runtime/tests
 
 3. ```
    sudo chmod 666 /var/run/docker.sock
-   docker run --rm ghcr.io/opencompl/quidditch/toolchain:main
    docker run --rm ghcr.io/opencompl/quidditch/toolchain:main tar -cC /opt/quidditch-toolchain . | tar -xC ./toolchain
    ```
-   
+
 4. Install python requirements:
 
    ```
@@ -73,36 +72,24 @@ cd runtime/tests
    cd runtime && mkdir build
    ```
 
-7. switch to the manual-transformations branch :)
-   ```
-   git switch manual-transformations
-   ```
-
 ### 2. Set up Snitch-Specific Spike
 
 1. [clone the repo](https://github.com/opencompl/riscv-isa-sim/tree/CSR-Barrier) and switch to the  `origin/CSR-Barrier` branch:
 
    ```
    git clone https://github.com/opencompl/riscv-isa-sim.git
-   cd riscv-isa-sim
-   git switch CSR-Barrier
+   git switch origin/CSR-Barrier
    ```
 
 2. ```
    apt-get install device-tree-compiler libboost-regex-dev
+   cd riscv-isa-sim
    mkdir build
    cd build
-   ```
-
-3. Set the `--prefix` to the location of your [riscv toolchain install](https://github.com/riscv-collab/riscv-gnu-toolchain), for example: `--prefix=/opt/riscv/bin`
-
-   ```
-   ../configure --with-target=riscv32-unknown-elf --with-isa=RV32IMAFD --prefix=/opt/riscv/bin
+   ../configure --with-target=riscv32-unknown-elf --with-isa=RV32IMAFD --prefix=/home/hoppip/riscv-isa-sim/build
    make
    make install
    ```
-
-   
 
 ### 3. Set Environment Variables 
 
@@ -299,27 +286,6 @@ Comment out the contents of `Quidditch-zigzag/runtime/samples/CMakeLists.txt`
 
   ```
   sh compile-all-mlir-tests-for-riscv.sh
-  ```
-
-
-- Error:
-  ```
-  configure: error: Could not find a version of the Boost::Asio library!
-  ```
-
-  Solution: 
-  ```
-  sudo apt install libboost-all-dev
-  ```
-
-- Error:
-  ```
-  zigzag-spike-build-and-run.sh: 12: Bad substitution
-  ```
-
-  Instead of running the script with `sh`, try `bash`, for ex:
-  ```
-  bash zigzag-spike-build-and-run.sh matmul.mlir
   ```
 
   

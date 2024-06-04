@@ -65,7 +65,7 @@ add_executable(TiledMatmul6 tiledMatmul6/main.c
                            lib-zigzag/data.h
                            lib-zigzag/memref.h 
                            tiledMatmul6/out/tiledMatmul6.o)
-target_link_libraries(TiledMatmul6 snRuntime)
+target_link_libraries(TiledMatmul6 snRuntime Quidditch::janky_dispatch::janky_dispatch)
 
 # Testing tiled matrix multiplication on the DMA core
 add_executable(TiledMatmul7 tiledMatmul7/main.c

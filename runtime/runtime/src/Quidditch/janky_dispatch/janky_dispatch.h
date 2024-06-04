@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+
 //#include "iree/hal/local/executable_library.h"
 
 /// Entry point for compute cores to be parked and called upon for kernel
@@ -25,12 +26,12 @@ bool quidditch_dispatch_errors_occurred();
 /// Configures the kernel, environment and dispatch state to use for subsequent
 /// 'quidditch_dispatch_submit_workgroup' calls. It is impossible for a cluster
 /// to execute more than one kernel at a time.
-void quidditch_dispatch_set_kernel(uint32_t computeCoreID);
+void quidditch_dispatch_set_kernel(uint32_t hoodle);
     // iree_hal_executable_dispatch_v0_t kernel,
     // const iree_hal_executable_environment_v0_t* environment,
     // const iree_hal_executable_dispatch_state_v0_t* dispatch_state);
 
 /// Dispatches the compute core with the id 'workgroup_state->processorId' to
 /// execute the last configured kernel with the given workgroup state.
-void quidditch_dispatch_submit_workgroup();
+void quidditch_dispatch_submit_workgroup(uint32_t processor_id);
    // const iree_hal_executable_workgroup_state_v0_t* workgroup_state);

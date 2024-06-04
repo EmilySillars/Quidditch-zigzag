@@ -95,11 +95,15 @@ int main() {
   //if (!snrt_is_dm_core()) return 0;
 
   // If I am a compute core, standby for kernel execution.
-  if (!snrt_is_dm_core()) return quidditch_dispatch_enter_worker_loop();
+  if (!snrt_is_dm_core()) {
+    return quidditch_dispatch_enter_worker_loop();
+    printf("IMPOSSIBLE\n");
+  }
 
-  // If I reach after the above if-statement, I am the DMA core.
-  printf("SNRT_CLUSTER_CORE_NUM is %d\n",SNRT_CLUSTER_CORE_NUM);
-  printf("snrt_cluster_compute_core_num() is %d\n", snrt_cluster_compute_core_num());
+  printf("I am the dma core with id %d\n",snrt_cluster_core_idx());
+  // // If I reach after the above if-statement, I am the DMA core.
+  // printf("SNRT_CLUSTER_CORE_NUM is %d\n",SNRT_CLUSTER_CORE_NUM);
+  // printf("snrt_cluster_compute_core_num() is %d\n", snrt_cluster_compute_core_num());
   // Create memref objects for data stored in L3
   TwoDMemrefI8_t memrefA;
   memrefA.data = (int8_t *) malloc(sizeof(int8_t)*MAT_WIDTH_SQUARED); 
@@ -131,6 +135,8 @@ int main() {
 
   // -------------------------------------------------- V
   // Run the computation on a compute core??
+  quidditch_dispatch_set_kernel(42);
+  quidditch_dispatch_submit_workgroup(4);
   _mlir_ciface_mlirFunc(&memrefA, &memrefB, &memrefC);
 
   // I want that MLIR function to call a C function
@@ -161,6 +167,7 @@ int main() {
 
   // release all compute cores from the work loop
   quidditch_dispatch_quit(); 
+  printf("inside main after quidditch_dispatch_quit();\n");
   return nerr;
 }
 
