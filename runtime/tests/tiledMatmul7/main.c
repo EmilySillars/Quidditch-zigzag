@@ -4,56 +4,8 @@
 #include <team_decls.h>
 #include "../lib-zigzag/data.h"
 #include "../lib-zigzag/memref.h"
-#include <Quidditch/janky_dispatch/janky_dispatch.h>
+#include <Quidditch/zigzag_dispatch/zigzag_dispatch.h>
 #include <snitch_cluster_defs.h>
-//#include "dispatch.h"
-// /home/hoppip/Quidditch-zigzag/runtime/runtime/src/Quidditch/janky_dispatch/dispatch.h
-
-
-/*
- * These libraries are included from github.com/KULeuven-MICAS/snitch_cluster
- * Interested users, might want to look at:
- *
- * /sw/snRuntime/api
- * /target/snitch_cluster/sw/runtime/rtl/src
- * /target/snitch_cluster/sw/runtime/common
- * */
-
-
-/* These libraries are included from github.com/KULeuven-MICAS/snitch_cluster
- * Interested users, might want to look at:
- *
- * /target/snitch_cluster/sw/snax/gemm/include"
- * /target/snitch_cluster/sw/snax/mac/include"
- *
- * */
-
-// meshRow, tileSize and meshCol are defined in snax-gemm-params.h v v v
-// Copyright 2023 KU Leuven.
-// Licensed under the Apache License, Version 2.0, see LICENSE for details.
-// SPDX-License-Identifier: Apache-2.0
-//
-// Xiaoling Yi <xiaoling.yi@esat.kuleuven.be>
-#define tileSize 8
-#define meshRow 8
-#define meshCol 8
-// meshRow, tileSize and meshCol are defined in snax-gemm-params.h ^ ^ ^
-
-uint8_t Batch = 1;
-// meshRow, tileSize and meshCol are defined in snax-gemm-params.h
-uint8_t M_param = M_size / meshRow;
-uint8_t K_param = K_size / tileSize;
-uint8_t N_param = N_size / meshCol;
-// Extracted from datagen.py in snitch_cluster repo
-uint32_t strideInnermostA = 256;
-uint32_t strideInnermostB = 256;
-uint32_t strideInnermostC = 256;
-uint32_t ldA = 512;
-uint32_t ldB = 512;
-uint32_t ldC = 512;
-uint32_t strideA = 0;
-uint32_t strideB = 0;
-uint32_t strideC = 0;
 
 // Kernel provided via external definition
                                 
@@ -62,8 +14,6 @@ extern void _mlir_ciface_tile_compute(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
 
 extern void _mlir_ciface_mlirFunc(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
                            TwoDMemrefI32_t *c);
-
-
 
 int trouble = 0; 
 
@@ -82,10 +32,6 @@ void _mlir_ciface_hola(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b, TwoDMemrefI32_t *c)
 void _mlir_ciface_dispatch_to_accelerator(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b, TwoDMemrefI32_t *c){
   printf("calling tile compute... %d\n",trouble);
   trouble++;
-//   (void)snrt_mcycle();
-//   _mlir_ciface_tile_compute(a, b, c);
-//   snrt_cluster_hw_barrier();
-//   (void)snrt_mcycle();
 }
 
 #define MAT_WIDTH 104
@@ -100,7 +46,7 @@ int main() {
     printf("IMPOSSIBLE\n");
   }
 
-  printf("I am the dma core with id %d\n",snrt_cluster_core_idx());
+ // printf("I am the dma core with id %d\n",snrt_cluster_core_idx());
   // // If I reach after the above if-statement, I am the DMA core.
   // printf("SNRT_CLUSTER_CORE_NUM is %d\n",SNRT_CLUSTER_CORE_NUM);
   // printf("snrt_cluster_compute_core_num() is %d\n", snrt_cluster_compute_core_num());
@@ -135,8 +81,8 @@ int main() {
 
   // -------------------------------------------------- V
   // Run the computation on a compute core??
-  quidditch_dispatch_set_kernel(42);
-  quidditch_dispatch_submit_workgroup(4);
+  quidditch_dispatch_set_kernel();
+  quidditch_dispatch_submit_workgroup(1);
   _mlir_ciface_mlirFunc(&memrefA, &memrefB, &memrefC);
 
   // I want that MLIR function to call a C function
@@ -167,7 +113,7 @@ int main() {
 
   // release all compute cores from the work loop
   quidditch_dispatch_quit(); 
-  printf("inside main after quidditch_dispatch_quit();\n");
+ // printf("inside main after quidditch_dispatch_quit();\n");
   return nerr;
 }
 

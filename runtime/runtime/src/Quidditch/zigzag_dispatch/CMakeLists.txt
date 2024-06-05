@@ -1,11 +1,11 @@
 
 iree_cc_library(
     NAME
-    janky_dispatch
+    zigzag_dispatch
     HDRS
     #../../../../../snitch_cluster/target/snitch_cluster/sw/runtime/rtl/src/snrt.h
     SRCS
-    janky_dispatch.c
+    zigzag_dispatch.c
     DEPS
     snRuntime
     PUBLIC
