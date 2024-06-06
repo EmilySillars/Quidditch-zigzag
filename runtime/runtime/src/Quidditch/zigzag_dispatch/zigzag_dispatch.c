@@ -10,6 +10,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 #include <team_decls.h>
 
 // TODO: This should be cluster local.
@@ -17,6 +18,121 @@ static struct worker_metadata_t {
   atomic_uint workers_waiting;
   atomic_bool exit;
 } worker_metadata = {0, false};
+
+// // C Program for the above approach
+// #include<stdio.h>
+// int main()
+// {
+//     int i, n=2;
+//     char str[50];
+
+//     //open file sample.txt in write mode
+//     FILE *fptr = fopen("sample.txt", "w");
+//     if (fptr == NULL)
+//     {
+//         printf("Could not open file");
+//         return 0;
+//     }
+
+//     for (i = 0; i < n; i++)
+//     {
+//         puts("Enter a name");
+//         scanf("%[^\n]%*c", str);
+//         fprintf(fptr,"%d.%s\n", i, str);
+//     }
+//     fclose(fptr);
+
+//     return 0;
+// }
+// void setup_outputs(){
+//   const char* base = "out0.txt";
+//   char name[9];
+//   //char* strcpy(char* destination, const char* source);
+//   strcpy(name, base);
+//   for (size_t i = 0; i < 9; i++){
+//     name[3] = (char) (i+48);
+//     fprintf(stderr,"%s\n", name);
+//     //outputs[i] = fopen(name, "w");
+//   }
+//   // printf("%s", base);
+// }
+// void close_outputs(){
+//   //   for (size_t i = 0; i < 9; i++){
+//   //     fclose(outputs[i]);
+//   // }
+// }
+
+// operation dumb down the code vvvvvvvvvvvvvvvvvvvvvvvvvv
+
+//(uint32_t*)CLUSTER_CLINT_SET_ADDR
+// FILE * outputs[9];
+  // snrt_interrupt_enable(IRQ_M_CLUSTER);
+  // // printf("mask before: %x",*((uint32_t*)CLUSTER_CLINT_SET_ADDR));
+  // uint32_t compute_cores = snrt_cluster_compute_core_num();
+  // printf("setting mask to %x\n", (1 << compute_cores) - 1);
+  // snrt_int_cluster_set((1 << compute_cores) - 1);
+  // uint32_t reg = 0;
+  // read_csr(reg);
+  // printf("apparently reg is %x\n",reg);
+  // print_csr();
+
+atomic_uint bins[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+atomic_bool sleep[9] = {true, true, true, true, true, true, true, true, true};
+
+
+int compute_core_loop() {
+  snrt_interrupt_enable(IRQ_M_CLUSTER);  // extremely important! enables
+                                         // interrupts on the cluster!!!
+  bins[snrt_cluster_core_idx()] = snrt_cluster_core_idx();
+  while (!worker_metadata.exit) {
+    while (sleep[snrt_cluster_core_idx()]) {
+      ;
+    }
+    // If didn't get woken up to exit,
+    if (!worker_metadata.exit) {
+      // do something
+      bins[snrt_cluster_core_idx()]++;
+      // go back to sleep
+      sleep[snrt_cluster_core_idx()] = true;
+    }
+  }
+  snrt_interrupt_disable(IRQ_M_CLUSTER);
+  return 0;
+}
+
+void tell_compute_cores_to_exit() { 
+  worker_metadata.exit = true; 
+  // cores can't exit until they wake up
+  wake_up_compute_cores();
+}
+
+void wake_up_compute_cores() {
+  for (size_t i = 0; i < 8; i++) {
+    sleep[i] = false;
+  }
+}
+
+void wait_for_all_compute_cores() {
+  while(!(sleep[0]&&sleep[1]&&sleep[2]&&sleep[3]&&sleep[4]&&sleep[5]&&sleep[6]&&sleep[7]&&sleep[8])){
+
+  }
+}
+
+void print_csr() {
+  uint32_t vendorid;
+  __asm__ volatile("csrr    %0, mvendorid"
+                   : "=r"(vendorid) /* output : register */
+                   :                /* input : none */
+                   : /* clobbers: none */);
+  printf("csr: %x\n", vendorid);
+}
+
+void printBins() {
+  printf("bins: %d %d %d %d %d %d %d %d %d\n", bins[0], bins[1], bins[2],
+         bins[3], bins[4], bins[5], bins[6], bins[7], bins[8]);
+}
+// wake_all_workers()
+//  operation dumb down the code ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 // TODO: All of this synchronization in this file could use hardware barriers
 // which might be more efficient.
@@ -32,26 +148,28 @@ static void park_worker() {
   worker_metadata.workers_waiting--;
 }
 
-static void wake_all_workers() {
+void wake_all_workers() {
   assert(snrt_is_dm_core() && "DM core is currently our host");
   uint32_t compute_cores = snrt_cluster_compute_core_num();
   // Compute cores are indices 0 to compute_cores.
   snrt_int_cluster_set((1 << compute_cores) -
                        1);  // use bitmask to wake up compute cores using a
                             // local cluster interrupt!!!
-  printf("end of wake all workers\n");
+  // printf("end of wake all workers\n");
 }
 
 void quidditch_dispatch_wait_for_workers() {
   assert(snrt_is_dm_core() && "DM core is currently our host");
   // Spin until all compute corkers are parked.
-  printf("waiting for workers -- workers_waiting: %d exit: %d\n",worker_metadata.workers_waiting, worker_metadata.exit);
-  
+  printf("waiting for workers -- workers_waiting: %d exit: %d\n",
+         worker_metadata.workers_waiting, worker_metadata.exit);
+
   // while the number of workers waiting /= computee core num)
   while (worker_metadata.workers_waiting != snrt_cluster_compute_core_num())
 
     ;
-  printf("waited for workers -- workers_waiting: %d exit: %d\n",worker_metadata.workers_waiting, worker_metadata.exit);
+  printf("waited for workers -- workers_waiting: %d exit: %d\n",
+         worker_metadata.workers_waiting, worker_metadata.exit);
 }
 
 // TODO: This only works for a single cluster by using globals. Should be
@@ -62,7 +180,8 @@ bool quidditch_dispatch_errors_occurred() { return error; }
 
 void quidditch_dispatch_set_kernel() {
   // set function pointer
-  printf("inside set kernel\nworkers_waiting: %d exit: %d\n",worker_metadata.workers_waiting, worker_metadata.exit);
+  printf("inside set kernel\nworkers_waiting: %d exit: %d\n",
+         worker_metadata.workers_waiting, worker_metadata.exit);
 }
 
 int quidditch_dispatch_enter_worker_loop() {
@@ -86,13 +205,17 @@ int quidditch_dispatch_enter_worker_loop() {
 }
 
 void quidditch_dispatch_quit() {
-  printf("quidditch_dispatch_quit- workers_waiting: %d exit: %d\n",worker_metadata.workers_waiting, worker_metadata.exit);
+  printf("quidditch_dispatch_quit- workers_waiting: %d exit: %d\n",
+         worker_metadata.workers_waiting, worker_metadata.exit);
   quidditch_dispatch_wait_for_workers();
-  printf("quidditch_dispatch_quit- workers_waiting: %d exit: %d\n",worker_metadata.workers_waiting, worker_metadata.exit);
+  printf("quidditch_dispatch_quit- workers_waiting: %d exit: %d\n",
+         worker_metadata.workers_waiting, worker_metadata.exit);
   worker_metadata.exit = true;
-  printf("quidditch_dispatch_quit- workers_waiting: %d exit: %d\n",worker_metadata.workers_waiting, worker_metadata.exit);
+  printf("quidditch_dispatch_quit- workers_waiting: %d exit: %d\n",
+         worker_metadata.workers_waiting, worker_metadata.exit);
   wake_all_workers();
-  printf("quidditch_dispatch_quit- workers_waiting: %d exit: %d\n",worker_metadata.workers_waiting, worker_metadata.exit);
+  printf("quidditch_dispatch_quit- workers_waiting: %d exit: %d\n",
+         worker_metadata.workers_waiting, worker_metadata.exit);
 }
 
 void quidditch_dispatch_submit_workgroup(uint32_t processor_id) {

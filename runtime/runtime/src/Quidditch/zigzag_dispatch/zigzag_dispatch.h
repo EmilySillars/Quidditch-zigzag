@@ -3,8 +3,19 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdatomic.h>
 
 
+// operation dumb down the code vvvvvvvvvvvvvvvvvvvvvvvvvv
+int compute_core_loop(void);
+void tell_compute_cores_to_exit(void);
+void printBins(void);
+void setup_outputs(void);
+void close_outputs(void);
+void wake_up_compute_cores(void);
+void wait_for_all_compute_cores(void);
+void print_csr(void);
+// operation dumb down the code ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 /// Entry point for compute cores to be parked and called upon for kernel
 /// execution. Cores are halted within the function until
