@@ -31,9 +31,9 @@ cd runtime/tests
 | **Tiled Matrix Multiplication 3**<br />```sh zigzag-spike-build-and-run.sh tiledMatmul3.mlir```<br />Full details [here](../runtime/tests/tiledMatmul3/README.md) | 16 x 16     | dynamic    | Fixed  | ZigZag w/ gemm | yes (slow) | yes        |
 | ~~Tiled Matrix Multiplication 4~~<br />```sh zigzag-spike-build-and-run.sh tiledMatmul4.mlir```<br />Full details [here](../runtime/tests/tiledMatmul4/README.md) | 17 x 17     | dynamic    | Fixed  | ZigZag w/ gemm | ***TODO*** | ***TODO*** |
 | **Tiled Matrix Multiplication 5**<br />```sh zigzag-spike-build-and-run.sh tiledMatmul5.mlir```<br />Full details [here](../runtime/tests/tiledMatmul5/README.md) | 104 x 104   | dynamic    | Fixed  | ZigZag w/ gemm | TODO       | yes        |
-| ~~Tiled Matrix Multiplication 6~~<br />```sh zigzag-spike-build-and-run.sh tiledMatmul6.mlir```<br /><br />Uses MLIR Subviews!<br />Full details [here](../runtime/tests/tiledMatmul6/README.md) | 104 x 104   | dynamic    | Fixed  | ZigZag w/ gemm | ***TODO*** | ***TODO*** |
-| ~~Tiled Matrix Multiplication 7~~<br />```sh zigzag-spike-build-and-run.sh tiledMatmul7.mlir```<br /><br />Trying to dispatch to accelerator<br />Full details [here](../runtime/tests/tiledMatmul7/README.md) |             |            |        |                | ***TODO*** | ***TODO*** |
-| ~~Tiled Matrix Multiplication 8~~<br />```sh zigzag-spike-build-and-run.sh tiledMatmul8.mlir```<br />Full details [here](../runtime/tests/tiledMatmul8/README.md) | 19 x 19     | dynamic    | Fixed  | ZigZag w/ gemm | ***TODO*** | ***TODO*** |
+| Tiled Matrix Multiplication 6<br />```sh zigzag-spike-build-and-run.sh tiledMatmul6.mlir```<br /><br />Uses MLIR Subviews AND dispatches to compute core!<br />Full details [here](../runtime/tests/tiledMatmul6/README.md) | 104 x 104   | dynamic    | Fixed  | ZigZag w/ gemm | ***TODO*** | ***TODO*** |
+| tbd                                                          |             |            |        |                |            |            |
+| tbd                                                          |             |            |        |                |            |            |
 | **Tiled Matrix Multiplication 9**<br />```sh zigzag-spike-build-and-run.sh tiledMatmul9.mlir```<br />Full details [here](../runtime/tests/tiledMatmul9/README.md) | 600x600     | dynamic    | Fixed  | ZigZag w/ gemm | TODO       | TODO       |
 
 ## Setup
@@ -140,22 +140,6 @@ Automate this step by running [setup.sh](setup.sh)
    sh zigzag-spike-build-and-run.sh holaWorld.mlir
    ```
 
-### 3. on x86 CPU (Reality Check) (segfaults! need to debug!)
-
-1) navigate to the tests directory: `cd runtime/tests`
-
-2) run the following script with the name of the kernel's mlir source file; for example, `holaWorld.mlir`
-
-  ```
-  sh ../run-w-x86.sh matmul-tiled.mlir
-  ```
-
-**Tests Not Working**
-
-- `sh run-w-x86.sh matmul.mlir` (not working! need to fix!)
-
-- `sh run-w-x86.sh matmul-tiled.mlir` (not working! need to fix!)
-
 ## Build + Run + Test (more steps, fewer shell scripts)
 
 1. Run cmake from inside the build directory
@@ -221,6 +205,38 @@ On fedora, do `sudo yum install graphviz`
    ```
 
    
+   
+   
+
+## Broken Pieces
+
+### Running on x86 CPU (Reality Check) (segfaults! need to debug!)
+
+1) navigate to the tests directory: `cd runtime/tests`
+
+2) run the following script with the name of the kernel's mlir source file; for example, `holaWorld.mlir`
+
+  ```
+sh ../run-w-x86.sh matmul-tiled.mlir
+  ```
+
+**Tests Not Working**
+
+- `sh run-w-x86.sh matmul.mlir` (not working! need to fix!)
+
+- `sh run-w-x86.sh matmul-tiled.mlir` (not working! need to fix!)
+
+  
+
+### wfi() in snitch runtime
+
+Cannot seem to wake up compute cores after they call wfi!
+
+Broken Example Programs:
+
+| Tiled Matrix Multiplication 7<br />```sh zigzag-spike-build-and-run.sh tiledMatmul7.mlir```<br /><br />Trying to dispatch to accelerator<br />Full details [here](../runtime/tests/tiledMatmul7/README.md) |         |         |       |                | ***TODO*** | ***TODO*** |
+| :----------------------------------------------------------- | ------- | ------- | ----- | -------------- | ---------- | ---------- |
+| **Tiled Matrix Multiplication 8**<br />```sh zigzag-spike-build-and-run.sh tiledMatmul8.mlir```<br />Full details [here](../runtime/tests/tiledMatmul8/README.md) | 19 x 19 | dynamic | Fixed | ZigZag w/ gemm | ***TODO*** | ***TODO*** |
 
 # Troubleshooting
 
