@@ -13,6 +13,7 @@ cmake .. -GNinja -DCMAKE_TOOLCHAIN_FILE=../toolchain/ToolchainFile.cmake &&\
 ninja ${basename^} &&\
 
 # run the program
+# $SPIKE/spike -l -m0x10000000:0x40000,0x80000000:0x80000000 --disable-dtb -p9 tests/${basename^}
 $SPIKE/spike -m0x10000000:0x40000,0x80000000:0x80000000 --disable-dtb -p9 tests/${basename^}
 
 # return to runtime/tests directory
