@@ -38,18 +38,28 @@ void _mlir_ciface_dispatch_to_accelerator(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b, 
 //   (void)snrt_mcycle();
 }
 
+// only kernel supported
+int matmul(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b, TwoDMemrefI32_t *c){
+  printf("hola\n");
+  _mlir_ciface_mlirFunc(a,b,c);
+  // no way to check if correct right now - that is host's job
+  return 0;
+}
+
 int main() {
   if (!snrt_is_dm_core()) {
     return compute_core_loop();
   }
 
-  printBins(); // 0
-  wake_up_compute_core(5); // 1
-  wait_for_compute_core(5);
-  printBins();
-  wake_up_compute_core(5); // 1
-  wait_for_compute_core(5);
-  printBins();
+  
+
+  //printBins(); // 0
+  // wake_up_compute_core(5); // 1
+  // wait_for_compute_core(5);
+  // printBins();
+  // wake_up_compute_core(5); // 1
+  // wait_for_compute_core(5);
+  // printBins();
 
     // Create memref objects for data stored in L3
   TwoDMemrefI8_t memrefA;
@@ -85,9 +95,12 @@ int main() {
   // perform C code matmul to get the ground truth
   cCodeEquivalentThreeLoops(&memrefA, &memrefB, &memrefGolden);
 
-
+  //void * args[3] = {(void *)&memrefA, (void *)&memrefB, (void *)&memrefC};
   // Call the MLIR tiled matmul function
-  _mlir_ciface_mlirFunc(&memrefA, &memrefB, &memrefC);
+ // _mlir_ciface_mlirFunc(&memrefA, &memrefB, &memrefC);
+  set_kernel(matmul, &memrefA, &memrefB, &memrefC);
+  wake_up_compute_core(5); // 1
+  wait_for_compute_core(5);
 
   int nerr = 0;
   

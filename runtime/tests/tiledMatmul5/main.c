@@ -21,6 +21,7 @@ void _mlir_ciface_dispatch_to_accelerator(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b, 
   trouble ++;
 }
 
+
 // we assume square matrices
 #define MAT_WIDTH 104
 #define MAT_WIDTH_SQUARED (MAT_WIDTH * MAT_WIDTH)
