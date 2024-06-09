@@ -14,12 +14,12 @@ extern void _mlir_ciface_mlirFunc(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
 
 // select the kernel the compute cores should execute,
 // and provide valid addresses for the kernel's arguments
-void set_kernel(int (*f)(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b, TwoDMemrefI32_t *c),
-                TwoDMemrefI8_t *a, TwoDMemrefI8_t *b, TwoDMemrefI32_t *c);
+void set_kernel(void (*f)(void *a, void *b, void *c),
+                void *a, void *b, void *c);
 
 // returns nonzero when a computation has failed
 // busy wait until DMA core says to exit or perform a computation
-int compute_core_loop(void);
+void compute_core_loop(void);
 
 void tell_compute_cores_to_exit(void);
 void wake_up_compute_cores(void);

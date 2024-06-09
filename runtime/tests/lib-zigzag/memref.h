@@ -1,3 +1,5 @@
+// copied from 
+// https://github.com/KULeuven-MICAS/snax-mlir/blob/f651860981efe0da84c0e5231bfcb03faf16890a/runtime/include/memref.h
 #pragma once
 
 #include <stdint.h>
@@ -36,16 +38,3 @@ struct TwoDMemrefI8 {
 typedef struct OneDMemrefI32 OneDMemrefI32_t;
 typedef struct TwoDMemrefI8 TwoDMemrefI8_t;
 typedef struct TwoDMemrefI32 TwoDMemrefI32_t;
-
-// we assume square matrices
-#define MAT_WIDTH 104
-#define MAT_WIDTH_SQUARED (MAT_WIDTH * MAT_WIDTH)
-
-// compute mat mul
-void cCodeEquivalentThreeLoops(TwoDMemrefI8_t *x, TwoDMemrefI8_t *y,
-                               TwoDMemrefI32_t *z);
-// helper functions
-void cCodeEquivalent(TwoDMemrefI8_t *x, TwoDMemrefI8_t *y, TwoDMemrefI32_t *z);
-void print2DMemRefI8_t(TwoDMemrefI8_t *x, int32_t width);
-void print2DMemRefI32_t(TwoDMemrefI32_t *x, int32_t width);
-void print2DMemRefI32_t_notASquare(TwoDMemrefI32_t *x, int32_t stride_x, int32_t stride_y);

@@ -1,3 +1,6 @@
+# copied from 
+# https://github.com/KULeuven-MICAS/snax-mlir/blob/main/kernels/simple_matmul/gendata.py
+
 # simple script to generate inputs and expected outputs for simple_matmult
 
 import numpy as np

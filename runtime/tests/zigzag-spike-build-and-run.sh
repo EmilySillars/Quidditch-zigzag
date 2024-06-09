@@ -17,5 +17,5 @@ ninja ${basename^} &&\
 $SPIKE/spike -m0x10000000:0x40000,0x80000000:0x80000000 --disable-dtb -p9 tests/${basename^}
 
 # return to runtime/tests directory
-cd tests
+cd ../tests
 
