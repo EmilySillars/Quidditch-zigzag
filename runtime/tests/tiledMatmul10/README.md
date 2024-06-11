@@ -1,9 +1,10 @@
-# Matrix Multiplication 6
+# Matrix Multiplication 10
 
 - This example runs tiled matrix multiplication on a snitch compute core.
-- Tiling scheme is chosen by ZigZag using gemm.py hardware description.
+- Tiling scheme is chosen by ZigZag using [gemm](https://github.com/KULeuven-MICAS/zigzag/blob/f53a6bf98b6eb4d4a592d3c5b1bf9cc6cce2eadc/zigzag/inputs/examples/hardware/Gemm.py) hardware description.
 - Dynamically Allocated Input
 - Matrix size 104 x 104
+- visualization of tiling scheme [here](https://docs.google.com/presentation/d/1_Xge48d5kN_uN03p3XD45aLoHuVnJ4UR7y0NiWZhvCE/edit?usp=sharing)
 
 [back to all tests](../../../zigzag-fork/README.md#Examples)
 

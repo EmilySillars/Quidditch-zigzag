@@ -17,7 +17,6 @@ extern void _mlir_ciface_mlirFunc(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
 void set_kernel(void (*f)(void *a, void *b, void *c),
                 void *a, void *b, void *c);
 
-// returns nonzero when a computation has failed
 // busy wait until DMA core says to exit or perform a computation
 void compute_core_loop(void);
 

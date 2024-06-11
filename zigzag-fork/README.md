@@ -2,10 +2,6 @@
 
 Run and Test MLIR examples with *Verilator and Spike Simulating Snitch*.
 
-Currently: All examples run on the snitch DMA core
-
-Someday: Run examples on Snitch *Cluster*!
-
 ##### Current Status
 
 - this repo deals with everything inside the blue box
@@ -22,19 +18,27 @@ Someday: Run examples on Snitch *Cluster*!
 cd runtime/tests
 ```
 
-| Test + Description                                           | Matrix Size | Allocation | Values | Tiling Method  | Verilator  | Spike      |
-| :----------------------------------------------------------- | ----------- | ---------- | ------ | -------------- | ---------- | ---------- |
-| **Hola World**<br />```sh zigzag-spike-build-and-run.sh holaWorld.mlir```<br />Full details [here](../runtime/tests/holaWorld/README.md) | n/a         | static     | Fixed  | n/a            | yes        | yes        |
-| **Matrix Multiplication**<br />```sh zigzag-verilator-build-and-run.sh matmul.mlir```<br />Full details [here](../runtime/tests/matmul/README.md) | 16 x 16     | static     | Fixed  | n/a            | yes        | yes        |
-| **Tiled Matrix Multiplication**<br />```sh zigzag-spike-build-and-run.sh tiledMatmul.mlir```<br />Full details [here](../runtime/tests/tiledMatmul/README.md) | 16 x 16     | static     | Fixed  | 2x16 and 16x2  | yes (slow) | yes        |
-| **Tiled Matrix Multiplication 2**<br />```sh zigzag-spike-build-and-run.sh tiledMatmul2.mlir```<br />Full details [here](../runtime/tests/tiledMatmul2/README.md) | 16 x 16     | static     | Fixed  | ZigZag w/ gemm | yes (slow) | yes        |
-| **Tiled Matrix Multiplication 3**<br />```sh zigzag-spike-build-and-run.sh tiledMatmul3.mlir```<br />Full details [here](../runtime/tests/tiledMatmul3/README.md) | 16 x 16     | dynamic    | Fixed  | ZigZag w/ gemm | yes (slow) | yes        |
-| ~~Tiled Matrix Multiplication 4~~<br />```sh zigzag-spike-build-and-run.sh tiledMatmul4.mlir```<br />Full details [here](../runtime/tests/tiledMatmul4/README.md) | 17 x 17     | dynamic    | Fixed  | ZigZag w/ gemm | ***TODO*** | ***TODO*** |
-| **Tiled Matrix Multiplication 5**<br />```sh zigzag-spike-build-and-run.sh tiledMatmul5.mlir```<br />Full details [here](../runtime/tests/tiledMatmul5/README.md) | 104 x 104   | dynamic    | Fixed  | ZigZag w/ gemm | TODO       | yes        |
-| Tiled Matrix Multiplication 6<br />```sh zigzag-spike-build-and-run.sh tiledMatmul6.mlir```<br /><br />Uses MLIR Subviews AND dispatches to compute core!<br />Full details [here](../runtime/tests/tiledMatmul6/README.md) | 104 x 104   | dynamic    | Fixed  | ZigZag w/ gemm | ***TODO*** | ***TODO*** |
-| tbd                                                          |             |            |        |                |            |            |
-| tbd                                                          |             |            |        |                |            |            |
-| **Tiled Matrix Multiplication 9**<br />```sh zigzag-spike-build-and-run.sh tiledMatmul9.mlir```<br />Full details [here](../runtime/tests/tiledMatmul9/README.md) | 600x600     | dynamic    | Fixed  | ZigZag w/ gemm | TODO       | TODO       |
+#### Snitch DMA Core + 1 Compute Core
+
+| Test + Description                                           | Matrix Size | Allocation | Values | Tiling Method                                                | Verilator | Spike |
+| :----------------------------------------------------------- | ----------- | ---------- | ------ | ------------------------------------------------------------ | --------- | ----- |
+| **Tiled Matrix Multiplication 6**<br />```sh zigzag-spike-build-and-run.sh tiledMatmul6.mlir```<br /><br />Dispatches to compute core!<br />Full details [here](../runtime/tests/tiledMatmul6/README.md) | 104 x 104   | dynamic    | Fixed  | ZigZag w/ [gemm](https://github.com/KULeuven-MICAS/zigzag/blob/f53a6bf98b6eb4d4a592d3c5b1bf9cc6cce2eadc/zigzag/inputs/examples/hardware/Gemm.py) | TODO      | yes   |
+| **Tiled Matrix Multiplication 10**<br />```sh zigzag-spike-build-and-run.sh tiledMatmul6.mlir```<br /><br />Dispatches to compute core!<br />Uses MLIR Subviews!<br /> Full details [here](../runtime/tests/tiledMatmul10/README.md) | 104 x 104   | dynamic    | Fixed  | ZigZag w/ [gemm](https://github.com/KULeuven-MICAS/zigzag/blob/f53a6bf98b6eb4d4a592d3c5b1bf9cc6cce2eadc/zigzag/inputs/examples/hardware/Gemm.py) | TODO      | TODO  |
+
+#### Snitch DMA Core only
+
+| Test + Description                                           | Matrix Size | Allocation | Values | Tiling Method                                                | Verilator  | Spike      |
+| :----------------------------------------------------------- | ----------- | ---------- | ------ | ------------------------------------------------------------ | ---------- | ---------- |
+| **Hola World**<br />```sh zigzag-spike-build-and-run.sh holaWorld.mlir```<br />Full details [here](../runtime/tests/holaWorld/README.md) | n/a         | static     | Fixed  | n/a                                                          | yes        | yes        |
+| **Matrix Multiplication**<br />```sh zigzag-verilator-build-and-run.sh matmul.mlir```<br />Full details [here](../runtime/tests/matmul/README.md) | 16 x 16     | static     | Fixed  | n/a                                                          | yes        | yes        |
+| **Tiled Matrix Multiplication**<br />```sh zigzag-spike-build-and-run.sh tiledMatmul.mlir```<br />Full details [here](../runtime/tests/tiledMatmul/README.md) | 16 x 16     | static     | Fixed  | 2x16 and 16x2                                                | yes (slow) | yes        |
+| **Tiled Matrix Multiplication 2**<br />```sh zigzag-spike-build-and-run.sh tiledMatmul2.mlir```<br />Full details [here](../runtime/tests/tiledMatmul2/README.md) | 16 x 16     | static     | Fixed  | ZigZag w/ [gemm](https://github.com/KULeuven-MICAS/zigzag/blob/f53a6bf98b6eb4d4a592d3c5b1bf9cc6cce2eadc/zigzag/inputs/examples/hardware/Gemm.py) | yes (slow) | yes        |
+| **Tiled Matrix Multiplication 3**<br />```sh zigzag-spike-build-and-run.sh tiledMatmul3.mlir```<br />Full details [here](../runtime/tests/tiledMatmul3/README.md) | 16 x 16     | dynamic    | Fixed  | ZigZag w/ [gemm](https://github.com/KULeuven-MICAS/zigzag/blob/f53a6bf98b6eb4d4a592d3c5b1bf9cc6cce2eadc/zigzag/inputs/examples/hardware/Gemm.py) | yes (slow) | yes        |
+| ~~Tiled Matrix Multiplication 4~~<br />```sh zigzag-spike-build-and-run.sh tiledMatmul4.mlir```<br />Full details [here](../runtime/tests/tiledMatmul4/README.md) | 17 x 17     | dynamic    | Fixed  | ZigZag w/ [gemm](https://github.com/KULeuven-MICAS/zigzag/blob/f53a6bf98b6eb4d4a592d3c5b1bf9cc6cce2eadc/zigzag/inputs/examples/hardware/Gemm.py) | ***TODO*** | ***TODO*** |
+| **Tiled Matrix Multiplication 5**<br />```sh zigzag-spike-build-and-run.sh tiledMatmul5.mlir```<br />Full details [here](../runtime/tests/tiledMatmul5/README.md) | 104 x 104   | dynamic    | Fixed  | ZigZag w/ [gemm](https://github.com/KULeuven-MICAS/zigzag/blob/f53a6bf98b6eb4d4a592d3c5b1bf9cc6cce2eadc/zigzag/inputs/examples/hardware/Gemm.py) | TODO       | yes        |
+| tbd 7                                                        |             |            |        |                                                              | ***TODO*** | ***TODO*** |
+| tbd 8                                                        |             |            |        |                                                              | ***TODO*** | ***TODO*** |
+| ~~*Tiled Matrix Multiplication 9*~~<br />```sh zigzag-spike-build-and-run.sh tiledMatmul9.mlir```<br />Full details [here](../runtime/tests/tiledMatmul9/README.md) | 600x600     | dynamic    | Fixed  | ZigZag w/ [gemm](https://github.com/KULeuven-MICAS/zigzag/blob/f53a6bf98b6eb4d4a592d3c5b1bf9cc6cce2eadc/zigzag/inputs/examples/hardware/Gemm.py) | ***TODO*** | ***TODO*** |
 
 ## Setup
 
