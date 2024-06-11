@@ -98,13 +98,16 @@ int main() {
   // perform C code matmul to get the ground truth
   cCodeEquivalentThreeLoops(&memrefA, &memrefB, &memrefGolden);
 
-  // load output into L3 (already there)
-  // load input into L1
-  // load weight into L1  
+  // Create memref object for output slice stored in L1
+  TwoDMemrefI32_t memrefOSlice; // output
+  memrefOSlice.data = (int32_t *) (snrt_l1_start_addr() + sizeof(int32_t) * MAT_WIDTH_SQUARED * 2);
+  memrefOSlice.aligned_data = memrefOSlice.data;
+  memrefOSlice.offset = 0;
 
-  // perform matmul on compute core #5
+  // prepare compute core for matmul operation
   set_kernel(tiled_matmul_w_subviews_kernel, (void *)&memrefA, (void *)&memrefB,
              (void *)&memrefC);
+  // perform tiled matmul on compute core #5
   wake_up_compute_core(5);
   wait_for_compute_core(5);
 
