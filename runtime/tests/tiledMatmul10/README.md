@@ -195,6 +195,40 @@ void matmul_transformed(TwoDMemrefI8_t *x, TwoDMemrefI8_t *y,
   }) {llvm.emit_c_interface}: () -> ()
 ```
 
+#### c. MLIR transformed based on L1 - L3 split
+
+```
+ "func.func"() <{function_type = (memref<104x104xi8>, memref<104x104xi8, strided<[1, 104]>>, memref<104x104xi32, strided<[104,1]>>) -> (), sym_name = "tiled_matmul_w_subviews"}> ({
+  ^bb0(%arg0: memref<104x104xi8>, %arg1: memref<104x104xi8, strided<[1,104]>>, %arg2: memref<104x104xi32, strided<[104,1]>>):
+  
+    // indices
+    %zero = arith.constant 0 : index
+    %one = arith.constant 1: index
+    %eight = arith.constant 8 : index
+    %thirteen = arith.constant 13 : index
+
+    // enter scf nested FOR LOOP
+    scf.for %d0_1 = %zero to %thirteen step %one iter_args() -> () { // this loop uses both L3 and L1
+
+    %outputTile = memref.subview %arg2[%d0_1,%zero][8,104][1,1] 
+    :  memref<104x104xi32, strided<[104,1]>> to memref<8x104xi32, strided<[104, 1], offset: ?>>
+
+    %inputTile = memref.subview %arg0[%d0_1,%zero][8,104][1,1] 
+    : memref<104x104xi8> to memref<8x104xi8, strided<[104, 1], offset: ?>>
+
+    // %weightTile is unchanged
+
+    // all the following inner loops should be executed on the accelerator
+    
+    
+    } // end of d0_1 for
+
+    "func.return"() : () -> ()
+  }) {llvm.emit_c_interface}: () -> ()
+```
+
+
+
 ## IV. Running the transformed MLIR on Snitch
 
 ```

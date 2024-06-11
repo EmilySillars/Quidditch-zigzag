@@ -95,6 +95,14 @@ add_executable(TiledMatmul9 tiledMatmul9/main.c
                            tiledMatmul9/out/tiledMatmul9.o)
 target_link_libraries(TiledMatmul9 snRuntime)
 
+# Testing another tiled matrix multiplication on a single compute core
+add_executable(TiledMatmul10 tiledMatmul10/main.c
+                           lib-zigzag/data.c
+                           lib-zigzag/data.h
+                           lib-zigzag/memref.h 
+                           tiledMatmul10/out/tiledMatmul10.o)
+target_link_libraries(TiledMatmul10 snRuntime Quidditch::zigzag_dispatch::zigzag_dispatch)
+
 
 add_test(NAME HolaWorld COMMAND HolaWorld)
 set_property(TEST HolaWorld PROPERTY
