@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <team_decls.h>
+
 #include "../lib-zigzag/zigzag_utils.h"
 // #include <stdarg.h>
 
@@ -22,15 +23,36 @@ uint32_t snrt_l1_end_addr();
 // Kernels provided via external definition
 extern void _mlir_ciface_matmul(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
                                 TwoDMemrefI32_t *c);
-extern void _mlir_ciface_tiled_matmul(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
-                                TwoDMemrefI32_t *c, TwoDMemrefI32_t *l1OTile);
-extern void _mlir_ciface_dummy(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
-                                TwoDMemrefI32_t *c, TwoDMemrefI32_t *l1OTile);
-extern void _mlir_ciface_matmul_tiled_subviews(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
+extern void _mlir_ciface_accelerator_work(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
                                 TwoDMemrefI32_t *c);
+
+void tiled_matmul_kernel(void *a, void *b, void *c, void *l1OTile) {
+  TwoDMemrefI8_t *x = (TwoDMemrefI8_t *)a;
+  TwoDMemrefI8_t *y = (TwoDMemrefI8_t *)b;
+  TwoDMemrefI32_t *z = (TwoDMemrefI32_t *)c;
+  TwoDMemrefI32_t *zz = (TwoDMemrefI32_t *)l1OTile;
+  //_mlir_ciface_tiled_matmul(x, y, z, zz);
+  _mlir_ciface_matmul(x, y, z);  // PINEAPPLE FIX THIS LATER!
+  //_mlir_ciface_accelerator_work(x,y,z);
+}
+extern void _mlir_ciface_tiled_matmul(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
+                                      TwoDMemrefI32_t *c,
+                                      TwoDMemrefI32_t *l1OTile);
+extern void _mlir_ciface_dummy(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
+                               TwoDMemrefI32_t *c, TwoDMemrefI32_t *l1OTile);
+extern void _mlir_ciface_matmul_tiled_subviews(TwoDMemrefI8_t *a,
+                                               TwoDMemrefI8_t *b,
+                                               TwoDMemrefI32_t *c);
 // this tile_compute function is not used in this program
 extern void _mlir_ciface_tile_compute(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
                                       TwoDMemrefI32_t *c);
+extern void _mlir_ciface_sendWorkToAccelerator(TwoDMemrefI8_t *a,
+                                              TwoDMemrefI8_t *b,
+                                              TwoDMemrefI32_t *c) {
+  set_kernel(_mlir_ciface_accelerator_work, (void *)a, (void *)b, (void *)c, (void *)0);
+  wake_up_compute_core(5);
+  wait_for_compute_core(5);
+}
 // some more c functions that the mlir code has access to - not used in this
 // program
 void _mlir_ciface_hola(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
@@ -52,14 +74,7 @@ void matmul_kernel(void *a, void *b, void *c) {
   _mlir_ciface_matmul(x, y, z);
 }
 
-void tiled_matmul_kernel(void *a, void *b, void *c, void *l1OTile) {
-  TwoDMemrefI8_t *x = (TwoDMemrefI8_t *)a;
-  TwoDMemrefI8_t *y = (TwoDMemrefI8_t *)b;
-  TwoDMemrefI32_t *z = (TwoDMemrefI32_t *)c;
-  TwoDMemrefI32_t *zz = (TwoDMemrefI32_t *)l1OTile;
-  //_mlir_ciface_tiled_matmul(x, y, z, zz);
-  _mlir_ciface_matmul(x, y, z);
-}
+
 
 void dummy_kernel(void *a, void *b, void *c, void *l1OTile) {
   TwoDMemrefI8_t *x = (TwoDMemrefI8_t *)a;
@@ -91,7 +106,7 @@ int main() {
   }
 
   // Create memref objects for data stored in L3
-  TwoDMemrefI32_t memrefC; // output
+  TwoDMemrefI32_t memrefC;  // output
   memrefC.data = (int32_t *)malloc(sizeof(int32_t) * MAT_WIDTH_SQUARED);
   memrefC.aligned_data = memrefC.data;
   memrefC.offset = 0;
@@ -100,13 +115,14 @@ int main() {
   memrefGolden.aligned_data = memrefGolden.data;
   memrefGolden.offset = 0;
 
-  //Create memref objects for data stored in L1
-  TwoDMemrefI8_t memrefA; // input
-  memrefA.data = (int8_t *) snrt_l1_start_addr();
+  // Create memref objects for data stored in L1
+  TwoDMemrefI8_t memrefA;  // input
+  memrefA.data = (int8_t *)snrt_l1_start_addr();
   memrefA.aligned_data = memrefA.data;
   memrefA.offset = 0;
-  TwoDMemrefI8_t memrefB; // weight
-  memrefB.data = (int8_t *) (snrt_l1_start_addr() + sizeof(int8_t) * MAT_WIDTH_SQUARED);
+  TwoDMemrefI8_t memrefB;  // weight
+  memrefB.data =
+      (int8_t *)(snrt_l1_start_addr() + sizeof(int8_t) * MAT_WIDTH_SQUARED);
   memrefB.aligned_data = memrefB.data;
   memrefB.offset = 0;
 
@@ -122,19 +138,21 @@ int main() {
   cCodeEquivalentThreeLoops(&memrefA, &memrefB, &memrefGolden);
 
   // Create memref object for output slice stored in L1
-  TwoDMemrefI32_t memrefOSlice; // output
-  memrefOSlice.data = (int32_t *) (snrt_l1_start_addr() + sizeof(int32_t) * MAT_WIDTH_SQUARED * 2);
+  TwoDMemrefI32_t memrefOSlice;  // output
+  memrefOSlice.data = (int32_t *)(snrt_l1_start_addr() +
+                                  sizeof(int32_t) * MAT_WIDTH_SQUARED * 2);
   memrefOSlice.aligned_data = memrefOSlice.data;
   memrefOSlice.offset = 0;
 
   // prepare compute core for matmul operation
-  // set_kernel(tiled_matmul_w_subviews_kernel, (void *)&memrefA, (void *)&memrefB,
+  // set_kernel(tiled_matmul_w_subviews_kernel, (void *)&memrefA, (void
+  // *)&memrefB,
   //            (void *)&memrefC);
-  
+
   // set_kernel(tiled_matmul_kernel, (void *)&memrefA, (void *)&memrefB,
   //            (void *)&memrefC, (void *) &memrefOSlice);
-  set_kernel(dummy_kernel, (void *)&memrefA, (void *)&memrefB,
-             (void *)&memrefC, (void *) &memrefOSlice);
+  set_kernel(dummy_kernel, (void *)&memrefA, (void *)&memrefB, (void *)&memrefC,
+             (void *)&memrefOSlice);
   // perform tiled matmul on compute core #5
   wake_up_compute_core(5);
   wait_for_compute_core(5);

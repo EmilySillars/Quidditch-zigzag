@@ -36,7 +36,7 @@ static struct cluster_state_t {
 //   cluster_state.args = args;
 // }
 
-// void set_kernel(void (*f)(void *a, void *b, void *c), void *a, void *b, void *c){
+// void set_kernel3(void (*f)(void *a, void *b, void *c), void *a, void *b, void *c){
 //   cluster_state.f = f;
 //   cluster_state.a = a;
 //   cluster_state.b = b;
