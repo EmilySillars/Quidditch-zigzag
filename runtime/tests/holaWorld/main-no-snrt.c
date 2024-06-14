@@ -169,7 +169,7 @@ int main() {
 
   // I want that MLIR function to call a C function
   // -------------------------------------------------- ^
-
+  printf("goodle");
   int nerr = 0;
   return nerr;
 }

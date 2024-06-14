@@ -164,7 +164,6 @@ int main() {
   // -------------------------------------------------- V
   // I want a C function to call an MLIR function
   _mlir_ciface_mlirFunc(&memrefA, &memrefB, &memrefC);
-
   // I want that MLIR function to call a C function
   // -------------------------------------------------- ^
 

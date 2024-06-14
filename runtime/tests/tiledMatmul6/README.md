@@ -212,3 +212,28 @@ verilator:
 sh zigzag-verilator-build-and-run.sh tiledMatmul5.mlir
 ```
 
+## V. Expected Output
+
+```
+[hoppip@inf-205-4 tests]$ sh zigzag-spike-build-and-run.sh tiledMatmul6.mlir
+tiledMatmul6
+TiledMatmul6
+rm: cannot remove 'tiledMatmul6/out/*.svg': No such file or directory
+warning: overriding the module target triple with riscv32-unknown-unknown-elf [-Woverride-module]
+1 warning generated.
+-- Could not find nvcc, please set CUDAToolkit_ROOT.
+-- IREE HAL drivers:
+-- IREE HAL local executable library loaders:
+-- IREE HAL local executable plugin mechanisms:
+-- Not adding LLVM/MLIR because the configuration does not require it
+-- Disabling compiler loader (platform does not support library loading)
+-- Configuring IREE runtime plugins
+-- Runtime tracing disabled
+-- Configuring done (0.3s)
+-- Generating done (0.1s)
+-- Build files have been written to: /home/hoppip/Quidditch-zigzag/runtime/build
+[0/2] Re-checking globbed directories...
+[1/1] Linking C executable tests/TiledMatmul6
+Output Correct
+```
+

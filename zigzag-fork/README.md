@@ -132,7 +132,7 @@ Automate this step by running [setup.sh](setup.sh)
 
 2) run the following script with the name of the kernel's mlir source file; for example, `holaWorld.mlir`
    ```
-   sh zigzag-build-and-run.sh holaWorld.mlir
+   sh zigzag-verilator-build-and-run.sh holaWorld.mlir
    ```
 
 ### 2. with Spike Simulating Snitch (faster, not cycle accurate)
@@ -180,9 +180,9 @@ Example:
 ```
 cd build
 cmake .. -GNinja -DCMAKE_TOOLCHAIN_FILE=../toolchain/ToolchainFile.cmake
-cd tests
+cd ../../../runtime/tests/
 sh compile-for-riscv.sh holaWorld.mlir
-cd ..
+cd ../../../../
 ninja HolaWorld
 ../../toolchain/bin/snitch_cluster.vlt tests/HolaWorld                                    # verilator
 $SPIKE/spike -m0x10000000:0x40000,0x80000000:0x80000000 --disable-dtb -p9 tests/HolaWorld # spike

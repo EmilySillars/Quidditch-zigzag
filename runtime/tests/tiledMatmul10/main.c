@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <team_decls.h>
 #include "../lib-zigzag/zigzag_utils.h"
+// #include <stdarg.h>
 
 uint32_t snrt_l1_start_addr();
 uint32_t snrt_l1_end_addr();
@@ -21,6 +22,10 @@ uint32_t snrt_l1_end_addr();
 // Kernels provided via external definition
 extern void _mlir_ciface_matmul(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
                                 TwoDMemrefI32_t *c);
+extern void _mlir_ciface_tiled_matmul(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
+                                TwoDMemrefI32_t *c, TwoDMemrefI32_t *l1OTile);
+extern void _mlir_ciface_dummy(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
+                                TwoDMemrefI32_t *c, TwoDMemrefI32_t *l1OTile);
 extern void _mlir_ciface_matmul_tiled_subviews(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
                                 TwoDMemrefI32_t *c);
 // this tile_compute function is not used in this program
@@ -45,6 +50,24 @@ void matmul_kernel(void *a, void *b, void *c) {
   TwoDMemrefI8_t *y = (TwoDMemrefI8_t *)b;
   TwoDMemrefI32_t *z = (TwoDMemrefI32_t *)c;
   _mlir_ciface_matmul(x, y, z);
+}
+
+void tiled_matmul_kernel(void *a, void *b, void *c, void *l1OTile) {
+  TwoDMemrefI8_t *x = (TwoDMemrefI8_t *)a;
+  TwoDMemrefI8_t *y = (TwoDMemrefI8_t *)b;
+  TwoDMemrefI32_t *z = (TwoDMemrefI32_t *)c;
+  TwoDMemrefI32_t *zz = (TwoDMemrefI32_t *)l1OTile;
+  //_mlir_ciface_tiled_matmul(x, y, z, zz);
+  _mlir_ciface_matmul(x, y, z);
+}
+
+void dummy_kernel(void *a, void *b, void *c, void *l1OTile) {
+  TwoDMemrefI8_t *x = (TwoDMemrefI8_t *)a;
+  TwoDMemrefI8_t *y = (TwoDMemrefI8_t *)b;
+  TwoDMemrefI32_t *z = (TwoDMemrefI32_t *)c;
+  TwoDMemrefI32_t *zz = (TwoDMemrefI32_t *)l1OTile;
+  //_mlir_ciface_tiled_matmul(x, y, z, zz);
+  _mlir_ciface_dummy(x, y, z, zz);
 }
 
 void tiled_matmul_w_subviews_kernel(void *a, void *b, void *c) {
@@ -105,8 +128,13 @@ int main() {
   memrefOSlice.offset = 0;
 
   // prepare compute core for matmul operation
-  set_kernel(tiled_matmul_w_subviews_kernel, (void *)&memrefA, (void *)&memrefB,
-             (void *)&memrefC);
+  // set_kernel(tiled_matmul_w_subviews_kernel, (void *)&memrefA, (void *)&memrefB,
+  //            (void *)&memrefC);
+  
+  // set_kernel(tiled_matmul_kernel, (void *)&memrefA, (void *)&memrefB,
+  //            (void *)&memrefC, (void *) &memrefOSlice);
+  set_kernel(dummy_kernel, (void *)&memrefA, (void *)&memrefB,
+             (void *)&memrefC, (void *) &memrefOSlice);
   // perform tiled matmul on compute core #5
   wake_up_compute_core(5);
   wait_for_compute_core(5);
