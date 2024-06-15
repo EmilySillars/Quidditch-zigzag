@@ -4,7 +4,7 @@
 #map3 = affine_map<(d0, d1, d2) -> (d0, d1)>
 "builtin.module"() ({
 
-"func.func"() <{function_type = (memref<104x104xi8>, memref<104x104xi8, strided<[1, 104]>>, memref<104x104xi32>) -> (), sym_name = "simple_matmul"}> ({
+"func.func"() <{function_type = (memref<104x104xi8>, memref<104x104xi8, strided<[1, 104]>>, memref<104x104xi32>) -> (), sym_name = "kernel_matmul"}> ({
   ^bb0(%arg0: memref<104x104xi8>, %arg1: memref<104x104xi8, strided<[1, 104]>>, %arg2: memref<104x104xi32>):
     %0 = "arith.constant"() <{value = 0 : i32}> : () -> i32
     "linalg.generic"(%arg0, %arg1, %0, %0, %arg2) <{indexing_maps = [affine_map<(d0, d1, d2) -> (d0, d2)>, affine_map<(d0, d1, d2) -> (d2, d1)>, affine_map<(d0, d1, d2) -> ()>, affine_map<(d0, d1, d2) -> ()>, affine_map<(d0, d1, d2) -> (d0, d1)>], iterator_types = [#linalg.iterator_type<parallel>, #linalg.iterator_type<parallel>, #linalg.iterator_type<reduction>], operandSegmentSizes = array<i32: 4, 1>}> ({
@@ -194,45 +194,26 @@
     "func.return"() : () -> ()
   }) {llvm.emit_c_interface}: () -> ()
 
+
+
+
 // perform tiled matrix multiplication,
 // dispatching part of the work to the accelerator!
+
   "func.func"() <{function_type = (memref<104x104xi8>, memref<104x104xi8, strided<[1, 104]>>, memref<104x104xi32, strided<[104,1]>>, memref<104x104xi32, strided<[104,1]>>) -> (), sym_name = "tiled_matmul"}> ({
   ^bb0(%arg0: memref<104x104xi8>, %arg1: memref<104x104xi8, strided<[1,104]>>, %arg2: memref<104x104xi32, strided<[104,1]>>, %l1OSlice: memref<104x104xi32, strided<[104,1]>>):
     // indices
     %zero = arith.constant 0 : index
     %one = arith.constant 1: index
-    %eight = arith.constant 8 : index
-    %thirteen = arith.constant 13 : index  
+    %five = arith.constant 5: index
 
-    // enter scf FOR LOOP
-    scf.for %d0_1 = %zero to %thirteen step %one iter_args() -> () { // this loop uses both L3 and L1
-	
-	  // select a slice of output space on L3
-    %outputTileL3 = memref.subview %arg2[%d0_1,%zero][8,104][1,1] 
-    :  memref<104x104xi32, strided<[104,1]>> to memref<8x104xi32, strided<[104, 1], offset: ?>>
-
-    // select a corresponding slice of output space on L1
-    %outputTileL1 = memref.subview %l1OSlice[%d0_1,%zero][8,104][1,1] 
-    :  memref<104x104xi32, strided<[104,1]>> to memref<8x104xi32, strided<[104, 1], offset: ?>>
-    	
-	  // select a slice of input data from L1
-    %inputTile = memref.subview %arg0[%d0_1,%zero][8,104][1,1] 
-    : memref<104x104xi8> to memref<8x104xi8, strided<[104, 1], offset: ?>>
-
-    // weight data tile is unchanged
-
-    // all the following inner loops should be executed on the accelerator
-    // some sort of C function call with %inputTile, %arg1, and %outputTileL1 as parameters
-    //    func.call @tiled_matmul_w_subviews(%arg0, %arg1, %arg2_diff_stride) : (memref<104x104xi8>, memref<104x104xi8, strided<[1, 104]>>, memref<104x104xi32, strided<[104,1]>>) -> ()
-    func.call @sendWorkToAccelerator(%inputTile, %arg1, %outputTileL1) : (memref<8x104xi8, strided<[104, 1], offset: ?>>, memref<104x104xi8, strided<[1, 104]>>, memref<8x104xi32, strided<[104, 1], offset: ?>>) -> ()
-    // copy output slice from L1 to L3
-    // memref.copy %arg0, %arg1 : memref<?xf32> to memref<?xf32>
-    memref.copy %outputTileL3, %outputTileL1 : memref<8x104xi32, strided<[104, 1], offset: ?>> to memref<8x104xi32, strided<[104, 1], offset: ?>>   
-    
-    } // end of d0_1 for
+    func.call @dispatch_to_accelerator(%five, %arg0, %arg1, %arg2) : (index, memref<104x104xi8>, memref<104x104xi8, strided<[1, 104]>>, memref<104x104xi32, strided<[104,1]>>) -> ()
 
     "func.return"() : () -> ()
   }) {llvm.emit_c_interface}: () -> ()
+
+
+
 
 // DUMMY THAT ALWAYS RETURNS CORRECT ANSWER
   "func.func"() <{function_type = (memref<104x104xi8>, memref<104x104xi8, strided<[1, 104]>>, memref<104x104xi32, strided<[104,1]>>, memref<104x104xi32, strided<[104,1]>>) -> (), sym_name = "dummy"}> ({
@@ -297,7 +278,8 @@
 
 
 // declaring an external MLIR function called dispatch_to_accelerator
-"func.func"() <{function_type =  (memref<2x16xi8>, memref<16x2xi8, strided<[1,16]>>, memref<2x2xi32, strided<[16,1]>>) -> (), sym_name = "dispatch_to_accelerator", sym_visibility = "private"}> ({}) {llvm.emit_c_interface}: () -> ()
+"func.func"() <{function_type = (index, memref<104x104xi8>, memref<104x104xi8, strided<[1, 104]>>, memref<104x104xi32, strided<[104,1]>>) -> (), sym_name = "dispatch_to_accelerator", sym_visibility = "private"}> ({}) {llvm.emit_c_interface}: () -> ()
+//"func.func"() <{function_type =  (memref<2x16xi8>, memref<16x2xi8, strided<[1,16]>>, memref<2x2xi32, strided<[16,1]>>) -> (), sym_name = "dispatch_to_accelerator", sym_visibility = "private"}> ({}) {llvm.emit_c_interface}: () -> ()
 
 // declaring an external MLIR function called hola
 "func.func"() <{function_type =  (memref<2x16xi8>, memref<16x2xi8, strided<[1,16]>>, memref<2x2xi32, strided<[16,1]>>) -> (), sym_name = "hola", sym_visibility = "private"}> ({}) {llvm.emit_c_interface}: () -> ()
@@ -318,7 +300,7 @@
   "func.func"() <{function_type = (memref<104x104xi8>, memref<104x104xi8, strided<[1, 104]>>, memref<104x104xi32>) -> (), sym_name = "matmul"}> ({
   ^bb0(%arg0: memref<104x104xi8, 0 : i32>, %arg1: memref<104x104xi8, strided<[1,104]>, 0 : i32>, %arg2: memref<104x104xi32>):
     %arg2_diff_stride = memref.cast %arg2 : memref<104x104xi32> to memref<104x104xi32, strided<[104, 1]>>
-    func.call @simple_matmul(%arg0, %arg1, %arg2) : (memref<104x104xi8>, memref<104x104xi8, strided<[1, 104]>>, memref<104x104xi32>) -> ()
+    func.call @kernel_matmul(%arg0, %arg1, %arg2) : (memref<104x104xi8>, memref<104x104xi8, strided<[1, 104]>>, memref<104x104xi32>) -> ()
 "func.return"() : () -> ()
   }) {llvm.emit_c_interface} : () -> ()
 

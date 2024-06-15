@@ -44,6 +44,8 @@ int main() {
     return 0;
   }
 
+  //printf("I am the DMA core with id %d", snrt_cluster_core_idx());
+
   // Create memref objects for data stored in L3
   TwoDMemrefI8_t memrefA;
   memrefA.data = (int8_t *) malloc(sizeof(int8_t)*MAT_WIDTH_SQUARED); 

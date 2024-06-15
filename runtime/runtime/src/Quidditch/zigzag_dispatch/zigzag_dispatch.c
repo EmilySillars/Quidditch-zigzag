@@ -29,24 +29,11 @@ static struct cluster_state_t {
     {false, false, false, false, false, false, false, false, false},
     false};
 
-// void set_kernel(int (*f)(void * args[]), void * args[]){
-//   cluster_state.f = f;
-//   cluster_state.args = args;
-// }
-
-// void set_kernel3(void (*f)(void *a, void *b, void *c), void *a, void *b, void *c){
-//   cluster_state.f = f;
-//   cluster_state.a = a;
-//   cluster_state.b = b;
-//   cluster_state.c = c;
-// }
-
-void compute_core_perform_work(){
-
+void set_kernel(void (*g)(void *a, void *b, void *c)){
+  cluster_state.g = g;
 }
 
-void set_kernel(void (*g)(void *a, void *b, void *c), void *a, void *b, void *c){
-  cluster_state.g = g;
+void set_kernel_args(void *a, void *b, void *c){
   cluster_state.a = a;
   cluster_state.b = b;
   cluster_state.c = c;

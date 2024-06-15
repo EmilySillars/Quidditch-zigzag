@@ -64,6 +64,8 @@ add_executable(TiledMatmul6 tiledMatmul6/main.c
                            lib-zigzag/data.c
                            lib-zigzag/data.h
                            lib-zigzag/memref.h 
+                           lib-zigzag/zigzag_utils.h
+                           lib-zigzag/zigzag_utils.c
                            tiledMatmul6/out/tiledMatmul6.o)
 target_link_libraries(TiledMatmul6 snRuntime Quidditch::zigzag_dispatch::zigzag_dispatch)
 
@@ -100,6 +102,8 @@ add_executable(TiledMatmul10 tiledMatmul10/main.c
                            lib-zigzag/data.c
                            lib-zigzag/data.h
                            lib-zigzag/memref.h 
+                           lib-zigzag/zigzag_utils.h
+                           lib-zigzag/zigzag_utils.c
                            tiledMatmul10/out/tiledMatmul10.o)
 target_link_libraries(TiledMatmul10 snRuntime Quidditch::zigzag_dispatch::zigzag_dispatch)
 

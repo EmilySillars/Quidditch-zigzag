@@ -1,88 +1,85 @@
 // all the defintions needed for ZigZag integration
+// we assume square matrices (for now)
 
-#include "memref.h" // from KULeuven's snax-mlir repo
+#include "memref.h" // from KULeuven's snax-mlir repo: https://github.com/KULeuven-MICAS/snax-mlir/blob/4666236ffd848eff1a4634c824ad257ba68d9a64/runtime/include/memref.h
+#include <stdarg.h>
+#include <Quidditch/zigzag_dispatch/zigzag_dispatch.h>
 
-// we assume square matrices
+#ifndef MAT_WIDTH
 #define MAT_WIDTH 104
+#endif
 #define MAT_WIDTH_SQUARED (MAT_WIDTH * MAT_WIDTH)
 
-// compute mat mul
+// compute matrix multiplication (for checking mlir matmul correctness)
 void cCodeEquivalentThreeLoops(TwoDMemrefI8_t *x, TwoDMemrefI8_t *y,
                                TwoDMemrefI32_t *z);
-// helper functions
-void cCodeEquivalent(TwoDMemrefI8_t *x, TwoDMemrefI8_t *y, TwoDMemrefI32_t *z);
+
+// printing functions to help with debugging
 void print2DMemRefI8_t(TwoDMemrefI8_t *x, int32_t width);
 void print2DMemRefI32_t(TwoDMemrefI32_t *x, int32_t width);
 void print2DMemRefI32_t_notASquare(TwoDMemrefI32_t *x, int32_t stride_x, int32_t stride_y);
 
-// helper funcs below
-void print2DMemRefI8_t(TwoDMemrefI8_t *x, int32_t width) {
-  printf("[\n");
-  // we ASSUME a square 2D array
-  int32_t col = 0;
-  for (int i = 0; i < width * width; i++) {
-    if (col == width) {
-      col = 0;
-      printf("\n %d ", x->aligned_data[i]);
+/*
+All ZigZag sees is a memory hierarchy attached to a MAC array.
+It recommends an optimal tiling scheme, but to implement it,
+we need to carry out the correct movement of data tiles such that 
+everything is where it's supposed to be when each PE within the mac array runs.
+To implement the correct data movement for ZigZag's schedule,
+we employ a "host-accelerator" abstraction.
+*/
 
-    } else {
-      printf(" %d ", x->aligned_data[i]);
-    }
-    col++;
-  }
-  printf("]\n");
-}
+// DL Kernels Defined in MLIR
+extern void _mlir_ciface_kernel_matmul(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
+                                TwoDMemrefI32_t *c);
+extern void _mlir_ciface_kernel_1dConv(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
+                                TwoDMemrefI32_t *c);
 
-void print2DMemRefI32_t(TwoDMemrefI32_t *x, int32_t width) {
-  printf("[\n");
-  // we ASSUME a square 2D array
-  int32_t col = 0;
-  for (int i = 0; i < width * width; i++) {
-    if (col == width) {
-      col = 0;
-      printf("\n %d ", x->aligned_data[i]);
+// "Host" function calls
 
-    } else {
-      printf(" %d ", x->aligned_data[i]);
-    }
-    col++;
-  }
-  printf("]\n");
-}
+// tell the accelerator which kernel it should perform
+// all kernels have three arguments, and are passed as function pointers
+// for now, all accelerators must perform the same kernel
+void set_accelerator_kernel(void (*k)(void *arg0, void *arg1, void *arg2));
 
-void print2DMemRefI32_t_notASquare(TwoDMemrefI32_t *x, int32_t stride_x, int32_t stride_y) {
-  printf("[\n");
-  int32_t col = 0;
-  for (int i = 0; i < stride_x*stride_y; i++) {
-    if (col == stride_x) {
-      col = 0;
-      printf("\n %d ", x->aligned_data[i]);
 
-    } else {
-      printf(" %d ", x->aligned_data[i]);
-    }
-    col++;
-  }
-  printf("]\n");
-}
+void host_acc_perform_kernel_together(kernel_ptr k,void *arg0, void *arg1,
+                                                void *arg2, ...);
+// MLIR funcs for tiled kernels
+extern void _mlir_ciface_dummy(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
+                               TwoDMemrefI32_t *c, TwoDMemrefI32_t *d);
+extern void _mlir_ciface_tiled_matmul(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
+                                      TwoDMemrefI32_t *c,
+                                      TwoDMemrefI32_t *l1OTile);
 
-void cCodeEquivalentThreeLoops(TwoDMemrefI8_t *x, TwoDMemrefI8_t *y,
-                               TwoDMemrefI32_t *z) {
-  // printf("M_size is %d and N_size is %d\n",M_size, N_size);
-  // for (int i = 0; i < M_size * N_size; i++) {
-  //   z->aligned_data[i] = x->aligned_data[i] * y->aligned_data[i];
-  // }
-  int z_index, x_index, y_index = 0;
-  for (int d0 = 0; d0 < MAT_WIDTH; d0++) {
-    for (int d1 = 0; d1 < MAT_WIDTH; d1++) {
-      for (int d2 = 0; d2 < MAT_WIDTH; d2++) {
-        // arg7[d0][d1] += arg3[d0][d2] * arg4[d2][d1]; // and this is a MAC!
-        z_index = (d0 * MAT_WIDTH) + d1;
-        x_index = (d0 * MAT_WIDTH) + d2;
-        y_index = (d2 * MAT_WIDTH) + d1;
-        z->aligned_data[z_index] +=
-            x->aligned_data[x_index] * y->aligned_data[y_index];
-      }
-    }
-  }
-}
+// dispatch workload to accelerator with id accID
+void _mlir_ciface_dispatch_to_accelerator(uint32_t accID, void* arg0, void* arg1, void* arg2);
+
+/*
+Q: What level of memory is the accelerator writing its results to? 
+A: This marks the "host-accelerator" memory hierarchy divide; 
+any level of memory (and corresponding data x-fers) 
+ABOVE the level of memory where accelerator writes its results 
+is the responsiblity of the host.
+
+We need to express the host-accelerator abstraction (using zigzag) 
+as well as the C-mlir abstraction (a pain in the neck)
+and the DMA core - Compute Core abstraction (snitch).
+
+"Host" (DMA core):
+- allocate matrices
+- set accelerator kernel (which calls set compute core kernel, 
+                         (which always has at most 3 args, so just setting function pointer))
+- call host-acc-perform-kernel-together (a variable length C function that 
+                                         picks the correct MLIR function
+                                         based on the acc-kernel-workload to execute)
+  In MLIR,
+  repeat for all tiles of input:
+    select tiles and send to the compute core (dispatch_to_accelerator)
+    VIA a C function call which takes the 3 kernel args
+    then copy l1 result tiles back to L3 (part of the memory transfers needed to implement tiling scheme)
+
+"Accelerator" (compute core):
+- performs computation that takes in 3 arguments
+- writes results to L1
+- (that's it!)
+*/
