@@ -34,6 +34,7 @@ extern void _mlir_ciface_kernel_matmul(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
 extern void _mlir_ciface_kernel_1dConv(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
                                 TwoDMemrefI32_t *c);
 
+extern void _mlir_ciface_accelerator_work(TwoDMemrefI8_t *arg0,TwoDMemrefI8_t *arg1,TwoDMemrefI32_t *arg2);
 
 void _mlir_ciface_print_my_arg(TwoDMemrefI8_t *arg);
 void _mlir_ciface_print_my_arg2(uint64_t arg);
@@ -46,7 +47,7 @@ void _mlir_ciface_print_my_arg3(uint64_t arg);
 // for now, all accelerators must perform the same kernel
 void set_accelerator_kernel(void (*k)(void *arg0, void *arg1, void *arg2));
 
-
+void _mlir_ciface_modify_output(TwoDMemrefI8_t *arg0,TwoDMemrefI8_t *arg1,TwoDMemrefI32_t *arg2);
 void host_acc_perform_kernel_together(kernel_ptr k,void *arg0, void *arg1,
                                                 void *arg2, ...);
 // MLIR funcs for tiled kernels

@@ -198,12 +198,14 @@ int main() {
   //_mlir_ciface_sendingMemref(&memrefA);
   //_mlir_ciface_sendingMemref((void*) &memrefA);
 
-  set_kernel((kernel_ptr)_mlir_ciface_kernel_matmul);
+  //set_kernel((kernel_ptr)_mlir_ciface_kernel_matmul);
+ set_kernel((kernel_ptr)_mlir_ciface_accelerator_work);
+  //set_kernel((kernel_ptr)_mlir_ciface_modify_output);
   //set_kernel_args((void *)&memrefA, (void *)&memrefB, (void *)&memrefC);
   // perform tiled matmul on compute core #5
    host_acc_perform_kernel_together2((kernel_ptr)_mlir_ciface_kernel_matmul,
                                    (void*)&memrefA, (void *)&memrefB, (void *)&memrefC,
-                                   (void*)87);
+                                   (void*)&memrefOSlice);
   // host_acc_perform_kernel_together2((kernel_ptr)_mlir_ciface_kernel_matmul,
   //                                  (void*)&memrefA, (void *)&memrefB, (void *)&memrefC,
   //                                  87, (void*)&memrefA, (void*)&memrefB, (void*)&memrefC);
@@ -234,8 +236,8 @@ int main() {
 
   if (nerr != 0) {
     printf("Output does not match the golden value!\n");
-    print2DMemRefI32_t(&memrefC, 5);
-    print2DMemRefI32_t(&memrefGolden, 5);
+    print2DMemRefI32_t(&memrefC, 104);
+   // print2DMemRefI32_t(&memrefGolden, 104);
   } else {
     printf("Output Correct\n");
   }

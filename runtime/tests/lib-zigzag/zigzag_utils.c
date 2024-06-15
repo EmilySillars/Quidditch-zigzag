@@ -18,6 +18,9 @@ void _mlir_ciface_dispatch_to_accelerator(TwoDMemrefI8_t *accID, TwoDMemrefI8_t 
   // wait_for_compute_core(accID);
 }
 
+void _mlir_ciface_modify_output(TwoDMemrefI8_t *arg0,TwoDMemrefI8_t *arg1,TwoDMemrefI32_t *arg2) {
+  arg2->aligned_data[0] += 1;
+}
 
 void _mlir_ciface_print_my_arg(TwoDMemrefI8_t *arg) {
   printf("my arg is %x\n", (unsigned int)arg);
@@ -85,6 +88,7 @@ void host_acc_perform_kernel_together(kernel_ptr k, void *arg0, void *arg1,
            (unsigned int)fourthArg, (unsigned int)arg3, (unsigned int)arg4, (unsigned int)arg5);
     _mlir_ciface_tiled_matmul(arg0, arg1, arg2, arg3);
   }
+  //_mlir_ciface_modify_output
 }
 
 void host_acc_perform_kernel_together2(kernel_ptr k, void *arg0, void *arg1,
@@ -93,6 +97,17 @@ void host_acc_perform_kernel_together2(kernel_ptr k, void *arg0, void *arg1,
     printf("host_acc_together: a = %x, b = %x, c = %x, fourthArg is %x \n",
           (unsigned int) arg0,(unsigned int) arg1, (unsigned int)arg2, (unsigned int)arg3);
     _mlir_ciface_tiled_matmul(arg0, arg1, arg2, arg3);
+  }
+  else if (k == (kernel_ptr)_mlir_ciface_modify_output) {
+    printf("host_acc_together: a = %x, b = %x, c = %x, fourthArg is %x \n",
+          (unsigned int) arg0,(unsigned int) arg1, (unsigned int)arg2, (unsigned int)arg3);
+    _mlir_ciface_tiled_matmul(arg0, arg1, arg2, arg3);
+  }
+  else if(k == (kernel_ptr)_mlir_ciface_accelerator_work) {
+    printf("host_acc_together: a = %x, b = %x, c = %x, fourthArg is %x \n",
+          (unsigned int) arg0,(unsigned int) arg1, (unsigned int)arg2, (unsigned int)arg3);
+    _mlir_ciface_tiled_matmul(arg0, arg1, arg2, arg3);
+
   }
 }
 
