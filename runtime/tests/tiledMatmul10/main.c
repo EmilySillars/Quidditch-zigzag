@@ -20,6 +20,45 @@
 uint32_t snrt_l1_start_addr();
 uint32_t snrt_l1_end_addr();
 
+/*
+All ZigZag sees is a memory hierarchy attached to a MAC array.
+It recommends an optimal tiling scheme, but to implement it,
+we need to carry out the correct movement of data tiles such that 
+everything is where it's supposed to be when each PE within the mac array runs.
+We need to divide the computation and the memory transfers using a "host-accelerator" abstraction.
+
+Q: What level of memory is the accelerator writing its results to? 
+A: This marks the "host-accelerator" memory hierarchy divide; 
+any level of memory (and corresponding data x-fers) 
+ABOVE the level of memory where accelerator writes its results 
+is the responsiblity of the host.
+
+We need to express the host-accelerator abstraction (using zigzag) 
+as well as the C-mlir abstraction (a pain in the neck)
+and the DMA core - Compute Core abstraction (snitch).
+
+"Host" (DMA core):
+- allocate matrices
+- set accelerator kernel (which calls set compute core kernel, 
+                         (which always has at most 3 args, so just setting function pointer))
+- call host-acc-perform-kernel-together (a variable length C function that 
+                                         picks the correct MLIR function
+                                         based on the acc-kernel-workload to execute)
+  In MLIR,
+  repeat for all tiles of input:
+    select tiles and send to the compute core (dispatch_to_accelerator)
+    VIA a C function call which takes the 3 kernel args
+    then copy l1 result tiles back to L3 (part of the memory transfers needed to implement tiling scheme)
+
+"Accelerator" (compute core):
+- performs computation that takes in 3 arguments
+- writes results to L1
+- (that's it!)
+
+
+
+*/
+
 // Kernels provided via external definition
 extern void _mlir_ciface_matmul(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
                                 TwoDMemrefI32_t *c);
@@ -39,7 +78,7 @@ extern void _mlir_ciface_tiled_matmul(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
                                       TwoDMemrefI32_t *c,
                                       TwoDMemrefI32_t *l1OTile);
 extern void _mlir_ciface_dummy(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
-                               TwoDMemrefI32_t *c, TwoDMemrefI32_t *l1OTile);
+                               TwoDMemrefI32_t *c);
 extern void _mlir_ciface_matmul_tiled_subviews(TwoDMemrefI8_t *a,
                                                TwoDMemrefI8_t *b,
                                                TwoDMemrefI32_t *c);
@@ -49,7 +88,7 @@ extern void _mlir_ciface_tile_compute(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
 extern void _mlir_ciface_sendWorkToAccelerator(TwoDMemrefI8_t *a,
                                               TwoDMemrefI8_t *b,
                                               TwoDMemrefI32_t *c) {
-  set_kernel(_mlir_ciface_accelerator_work, (void *)a, (void *)b, (void *)c, (void *)0);
+ // set_kernel(_mlir_ciface_accelerator_work, (void *)a, (void *)b, (void *)c, (void *)0);
   wake_up_compute_core(5);
   wait_for_compute_core(5);
 }
@@ -76,13 +115,12 @@ void matmul_kernel(void *a, void *b, void *c) {
 
 
 
-void dummy_kernel(void *a, void *b, void *c, void *l1OTile) {
+void dummy_kernel(void *a, void *b, void *c) {
   TwoDMemrefI8_t *x = (TwoDMemrefI8_t *)a;
   TwoDMemrefI8_t *y = (TwoDMemrefI8_t *)b;
   TwoDMemrefI32_t *z = (TwoDMemrefI32_t *)c;
-  TwoDMemrefI32_t *zz = (TwoDMemrefI32_t *)l1OTile;
   //_mlir_ciface_tiled_matmul(x, y, z, zz);
-  _mlir_ciface_dummy(x, y, z, zz);
+   _mlir_ciface_matmul(x, y, z);
 }
 
 void tiled_matmul_w_subviews_kernel(void *a, void *b, void *c) {
@@ -151,8 +189,7 @@ int main() {
 
   // set_kernel(tiled_matmul_kernel, (void *)&memrefA, (void *)&memrefB,
   //            (void *)&memrefC, (void *) &memrefOSlice);
-  set_kernel(dummy_kernel, (void *)&memrefA, (void *)&memrefB, (void *)&memrefC,
-             (void *)&memrefOSlice);
+  set_kernel(dummy_kernel, (void *)&memrefA, (void *)&memrefB, (void *)&memrefC);
   // perform tiled matmul on compute core #5
   wake_up_compute_core(5);
   wait_for_compute_core(5);

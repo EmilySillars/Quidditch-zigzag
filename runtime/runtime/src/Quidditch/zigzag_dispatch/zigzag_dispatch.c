@@ -20,12 +20,10 @@ static struct cluster_state_t {
   int bins[9];
   atomic_bool sleep[9];
   atomic_bool exit;
-  void (*f)(void *a, void *b, void *c);
-  void (*g)(void *a, void *b, void *c, void *d);
+  void (*g)(void *a, void *b, void *c);
   void *a;
   void *b;
   void *c;
-  void* d;
 } cluster_state = {
     {0, 0, 0, 0, 0, 0, 0, 0, 0},
     {false, false, false, false, false, false, false, false, false},
@@ -43,12 +41,15 @@ static struct cluster_state_t {
 //   cluster_state.c = c;
 // }
 
-void set_kernel(void (*g)(void *a, void *b, void *c, void* d), void *a, void *b, void *c, void *d){
+void compute_core_perform_work(){
+
+}
+
+void set_kernel(void (*g)(void *a, void *b, void *c), void *a, void *b, void *c){
   cluster_state.g = g;
   cluster_state.a = a;
   cluster_state.b = b;
   cluster_state.c = c;
-  cluster_state.d = d;
 }
 
 void compute_core_loop() {
@@ -61,7 +62,7 @@ void compute_core_loop() {
     // If didn't get woken up to exit,
     if (!cluster_state.exit) {
       // do something
-      (*cluster_state.g)(cluster_state.a, cluster_state.b, cluster_state.c, cluster_state.c);
+      (*cluster_state.g)(cluster_state.a, cluster_state.b, cluster_state.c);
       cluster_state.bins[snrt_cluster_core_idx()]++;
     }
   }
