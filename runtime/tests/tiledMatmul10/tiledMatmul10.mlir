@@ -203,11 +203,31 @@
   "func.func"() <{function_type = (memref<104x104xi8>, memref<104x104xi8, strided<[1, 104]>>, memref<104x104xi32, strided<[104,1]>>, memref<104x104xi32, strided<[104,1]>>) -> (), sym_name = "tiled_matmul"}> ({
   ^bb0(%arg0: memref<104x104xi8>, %arg1: memref<104x104xi8, strided<[1,104]>>, %arg2: memref<104x104xi32, strided<[104,1]>>, %l1OSlice: memref<104x104xi32, strided<[104,1]>>):
     // indices
-    %zero = arith.constant 0 : index
-    %one = arith.constant 1: index
     %five = arith.constant 5: index
 
-    func.call @dispatch_to_accelerator(%five, %arg0, %arg1, %arg2) : (index, memref<104x104xi8>, memref<104x104xi8, strided<[1, 104]>>, memref<104x104xi32, strided<[104,1]>>) -> ()
+    func.call @dispatch_to_accelerator(%arg0, %arg0, %arg1, %arg2) : (memref<104x104xi8>, memref<104x104xi8>, memref<104x104xi8, strided<[1, 104]>>, memref<104x104xi32, strided<[104,1]>>) -> ()
+
+    "func.return"() : () -> ()
+  }) {llvm.emit_c_interface}: () -> ()
+
+
+
+  "func.func"() <{function_type = (memref<104x104xi8>) -> (), sym_name = "print_my_arg", sym_visibility = "private"}> ({}) {llvm.emit_c_interface}: () -> ()
+  "func.func"() <{function_type = (!llvm.ptr) -> (), sym_name = "print_my_arg2", sym_visibility = "private"}> ({}) {llvm.emit_c_interface}: () -> ()
+  "func.func"() <{function_type = (i64) -> (), sym_name = "print_my_arg3", sym_visibility = "private"}> ({}) {llvm.emit_c_interface}: () -> ()
+
+
+  "func.func"() <{function_type = (memref<104x104xi8>) -> (), sym_name = "sendingMemref"}> ({
+  ^bb0(%arg0: memref<104x104xi8>):
+    //func.call @dispatch_to_accelerator(%arg0, %arg0, %arg1, %arg2) : (memref<104x104xi8>, memref<104x104xi8>, memref<104x104xi8, strided<[1, 104]>>, memref<104x104xi32, strided<[104,1]>>) -> ()
+    
+     %0 = memref.extract_aligned_pointer_as_index %arg0 : memref<104x104xi8> -> index
+     %1 = arith.index_cast %0 : index to i64
+     %2 = llvm.inttoptr %1 : i64 to !llvm.ptr
+     //func.call @print_my_arg3(%1):(i64) -> ()
+     //func.call @print_my_arg2(%2):(!llvm.ptr) -> ()
+     func.call @print_my_arg(%arg0):(memref<104x104xi8>) -> ()
+     //func.call @print_my_arg(%arg0):(memref<104x104xi8>) -> ()
 
     "func.return"() : () -> ()
   }) {llvm.emit_c_interface}: () -> ()
@@ -278,7 +298,7 @@
 
 
 // declaring an external MLIR function called dispatch_to_accelerator
-"func.func"() <{function_type = (index, memref<104x104xi8>, memref<104x104xi8, strided<[1, 104]>>, memref<104x104xi32, strided<[104,1]>>) -> (), sym_name = "dispatch_to_accelerator", sym_visibility = "private"}> ({}) {llvm.emit_c_interface}: () -> ()
+"func.func"() <{function_type = (memref<104x104xi8>, memref<104x104xi8>, memref<104x104xi8, strided<[1, 104]>>, memref<104x104xi32, strided<[104,1]>>) -> (), sym_name = "dispatch_to_accelerator", sym_visibility = "private"}> ({}) {llvm.emit_c_interface}: () -> ()
 //"func.func"() <{function_type =  (memref<2x16xi8>, memref<16x2xi8, strided<[1,16]>>, memref<2x2xi32, strided<[16,1]>>) -> (), sym_name = "dispatch_to_accelerator", sym_visibility = "private"}> ({}) {llvm.emit_c_interface}: () -> ()
 
 // declaring an external MLIR function called hola

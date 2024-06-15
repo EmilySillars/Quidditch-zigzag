@@ -61,6 +61,7 @@ needed to implement tiling scheme)
 */
 
 // Kernels provided via external definition
+extern void _mlir_ciface_sendingMemref(TwoDMemrefI8_t *a);
 // extern void _mlir_ciface_kernel_matmul(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
 //                                 TwoDMemrefI32_t *c);
 extern void _mlir_ciface_matmul(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
@@ -192,13 +193,20 @@ int main() {
 
   // set_kernel(tiled_matmul_kernel, (void *)&memrefA, (void *)&memrefB,
   //            (void *)&memrefC, (void *) &memrefOSlice);
-  printf("main: a = %x, b = %x, c = %x\n",&memrefA,&memrefB,&memrefC);
+  printf("main: a = %x, b = %x, c = %x\n",(unsigned int)&memrefA,(unsigned int)&memrefB,(unsigned int)&memrefC);
+
+  //_mlir_ciface_sendingMemref(&memrefA);
+  //_mlir_ciface_sendingMemref((void*) &memrefA);
+
   set_kernel((kernel_ptr)_mlir_ciface_kernel_matmul);
-  set_kernel_args((void *)&memrefA, (void *)&memrefB, (void *)&memrefC);
+  //set_kernel_args((void *)&memrefA, (void *)&memrefB, (void *)&memrefC);
   // perform tiled matmul on compute core #5
-  host_acc_perform_kernel_together((kernel_ptr)_mlir_ciface_kernel_matmul,
-                                   &memrefA, (void *)&memrefB, (void *)&memrefC,
-                                   87);
+   host_acc_perform_kernel_together2((kernel_ptr)_mlir_ciface_kernel_matmul,
+                                   (void*)&memrefA, (void *)&memrefB, (void *)&memrefC,
+                                   (void*)87);
+  // host_acc_perform_kernel_together2((kernel_ptr)_mlir_ciface_kernel_matmul,
+  //                                  (void*)&memrefA, (void *)&memrefB, (void *)&memrefC,
+  //                                  87, (void*)&memrefA, (void*)&memrefB, (void*)&memrefC);
   // wake_up_compute_core(5);
   // wait_for_compute_core(5);
 
@@ -226,6 +234,8 @@ int main() {
 
   if (nerr != 0) {
     printf("Output does not match the golden value!\n");
+    print2DMemRefI32_t(&memrefC, 5);
+    print2DMemRefI32_t(&memrefGolden, 5);
   } else {
     printf("Output Correct\n");
   }

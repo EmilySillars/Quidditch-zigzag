@@ -4,14 +4,47 @@ void set_accelerator_kernel(void (*k)(void *arg0, void *arg1, void *arg2)) {
   set_kernel(k);
 }
 
-void _mlir_ciface_dispatch_to_accelerator(uint32_t accID, void *arg0, void *arg1,
-                             void *arg2) {
-  printf("dispatch to acc: accID is %d, a = %x, b = %x, c = %x\n",accID, arg0, arg1, arg2);
- // set_kernel_args(arg0, arg1, arg2);
+// TwoDMemrefI8_t *x, TwoDMemrefI8_t *y,
+//                                TwoDMemrefI32_t *z
+void _mlir_ciface_dispatch_to_accelerator(TwoDMemrefI8_t *accID, TwoDMemrefI8_t *arg0,
+                                          TwoDMemrefI8_t *arg1, TwoDMemrefI32_t *arg2) {
+  printf("dispatch to acc: arg0 = %x, arg1 = %x, arg2 = %x, arg3 is %x\n", (unsigned int)accID, (unsigned int)arg0,
+        (unsigned int) arg1, (unsigned int)arg2);
+  set_kernel_args(arg0, arg1, arg2);
   // perform tiled matmul on compute core # accID
-  wake_up_compute_core(accID);
-  wait_for_compute_core(accID);
+  wake_up_compute_core(5);
+  wait_for_compute_core(5);
+  // wake_up_compute_core(accID);
+  // wait_for_compute_core(accID);
 }
+
+
+void _mlir_ciface_print_my_arg(TwoDMemrefI8_t *arg) {
+  printf("my arg is %x\n", (unsigned int)arg);
+  print2DMemRefI8_t(arg, 5);
+  arg->aligned_data[0] += 77;
+  print2DMemRefI8_t(arg, 5);
+}
+
+void _mlir_ciface_print_my_arg2(uint64_t arg) {
+  printf("my arg as an llvm ptr is %llx\n", arg);
+}
+
+void _mlir_ciface_print_my_arg3(uint64_t arg) {
+  printf("my arg as an i64 is %llx\n", arg);
+}
+
+// void _mlir_ciface_dispatch_to_accelerator(void* accID, void *arg0,
+//                                           void *arg1, void *arg2) {
+//   printf("dispatch to acc: accID is %x, a = %x, b = %x, c = %x\n", accID, arg0,
+//          arg1, arg2);
+//   // set_kernel_args(arg0, arg1, arg2);
+//   // perform tiled matmul on compute core # accID
+//   wake_up_compute_core(5);
+//   wait_for_compute_core(5);
+//   // wake_up_compute_core(accID);
+//   // wait_for_compute_core(accID);
+// }
 
 /*
 
@@ -44,24 +77,23 @@ void host_acc_perform_kernel_together(kernel_ptr k, void *arg0, void *arg1,
   va_list cursor;
   va_start(cursor, arg2);
   if (k == (kernel_ptr)_mlir_ciface_kernel_matmul) {
-    printf("hoodle\n");
     void *arg3 = va_arg(cursor, void *);
-    uint32_t fourthArg = (uint32_t) arg3;
-    printf("fourthArg is %d, a = %x, b = %x, c = %x\n",fourthArg, arg0, arg1,arg2);
+    void *arg4 = va_arg(cursor, void *);
+    void *arg5 = va_arg(cursor, void *);
+    uint32_t fourthArg = (uint32_t)arg3;
+    printf("host_acc_together: fourthArg is %d, a = %x, b = %x, c = %x\n",
+           (unsigned int)fourthArg, (unsigned int)arg3, (unsigned int)arg4, (unsigned int)arg5);
     _mlir_ciface_tiled_matmul(arg0, arg1, arg2, arg3);
   }
+}
 
-  // switch (k) {
-  //   case _mlir_ciface_kernel_matmul:
-  //   void* arg3;
-  //     for (size_t i = 0; i < 4; i++) {
-  //     }
-  //     break;
-  //   default:
-  //     // for (size_t i = 0; i < 5; i++) {
-  //     // }
-  //     break;
-  // }
+void host_acc_perform_kernel_together2(kernel_ptr k, void *arg0, void *arg1,
+                                       void *arg2, void *arg3) {
+  if (k == (kernel_ptr)_mlir_ciface_kernel_matmul) {
+    printf("host_acc_together: a = %x, b = %x, c = %x, fourthArg is %x \n",
+          (unsigned int) arg0,(unsigned int) arg1, (unsigned int)arg2, (unsigned int)arg3);
+    _mlir_ciface_tiled_matmul(arg0, arg1, arg2, arg3);
+  }
 }
 
 // c-code implementation of kernels (to check correctness of MLIR)

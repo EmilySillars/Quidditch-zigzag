@@ -34,6 +34,11 @@ extern void _mlir_ciface_kernel_matmul(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
 extern void _mlir_ciface_kernel_1dConv(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
                                 TwoDMemrefI32_t *c);
 
+
+void _mlir_ciface_print_my_arg(TwoDMemrefI8_t *arg);
+void _mlir_ciface_print_my_arg2(uint64_t arg);
+void _mlir_ciface_print_my_arg3(uint64_t arg);
+
 // "Host" function calls
 
 // tell the accelerator which kernel it should perform
@@ -52,8 +57,11 @@ extern void _mlir_ciface_tiled_matmul(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
                                       TwoDMemrefI32_t *l1OTile);
 
 // dispatch workload to accelerator with id accID
-void _mlir_ciface_dispatch_to_accelerator(uint32_t accID, void* arg0, void* arg1, void* arg2);
-
+//void _mlir_ciface_dispatch_to_accelerator(void* accID, void* arg0, void* arg1, void* arg2);
+void _mlir_ciface_dispatch_to_accelerator(TwoDMemrefI8_t *accID, TwoDMemrefI8_t *arg0,
+                                          TwoDMemrefI8_t *arg1, TwoDMemrefI32_t *arg2);
+void host_acc_perform_kernel_together2(kernel_ptr k, void *arg0, void *arg1,
+                                      void *arg2, void* arg3);
 /*
 Q: What level of memory is the accelerator writing its results to? 
 A: This marks the "host-accelerator" memory hierarchy divide; 
