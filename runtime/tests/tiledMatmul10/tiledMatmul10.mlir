@@ -149,12 +149,6 @@
     %eight = arith.constant 8 : index
     %thirteen = arith.constant 13 : index
 
-    //%outputTile = memref.subview %arg2[%d0_1,%zero][8,104][1,1] :  memref<104x104xi32, strided<[104,1]>> to memref<8x104xi32, strided<[104, 1], offset: ?>>
-
-    //%inputTile = memref.subview %arg0[%d0_1,%zero][8,104][1,1] : memref<104x104xi8> to memref<8x104xi8, strided<[104, 1], offset: ?>>
-
-    //%weightTile = %arg1 : memref<104x104xi8, strided<[1,104]>>// unchanged
-
     // all the following inner loops should be executed on the accelerator
     scf.for %d1_1 = %zero to %thirteen step %one iter_args() -> () {  
     scf.for %d2_1 = %zero to %thirteen step %one iter_args () -> () {
@@ -207,27 +201,54 @@
         // indices
     %zero = arith.constant 0 : index
     %one = arith.constant 1: index
+    %two = arith.constant 2: index
     %five = arith.constant 5: index
     %eight = arith.constant 8 : index
+     %nine = arith.constant 9 : index
+      %ten = arith.constant 10 : index
+    %eleven = arith.constant 11 : index
+    %twelve = arith.constant 12 : index 
     %thirteen = arith.constant 13 : index  
+    %oneOhFour = arith.constant 104 : index
+    %d0_1_bk_sz = arith.constant 8 : index
+
+   // scf.for %d0_1 = %zero to %oneOhFour step %eight iter_args() -> () {
+    // select a slice of output space on L3
+   // %outputTileL3 = memref.subview %arg2[%d0_1,%zero][8,104][1,1] 
+   // :  memref<104x104xi32, strided<[104,1]>> to memref<8x104xi32, strided<[104, 1], offset: ?>>
+    // select a corresponding slice of output space on L1
+  //  %outputTileL1 = memref.subview %l1OSlice[%d0_1,%zero][8,104][1,1] 
+  //  :  memref<104x104xi32, strided<[104,1]>> to memref<8x104xi32, strided<[104, 1], offset: ?>> 	
+	  // select a slice of input data from L1
+  //  %inputTile = memref.subview %arg0[%d0_1,%zero][8,104][1,1] 
+  //  : memref<104x104xi8> to memref<8x104xi8, strided<[104, 1], offset: ?>>
+
+  // 3328 elts incomplete when for loop is 0-9, which means 4 subviews are left, since 4 * 104 * 8 = 3328.
+  // 2496 elts incomlpete when for loop is 0-10, which means 3 subviews are left, since 
 
     // enter scf FOR LOOP
     scf.for %d0_1 = %zero to %thirteen step %one iter_args() -> () { // this loop uses both L3 and L1
+
+    %d0 = arith.muli %d0_1, %d0_1_bk_sz : index
 	
 	  // select a slice of output space on L3
-    %outputTileL3 = memref.subview %arg2[%d0_1,%zero][8,104][1,1] 
+    %outputTileL3 = memref.subview %arg2[%d0,%zero][8,104][1,1] 
     :  memref<104x104xi32, strided<[104,1]>> to memref<8x104xi32, strided<[104, 1], offset: ?>>
 
     // select a corresponding slice of output space on L1
-    %outputTileL1 = memref.subview %l1OSlice[%d0_1,%zero][8,104][1,1] 
+    %outputTileL1 = memref.subview %l1OSlice[%d0,%zero][8,104][1,1] 
     :  memref<104x104xi32, strided<[104,1]>> to memref<8x104xi32, strided<[104, 1], offset: ?>>
     	
 	  // select a slice of input data from L1
-    %inputTile = memref.subview %arg0[%d0_1,%zero][8,104][1,1] 
+    %inputTile = memref.subview %arg0[%d0,%zero][8,104][1,1] 
     : memref<104x104xi8> to memref<8x104xi8, strided<[104, 1], offset: ?>>
 
-    func.call @dispatch_to_accelerator(%inputTile, %inputTile, %arg1, %outputTileL1) 
+    func.call @dispatch_to_accelerator(%inputTile, %inputTile, %arg1, %outputTileL3) 
     : (memref<8x104xi8, strided<[104, 1], offset: ?>>, memref<8x104xi8, strided<[104, 1], offset: ?>>, memref<104x104xi8, strided<[1,104]>>, memref<8x104xi32, strided<[104, 1], offset: ?>>) -> ()
+
+    //  func.call @accelerator_work(%inputTile, %arg1, %outputTileL3) 
+    // : (memref<8x104xi8, strided<[104, 1], offset: ?>>, memref<104x104xi8, strided<[1,104]>>, memref<8x104xi32, strided<[104, 1], offset: ?>>) -> ()
+
 
 
     // weight data tile is unchanged
@@ -239,7 +260,7 @@
     // copy output slice from L1 to L3
     // memref.copy %arg0, %arg1 : memref<?xf32> to memref<?xf32>
 
-    memref.copy %outputTileL1, %outputTileL3 : memref<8x104xi32, strided<[104, 1], offset: ?>> to memref<8x104xi32, strided<[104, 1], offset: ?>>   
+    //memref.copy %outputTileL1, %outputTileL3 : memref<8x104xi32, strided<[104, 1], offset: ?>> to memref<8x104xi32, strided<[104, 1], offset: ?>>   
     
     } // end of d0_1 for
 

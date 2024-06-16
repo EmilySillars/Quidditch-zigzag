@@ -63,6 +63,12 @@ void _mlir_ciface_dispatch_to_accelerator(TwoDMemrefI8_t *accID, TwoDMemrefI8_t 
                                           TwoDMemrefI8_t *arg1, TwoDMemrefI32_t *arg2);
 void host_acc_perform_kernel_together2(kernel_ptr k, void *arg0, void *arg1,
                                       void *arg2, void* arg3);
+
+void matmul_transformed(TwoDMemrefI8_t *x, TwoDMemrefI8_t *y,
+                               TwoDMemrefI32_t *z) ;
+
+void matmul_transformed2(TwoDMemrefI8_t *x, TwoDMemrefI8_t *y,
+                               TwoDMemrefI32_t *z) ;
 /*
 Q: What level of memory is the accelerator writing its results to? 
 A: This marks the "host-accelerator" memory hierarchy divide; 

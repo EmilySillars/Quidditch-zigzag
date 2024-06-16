@@ -180,3 +180,79 @@ void print2DMemRefI32_t_notASquare(TwoDMemrefI32_t *x, int32_t stride_x,
   }
   printf("]\n");
 }
+
+void matmul_transformed(TwoDMemrefI8_t *x, TwoDMemrefI8_t *y,
+                               TwoDMemrefI32_t *z) {
+  // only square matrices allowed
+  size_t d0_1_bk_sz = MAT_WIDTH / 13;  // 8
+  size_t d1_1_bk_sz = MAT_WIDTH / 13;  // 8
+  size_t d2_1_bk_sz = MAT_WIDTH / 13;  // 8
+   
+  for (size_t d0_1 = 0; d0_1 < 13; d0_1++) { // 13 8-elt-row chunks
+  
+  // everything inside here should be dispatched to the accelerator (I think)
+   for (size_t d1_1 = 0; d1_1 < 13; d1_1++) {
+    for (size_t d2_1 = 0; d2_1 < 13; d2_1++) {
+    
+     // these inner three loops should be spacially unrolled, but ignore for now...
+     for (size_t d0_2 = 0; d0_2 < 8; d0_2++) {
+      for (size_t d1_2 = 0; d1_2 < 8; d1_2++) {
+       for (size_t d2_2 = 0; d2_2 < 8; d2_2++) {
+       
+        // calculate indices
+        size_t d0 = d0_1 * d0_1_bk_sz + d0_2;
+        size_t d1 = d1_1 * d1_1_bk_sz + d1_2;
+        size_t d2 = d2_1 * d2_1_bk_sz + d2_2;
+        
+        //perform MAC
+        size_t z_index = (d0 * MAT_WIDTH) + d1;
+        size_t x_index = (d0 * MAT_WIDTH) + d2;
+        size_t y_index = (d2 * MAT_WIDTH) + d1;
+        z->aligned_data[z_index] +=
+            x->aligned_data[x_index] * y->aligned_data[y_index];
+       }
+      }
+     }
+    }
+   }
+  }                           
+}
+
+void matmul_transformed2(TwoDMemrefI8_t *x, TwoDMemrefI8_t *y,
+                               TwoDMemrefI32_t *z) {
+  // only square matrices allowed
+  size_t d0_1_bk_sz = MAT_WIDTH / 13;  // 8
+  size_t d1_1_bk_sz = MAT_WIDTH / 13;  // 8
+  size_t d2_1_bk_sz = MAT_WIDTH / 13;  // 8
+   
+  for (size_t d0_1 = 0; d0_1 < 13; d0_1++) { // 13 8-elt-row chunks
+  
+  // everything inside here should be dispatched to the accelerator (I think)
+   for (size_t d1_1 = 0; d1_1 < 13; d1_1++) {
+    for (size_t d2_1 = 0; d2_1 < 13; d2_1++) {
+    
+     // these inner three loops should be spacially unrolled, but ignore for now...
+     for (size_t d0_2 = 0; d0_2 < 8; d0_2++) {
+      for (size_t d1_2 = 0; d1_2 < 8; d1_2++) {
+       for (size_t d2_2 = 0; d2_2 < 8; d2_2++) {
+       
+        // calculate indices
+        //size_t d0 = d0_1 * d0_1_bk_sz + d0_2;
+        size_t d0 = d0_2;
+        size_t d1 = d1_1 * d1_1_bk_sz + d1_2;
+        size_t d2 = d2_1 * d2_1_bk_sz + d2_2;
+        
+        //perform MAC
+        size_t z_index = (d0 * MAT_WIDTH) + d1;
+        size_t x_index = (d0 * MAT_WIDTH) + d2;
+        size_t y_index = (d2 * MAT_WIDTH) + d1;
+        z->aligned_data[z_index] +=
+            x->aligned_data[x_index] * y->aligned_data[y_index];
+        //z->aligned_data[z_index] = d0_1;
+       }
+      }
+     }
+    }
+   }
+  }                           
+}

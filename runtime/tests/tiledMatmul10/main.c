@@ -178,6 +178,7 @@ int main() {
 
   // perform C code matmul to get the ground truth
   cCodeEquivalentThreeLoops(&memrefA, &memrefB, &memrefGolden);
+  // matmul_transformed2(&memrefA, &memrefB, &memrefGolden);
 
   // Create memref object for output slice stored in L1
   TwoDMemrefI32_t memrefOSlice;  // output
@@ -186,41 +187,17 @@ int main() {
   memrefOSlice.aligned_data = memrefOSlice.data;
   memrefOSlice.offset = 0;
 
-  // prepare compute core for matmul operation
-  // set_kernel(tiled_matmul_w_subviews_kernel, (void *)&memrefA, (void
-  // *)&memrefB,
-  //            (void *)&memrefC);
-
-  // set_kernel(tiled_matmul_kernel, (void *)&memrefA, (void *)&memrefB,
-  //            (void *)&memrefC, (void *) &memrefOSlice);
   printf("main: a = %x, b = %x, c = %x\n",(unsigned int)&memrefA,(unsigned int)&memrefB,(unsigned int)&memrefC);
 
-  //_mlir_ciface_sendingMemref(&memrefA);
-  //_mlir_ciface_sendingMemref((void*) &memrefA);
+  
 
-  //set_kernel((kernel_ptr)_mlir_ciface_kernel_matmul);
- set_kernel((kernel_ptr)_mlir_ciface_accelerator_work);
-  //set_kernel((kernel_ptr)_mlir_ciface_modify_output);
-  //set_kernel_args((void *)&memrefA, (void *)&memrefB, (void *)&memrefC);
-  // perform tiled matmul on compute core #5
+   set_kernel((kernel_ptr)_mlir_ciface_accelerator_work);
    host_acc_perform_kernel_together2((kernel_ptr)_mlir_ciface_kernel_matmul,
                                    (void*)&memrefA, (void *)&memrefB, (void *)&memrefC,
                                    (void*)&memrefOSlice);
-  // host_acc_perform_kernel_together2((kernel_ptr)_mlir_ciface_kernel_matmul,
-  //                                  (void*)&memrefA, (void *)&memrefB, (void *)&memrefC,
-  //                                  87, (void*)&memrefA, (void*)&memrefB, (void*)&memrefC);
-  // wake_up_compute_core(5);
-  // wait_for_compute_core(5);
 
-  // launch compute core 13 times
-  // set_kernel(hola_kernel, (void *)&memrefA, (void *)&memrefB, (void
-  // *)&memrefC); for (size_t i = 0; i < 13; i++) {
-  //   wake_up_compute_core(5);
-  //   wait_for_compute_core(5);
-  // }
 
-  // maybe we need to call tiled matmul and then modify tiledmatul to use
-  // subviews and THEN dispatch part of the matmul to the compute core
+  // matmul_transformed2(&memrefA, &memrefB, &memrefC);
 
   // check for correctness
   int nerr = 0;
@@ -237,7 +214,7 @@ int main() {
   if (nerr != 0) {
     printf("Output does not match the golden value!\n");
     print2DMemRefI32_t(&memrefC, 104);
-   // print2DMemRefI32_t(&memrefGolden, 104);
+    print2DMemRefI32_t(&memrefGolden, 104);
   } else {
     printf("Output Correct\n");
   }
@@ -250,3 +227,28 @@ int main() {
   tell_compute_cores_to_exit();
   return nerr;
 }
+
+
+  // host_acc_perform_kernel_together2((kernel_ptr)_mlir_ciface_kernel_matmul,
+  //                                  (void*)&memrefA, (void *)&memrefB, (void *)&memrefC,
+  //                                  87, (void*)&memrefA, (void*)&memrefB, (void*)&memrefC);
+  // wake_up_compute_core(5);
+  // wait_for_compute_core(5);
+
+  // launch compute core 13 times
+  // set_kernel(hola_kernel, (void *)&memrefA, (void *)&memrefB, (void
+  // *)&memrefC); for (size_t i = 0; i < 13; i++) {
+  //   wake_up_compute_core(5);
+  //   wait_for_compute_core(5);
+  // }
+
+  // maybe we need to call tiled matmul and then modify tiledmatul to use
+  // subviews and THEN dispatch part of the matmul to the compute core
+
+  //_mlir_ciface_sendingMemref(&memrefA);
+  //_mlir_ciface_sendingMemref((void*) &memrefA);
+
+  //set_kernel((kernel_ptr)_mlir_ciface_kernel_matmul);
+    //set_kernel((kernel_ptr)_mlir_ciface_modify_output);
+  //set_kernel_args((void *)&memrefA, (void *)&memrefB, (void *)&memrefC);
+  // perform tiled matmul on compute core #5
