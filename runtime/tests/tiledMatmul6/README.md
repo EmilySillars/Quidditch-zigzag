@@ -4,6 +4,7 @@
 - Tiling scheme is chosen by ZigZag using gemm.py hardware description.
 - Dynamically Allocated Input
 - Matrix size 104 x 104
+- All data on L3
 
 [back to all tests](../../../zigzag-fork/README.md#Examples)
 
@@ -203,13 +204,13 @@ cd runtime/tests
 spike: 
 
 ```
-sh zigzag-spike-build-and-run.sh tiledMatmul5.mlir
+sh zigzag-spike-build-and-run.sh tiledMatmul6.mlir
 ```
 
 verilator:
 
 ```
-sh zigzag-verilator-build-and-run.sh tiledMatmul5.mlir
+sh zigzag-verilator-build-and-run.sh tiledMatmul6.mlir
 ```
 
 ## V. Expected Output

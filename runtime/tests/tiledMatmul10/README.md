@@ -197,35 +197,107 @@ void matmul_transformed(TwoDMemrefI8_t *x, TwoDMemrefI8_t *y,
 
 #### c. MLIR transformed based on L1 - L3 split ("host" vs accelerator divide)
 
+Host:
+
 ```
-"func.func"() <{function_type = (memref<104x104xi8>, memref<104x104xi8, strided<[1, 104]>>, memref<104x104xi32, strided<[104,1]>>) -> (), sym_name = "tiled_matmul_w_subviews"}> ({
-  ^bb0(%arg0: memref<104x104xi8>, %arg1: memref<104x104xi8, strided<[1,104]>>, %arg2: memref<104x104xi32, strided<[104,1]>>):
-  
+// perform tiled matrix multiplication,
+// dispatching part of the work to the accelerator!
+  "func.func"() <{function_type = (memref<104x104xi8>, memref<104x104xi8, strided<[1, 104]>>, memref<104x104xi32, strided<[104,1]>>, memref<104x104xi32, strided<[104,1]>>) -> (), sym_name = "tiled_matmul"}> ({
+  ^bb0(%arg0: memref<104x104xi8>, %arg1: memref<104x104xi8, strided<[1,104]>>, %arg2: memref<104x104xi32, strided<[104,1]>>, %l1OSlice: memref<104x104xi32, strided<[104,1]>>):
     // indices
     %zero = arith.constant 0 : index
     %one = arith.constant 1: index
     %eight = arith.constant 8 : index
     %thirteen = arith.constant 13 : index  
+    %oneOhFour = arith.constant 104 : index
+    %d0_1_bk_sz = arith.constant 8 : index
+    // constants
+    %zero_i32 = arith.constant 0: i32
 
     // enter scf FOR LOOP
     scf.for %d0_1 = %zero to %thirteen step %one iter_args() -> () { // this loop uses both L3 and L1
+
+    %d0 = arith.muli %d0_1, %d0_1_bk_sz : index
 	
-	// adjust output tile's pointer to L3
-    %outputTile = memref.subview %arg2[%d0_1,%zero][8,104][1,1] 
+	  // select a slice of output space on L3
+    %outputTileL3 = memref.subview %arg2[%d0,%zero][8,104][1,1] 
     :  memref<104x104xi32, strided<[104,1]>> to memref<8x104xi32, strided<[104, 1], offset: ?>>
-    
-    // copy output slice from L3 to L1
-	
-	// adjust input tile's pointer to L1
-    %inputTile = memref.subview %arg0[%d0_1,%zero][8,104][1,1] 
+
+    // select a corresponding slice of output space on L1
+    %outputTileL1 = memref.subview %l1OSlice[%zero,%zero][8,104][1,1] 
+    :  memref<104x104xi32, strided<[104,1]>> to memref<8x104xi32, strided<[104, 1], offset: ?>>
+    	
+	  // select a slice of input data from L1
+    %inputTile = memref.subview %arg0[%d0,%zero][8,104][1,1] 
     : memref<104x104xi8> to memref<8x104xi8, strided<[104, 1], offset: ?>>
 
-    // %weightTile is unchanged
+    // dispatch mini matmul to accelerator
+    func.call @dispatch_to_accelerator(%inputTile, %inputTile, %arg1, %outputTileL1) 
+    : (memref<8x104xi8, strided<[104, 1], offset: ?>>, memref<8x104xi8, strided<[104, 1], offset: ?>>, memref<104x104xi8, strided<[1,104]>>, memref<8x104xi32, strided<[104, 1], offset: ?>>) -> ()
+
+    memref.copy %outputTileL1, %outputTileL3 : memref<8x104xi32, strided<[104, 1], offset: ?>> to memref<8x104xi32, strided<[104, 1], offset: ?>>   
+     
+    // zero-out the L1 slice; there has to be a better way to do this, right?
+    scf.for %i = %zero to %eight step %one iter_args() -> () { 
+    scf.for %j = %zero to %oneOhFour step %one iter_args() -> () { 
+     memref.store %zero_i32, %outputTileL1[%i, %j] :memref<8x104xi32, strided<[104, 1], offset: ?>>
+    } // end of %i for
+    } // end of %j for
+    } // end of d0_1 for
+
+    "func.return"() : () -> ()
+  }) {llvm.emit_c_interface}: () -> ()
+```
+
+Accelerator:
+
+```
+  "func.func"() <{function_type = (memref<8x104xi8, strided<[104, 1], offset: ?>>, memref<104x104xi8, strided<[1, 104]>>, memref<8x104xi32, strided<[104, 1], offset: ?>>) -> (), sym_name = "accelerator_work"}> ({
+  ^bb0(%arg0: memref<8x104xi8, strided<[104, 1], offset: ?>>, %arg1: memref<104x104xi8, strided<[1,104]>>, %arg2: memref<8x104xi32, strided<[104, 1], offset: ?>>):
+    // tile sizes
+    %d1_1_bk_sz = arith.constant 8 : index
+    %d2_1_bk_sz = arith.constant 8 : index
+    
+    // indices
+    %zero = arith.constant 0 : index
+    %one = arith.constant 1: index
+    %eight = arith.constant 8 : index
+    %thirteen = arith.constant 13 : index
 
     // all the following inner loops should be executed on the accelerator
-    
-    
-    } // end of d0_1 for
+    scf.for %d1_1 = %zero to %thirteen step %one iter_args() -> () {  
+    scf.for %d2_1 = %zero to %thirteen step %one iter_args () -> () {
+    // the inner 3 loops will be spatially unrolled on the accelerator
+    scf.for %d0_2 = %zero to %eight step %one iter_args() -> () {       
+    scf.for %d1_2 = %zero to %eight step %one iter_args () -> () { 
+    scf.for %d2_2 = %zero to %eight step %one iter_args () -> () {
+     // %prod0 = arith.muli %d0_1, %d0_1_bk_sz : index
+      %prod0 = arith.constant 0 : index
+      %d0 = arith.addi %prod0, %d0_2 : index
+
+      %prod1 = arith.muli %d1_1, %d1_1_bk_sz : index
+      %d1 = arith.addi %prod1, %d1_2 : index
+
+      %prod2 = arith.muli %d2_1, %d2_1_bk_sz : index
+      %d2 = arith.addi %prod2, %d2_2 : index
+
+      %inputElt = memref.load %arg0[%d0, %d2] : memref<8x104xi8, strided<[104, 1], offset: ?>>
+      %inputEltCasted = arith.extsi  %inputElt : i8 to i32 
+      
+      %weightElt = memref.load %arg1[%d2, %d1] : memref<104x104xi8, strided<[1,104]>>
+      %weightEltCasted = arith.extsi  %weightElt : i8 to i32 
+
+      %outputElt = memref.load %arg2[%d0, %d1] : memref<8x104xi32, strided<[104, 1], offset: ?>>
+      %prod = arith.muli %inputEltCasted, %weightEltCasted : i32
+
+      %newOutputElt = arith.addi %prod, %outputElt : i32 
+      memref.store %newOutputElt, %arg2[%d0, %d1] :memref<8x104xi32, strided<[104, 1], offset: ?>>
+
+    } // end of d2_2 for
+    } // end of d1_2 for
+    } // end of d0_2 for
+    } // end of d2_1 for
+    } // end of d1_1 for 
 
     "func.return"() : () -> ()
   }) {llvm.emit_c_interface}: () -> ()
@@ -242,12 +314,12 @@ cd runtime/tests
 spike: 
 
 ```
-sh zigzag-spike-build-and-run.sh tiledMatmul5.mlir
+sh zigzag-spike-build-and-run.sh tiledMatmul10.mlir
 ```
 
 verilator:
 
 ```
-sh zigzag-verilator-build-and-run.sh tiledMatmul5.mlir
+sh zigzag-verilator-build-and-run.sh tiledMatmul10.mlir
 ```
 

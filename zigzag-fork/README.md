@@ -22,8 +22,8 @@ cd runtime/tests
 
 | Test + Description                                           | Matrix Size | Allocation | Values | Tiling Method                                                | Verilator | Spike |
 | :----------------------------------------------------------- | ----------- | ---------- | ------ | ------------------------------------------------------------ | --------- | ----- |
-| **Tiled Matrix Multiplication 6**<br />```sh zigzag-spike-build-and-run.sh tiledMatmul6.mlir```<br /><br />Dispatches to compute core!<br />Full details [here](../runtime/tests/tiledMatmul6/README.md) | 104 x 104   | dynamic    | Fixed  | ZigZag w/ [gemm](https://github.com/KULeuven-MICAS/zigzag/blob/f53a6bf98b6eb4d4a592d3c5b1bf9cc6cce2eadc/zigzag/inputs/examples/hardware/Gemm.py) | TODO      | yes   |
-| **Tiled Matrix Multiplication 10**<br />```sh zigzag-spike-build-and-run.sh tiledMatmul6.mlir```<br /><br />Dispatches to compute core!<br />Uses MLIR Subviews!<br /> Full details [here](../runtime/tests/tiledMatmul10/README.md) | 104 x 104   | dynamic    | Fixed  | ZigZag w/ [gemm](https://github.com/KULeuven-MICAS/zigzag/blob/f53a6bf98b6eb4d4a592d3c5b1bf9cc6cce2eadc/zigzag/inputs/examples/hardware/Gemm.py) | TODO      | TODO  |
+| **Tiled Matrix Multiplication 6**<br />```sh zigzag-spike-build-and-run.sh tiledMatmul6.mlir```<br /><br />Dispatches to compute core!<br />Uses L3 only<br />Full details [here](../runtime/tests/tiledMatmul6/README.md) | 104 x 104   | dynamic    | Fixed  | ZigZag w/ [gemm](https://github.com/KULeuven-MICAS/zigzag/blob/f53a6bf98b6eb4d4a592d3c5b1bf9cc6cce2eadc/zigzag/inputs/examples/hardware/Gemm.py) | TODO      | yes   |
+| **Tiled Matrix Multiplication 10**<br />```sh zigzag-spike-build-and-run.sh tiledMatmul6.mlir```<br /><br />Dispatches to compute core!<br />Uses L3 and L1<br />Full details [here](../runtime/tests/tiledMatmul10/README.md) | 104 x 104   | dynamic    | Fixed  | ZigZag w/ [gemm](https://github.com/KULeuven-MICAS/zigzag/blob/f53a6bf98b6eb4d4a592d3c5b1bf9cc6cce2eadc/zigzag/inputs/examples/hardware/Gemm.py) | TODO      | yes   |
 
 #### Snitch DMA Core only
 
