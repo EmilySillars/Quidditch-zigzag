@@ -7,7 +7,9 @@ sh clean-out.sh $basename
 mkdir -p $basename/out
 
 # lower mlir to llvm
-mlir-opt $basename/$basename.mlir  --one-shot-bufferize='bufferize-function-boundaries' -test-lower-to-llvm > $basename/out/$basename-in-llvm-dialect.mlir
+mlir-opt $basename/$basename.mlir  --one-shot-bufferize='bufferize-function-boundaries' > $basename/out/$basename-bufferized.mlir
+mlir-opt $basename/out/$basename-bufferized.mlir -test-lower-to-llvm > $basename/out/$basename-in-llvm-dialect.mlir
+
 mlir-translate --mlir-to-llvmir -o $basename/out/$basename.ll $basename/out/$basename-in-llvm-dialect.mlir
 
 # compile llvm to .o file (target riscv)
