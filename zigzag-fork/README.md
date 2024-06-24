@@ -189,6 +189,10 @@ $SPIKE/spike -m0x10000000:0x40000,0x80000000:0x80000000 --disable-dtb -p9 tests/
 ctest -R HolaWorld                                                                        # as a test
 ```
 
+## How does mlir-opt's -O3 Effect ZigZag transformations?
+
+TODO
+
 ## How does Clang's -O3 Effect ZigZag transformations?
 
 ### Prequisites
@@ -208,9 +212,6 @@ On fedora, do `sudo yum install graphviz`
    sh was-it-all-worth-it.sh tiledMatmul5.mlir tiled_matmul
    ```
 
-   
-   
-   
 
 ## Broken Pieces
 
