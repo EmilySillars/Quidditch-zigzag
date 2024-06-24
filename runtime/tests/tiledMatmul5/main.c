@@ -63,7 +63,7 @@ int main() {
   }
 
   // perform C code matmul to get the ground truth
-  cCodeEquivalentThreeLoops(&memrefA, &memrefB, &memrefGolden);
+  cCodeSquareMatmul(&memrefA, &memrefB, &memrefGolden);
 
 
   // Call the MLIR tiled matmul function

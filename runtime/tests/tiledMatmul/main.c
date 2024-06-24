@@ -62,7 +62,7 @@ extern void _mlir_ciface_mlirFunc(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
 
 int trouble = 0; 
 
-void cCodeEquivalentThreeLoops(TwoDMemrefI8_t *x, TwoDMemrefI8_t *y,
+void cCodeSquareMatmul(TwoDMemrefI8_t *x, TwoDMemrefI8_t *y,
                                TwoDMemrefI32_t *z);
 void cCodeEquivalent(TwoDMemrefI8_t *x, TwoDMemrefI8_t *y, TwoDMemrefI32_t *z);
 void print2DMemRefI8_t(TwoDMemrefI8_t *x, int32_t width);
@@ -241,7 +241,7 @@ void cCodeEquivalent(TwoDMemrefI8_t *x, TwoDMemrefI8_t *y, TwoDMemrefI32_t *z) {
   }
 }
 
-void cCodeEquivalentThreeLoops(TwoDMemrefI8_t *x, TwoDMemrefI8_t *y,
+void cCodeSquareMatmul(TwoDMemrefI8_t *x, TwoDMemrefI8_t *y,
                                TwoDMemrefI32_t *z) {
   // printf("M_size is %d and N_size is %d\n",M_size, N_size);
   // for (int i = 0; i < M_size * N_size; i++) {

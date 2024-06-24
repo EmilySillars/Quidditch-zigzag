@@ -12,7 +12,7 @@
 
 #### a. MLIR (use linalg-to-stream tool)
 
-python xdsl_opt_main.py tests/matmul6.mlir -p linalg-to-stream; python run_zigzag.py
+python xdsl_opt_main.py tests/matmul10.mlir -p linalg-to-stream; python run_zigzag.py
 
 ```
 // matrices are 104 x 104

@@ -63,7 +63,7 @@ extern void _mlir_ciface_mlirFunc(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
 
 int trouble = 0; 
 
-void cCodeEquivalentThreeLoops(TwoDMemrefI8_t *x, TwoDMemrefI8_t *y,
+void cCodeSquareMatmul(TwoDMemrefI8_t *x, TwoDMemrefI8_t *y,
                                TwoDMemrefI32_t *z);
 void print2DMemRefI8_t(TwoDMemrefI8_t *x, int32_t width);
 void print2DMemRefI32_t(TwoDMemrefI32_t *x, int32_t width);
@@ -135,7 +135,7 @@ int main() {
   // print2DMemRefI32_t(&memrefC,16);
 
   // printf("PAMPLEMOUSSE VOLCANO: Calculating Golden Value.\n");
-  cCodeEquivalentThreeLoops(&memrefA, &memrefB, &memrefGolden);
+  cCodeSquareMatmul(&memrefA, &memrefB, &memrefGolden);
 
   // printf("PAMPLEMOUSSE VOLCANO: Calling MLIR matmul.\n");
   // -------------------------------------------------- V
@@ -163,7 +163,7 @@ int main() {
     printf("Output Correct\n");
   }
   // print2DMemRefI32_t(&memrefC,20);
-  // // cCodeEquivalentThreeLoops(&memrefA, &memrefB, &memrefC );
+  // // cCodeSquareMatmul(&memrefA, &memrefB, &memrefC );
   // print2DMemRefI32_t(&memrefGolden,20);
 
   // free everything before exiting!
@@ -225,7 +225,7 @@ void print2DMemRefI32_t_notASquare(TwoDMemrefI32_t *x, int32_t stride_x, int32_t
   printf("]\n");
 }
 
-void cCodeEquivalentThreeLoops(TwoDMemrefI8_t *x, TwoDMemrefI8_t *y,
+void cCodeSquareMatmul(TwoDMemrefI8_t *x, TwoDMemrefI8_t *y,
                                TwoDMemrefI32_t *z) {
   // printf("M_size is %d and N_size is %d\n",M_size, N_size);
   // for (int i = 0; i < M_size * N_size; i++) {

@@ -73,7 +73,7 @@ int main() {
   }
 
   // perform C code matmul to get the ground truth
-  cCodeEquivalentThreeLoops(&memrefA, &memrefB, &memrefGolden);
+  cCodeSquareMatmul(&memrefA, &memrefB, &memrefGolden);
 
   // perform matmul on compute core #5
   set_kernel(matmul_kernel, (void *) &memrefA, (void *) &memrefB, (void*) &memrefC);
