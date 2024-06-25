@@ -9,7 +9,7 @@ add_executable(HolaWorld holaWorld/main.c
                          lib-zigzag/data.c 
                          lib-zigzag/data.h 
                          holaWorld/out/holaWorld.o)
-target_link_libraries(HolaWorld snRuntime)
+target_link_libraries(HolaWorld snRuntime Quidditch::zigzag_dispatch::zigzag_dispatch)
 
 # Testing matrix multiplication on the DMA core
 add_executable(Matmul matmul/main.c
@@ -17,7 +17,7 @@ add_executable(Matmul matmul/main.c
                            lib-zigzag/data.h
                            lib-zigzag/memref.h 
                            matmul/out/matmul.o)
-target_link_libraries(Matmul snRuntime)
+target_link_libraries(Matmul snRuntime Quidditch::zigzag_dispatch::zigzag_dispatch)
 
 # Testing tiled matrix multiplication on the DMA core
 add_executable(TiledMatmul tiledMatmul/main.c
@@ -25,7 +25,7 @@ add_executable(TiledMatmul tiledMatmul/main.c
                            lib-zigzag/data.h
                            lib-zigzag/memref.h 
                            tiledMatmul/out/tiledMatmul.o)
-target_link_libraries(TiledMatmul snRuntime)
+target_link_libraries(TiledMatmul snRuntime Quidditch::zigzag_dispatch::zigzag_dispatch)
 
 # Testing another tiled matrix multiplication on the DMA core
 add_executable(TiledMatmul2 tiledMatmul2/main.c
@@ -33,7 +33,7 @@ add_executable(TiledMatmul2 tiledMatmul2/main.c
                            lib-zigzag/data.h
                            lib-zigzag/memref.h 
                            tiledMatmul2/out/tiledMatmul2.o)
-target_link_libraries(TiledMatmul2 snRuntime)
+target_link_libraries(TiledMatmul2 snRuntime Quidditch::zigzag_dispatch::zigzag_dispatch)
 
 # Testing another tiled matrix multiplication on the DMA core
 add_executable(TiledMatmul3 tiledMatmul3/main.c
@@ -41,7 +41,7 @@ add_executable(TiledMatmul3 tiledMatmul3/main.c
                            lib-zigzag/data.h
                            lib-zigzag/memref.h 
                            tiledMatmul3/out/tiledMatmul3.o)
-target_link_libraries(TiledMatmul3 snRuntime)
+target_link_libraries(TiledMatmul3 snRuntime Quidditch::zigzag_dispatch::zigzag_dispatch)
 
 # Testing another tiled matrix multiplication on the DMA core
 add_executable(TiledMatmul4 tiledMatmul4/main.c
@@ -49,15 +49,17 @@ add_executable(TiledMatmul4 tiledMatmul4/main.c
                            lib-zigzag/data.h
                            lib-zigzag/memref.h 
                            tiledMatmul4/out/tiledMatmul4.o)
-target_link_libraries(TiledMatmul4 snRuntime)
+target_link_libraries(TiledMatmul4 snRuntime Quidditch::zigzag_dispatch::zigzag_dispatch)
 
 # Testing another tiled matrix multiplication on the DMA core
 add_executable(TiledMatmul5 tiledMatmul5/main.c
                            lib-zigzag/data.c
                            lib-zigzag/data.h
                            lib-zigzag/memref.h 
+                           lib-zigzag/zigzag_utils.h
+                           lib-zigzag/zigzag_utils.c
                            tiledMatmul5/out/tiledMatmul5.o)
-target_link_libraries(TiledMatmul5 snRuntime)
+target_link_libraries(TiledMatmul5 snRuntime Quidditch::zigzag_dispatch::zigzag_dispatch)
 
 # Testing another tiled matrix multiplication on the DMA core
 add_executable(TiledMatmul6 tiledMatmul6/main.c
@@ -86,6 +88,8 @@ add_executable(TiledMatmul8 tiledMatmul8/main.c
                            lib-zigzag/data.c
                            lib-zigzag/data.h
                            lib-zigzag/memref.h 
+                           lib-zigzag/zigzag_utils.h
+                           lib-zigzag/zigzag_utils.c
                            tiledMatmul8/out/tiledMatmul8.o)
 target_link_libraries(TiledMatmul8 snRuntime Quidditch::zigzag_dispatch::zigzag_dispatch)
 
@@ -94,6 +98,8 @@ add_executable(TiledMatmul9 tiledMatmul9/main.c
                            lib-zigzag/data.c
                            lib-zigzag/data.h
                            lib-zigzag/memref.h 
+                           lib-zigzag/zigzag_utils.h
+                           lib-zigzag/zigzag_utils.c
                            tiledMatmul9/out/tiledMatmul9.o)
 target_link_libraries(TiledMatmul9 snRuntime)
 

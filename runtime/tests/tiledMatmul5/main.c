@@ -2,24 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <team_decls.h>
+#include "../lib-zigzag/zigzag_utils.h"
 #include "../lib-zigzag/data.h"
-#include "../lib-zigzag/memref.h"
-
-// Kernel provided via external definition                                
-extern void _mlir_ciface_mlirFunc(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
-                           TwoDMemrefI32_t *c);
-// this tile_compute function is not used in this program
-extern void _mlir_ciface_tile_compute(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
-                                TwoDMemrefI32_t *c);
-// some more c functions that the mlir code has access to - not used in this program
-void _mlir_ciface_hola(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b, TwoDMemrefI32_t *c){
-  printf("hola world!\n");
-}
-int trouble = 0; // bad global integer - TODO: get rid of this
-void _mlir_ciface_dispatch_to_accelerator(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b, TwoDMemrefI32_t *c){
-  printf("calling tile compute... %d\n",trouble);
-  trouble ++;
-}
 
 
 // we assume square matrices
