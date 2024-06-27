@@ -103,10 +103,30 @@ Spatial Loops
 
 ## III. Manual Transformation
 
-#### a. C code transformed
+#### a. C-ish pseudo code transformed
 
 ```
-TODO
+b_0_bk_sz = 13;
+a_0_bk_sz = 13;
+c_0_bk_sz = 8;
+
+for (b_0 = 0; b_0 < 8; b_0++) {
+ for (b_1 = 0; b_1 < 13; b_1++) {
+   for (a_0 = 0; a_0 < 8; a_0++) { 
+    for (c_0 = 0; c_0 < 13; c_0++) {
+     for (c_1 = 0; c_1 < 8; c_1 ++) {
+      for (a_1 = 0; a_1 < 13; a_1++) {
+        a = a_0 * a_0_bk_sz + a_1;
+        b = b_0 * b_0_bk_sz + b_1
+        c = c_0 * c_0_bk_sz + c_1
+      	O[a][b]+=I[a][c]*W[c][b]
+      }
+     }
+    }
+   }
+ }
+}
+
 ```
 
 #### b. MLIR transformed
@@ -123,6 +143,11 @@ Host:
 
 ```
 TODO
+First loop B in [0,8) selects vertical slices of O and W with dimensions (104 x 13)
+Second loop B in [0,13) selects vertical slices of each of O and W's vertical slices with dimensions (104x1)
+
+For each execution of the accelerator work loops, we give accelerator work: 
+The entire 104x104 I matrix, then a (104x1) slice of O and a (104x1) slice of W.
 ```
 
 Accelerator:

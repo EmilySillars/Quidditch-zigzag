@@ -14,6 +14,12 @@ void host_acc_perform_kernel_together(kernel_ptr k, void *arg0, void *arg1,
   }
 }
 
+void host_acc_perform_kernel_together_2_slices(kernel_ptr k, void *arg0, void *arg1,
+                                      void *arg2, void *slice1, void *slice2) {
+  _mlir_ciface_dummy(arg0, arg1, arg2, slice1);
+  //_mlir_ciface_tiled_matmul_2_slices(arg0, arg1, arg2, slice1, slice2);
+}
+
 void _mlir_ciface_dispatch_to_accelerator(uint32_t accID, TwoDMemrefI8_t *arg0,
                                           TwoDMemrefI8_t *arg1,
                                           TwoDMemrefI32_t *arg2) {

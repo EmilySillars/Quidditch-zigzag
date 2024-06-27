@@ -31,26 +31,37 @@ int main() {
     return 0;
   }
 
-  // Create memref objects for data stored in L3
+  // Create memref objects for data stored in L3: 
+  // output and weight
   TwoDMemrefI32_t memrefC;  // output
   memrefC.data = (int32_t *)malloc(sizeof(int32_t) * MAT_WIDTH_SQUARED);
   memrefC.aligned_data = memrefC.data;
   memrefC.offset = 0;
-  TwoDMemrefI32_t memrefGolden;
+  TwoDMemrefI32_t memrefGolden; // ground truth output
   memrefGolden.data = (int32_t *)malloc(sizeof(int32_t) * MAT_WIDTH_SQUARED);
   memrefGolden.aligned_data = memrefGolden.data;
   memrefGolden.offset = 0;
+  TwoDMemrefI8_t memrefB;  // weight
+  memrefB.data = (int8_t *) malloc(sizeof(int8_t) * MAT_WIDTH_SQUARED);
+  memrefB.aligned_data = memrefB.data;
+  memrefB.offset = 0;
 
-  // Create memref objects for data stored in L1
+  // Create memref objects for data stored in L1: 
+  // input, output-l1-slice, weight-l1-slice
   TwoDMemrefI8_t memrefA;  // input
   memrefA.data = (int8_t *)snrt_l1_start_addr();
   memrefA.aligned_data = memrefA.data;
   memrefA.offset = 0;
-  TwoDMemrefI8_t memrefB;  // weight
-  memrefB.data =
-      (int8_t *)(snrt_l1_start_addr() + sizeof(int8_t) * MAT_WIDTH_SQUARED);
-  memrefB.aligned_data = memrefB.data;
-  memrefB.offset = 0;
+  TwoDMemrefI8_t memrefWSlice;  // weight-l1-slice: 104x13
+  memrefWSlice.data =
+      (int8_t *)(snrt_l1_start_addr() + (MAT_WIDTH*13));
+  memrefWSlice.aligned_data = memrefWSlice.data;
+  memrefWSlice.offset = 0;
+  TwoDMemrefI32_t memrefOSlice;  // output-l1-slice: 104x13
+  memrefOSlice.data = (int32_t *)(snrt_l1_start_addr() +
+                                  (MAT_WIDTH*13*2));
+  memrefOSlice.aligned_data = memrefOSlice.data;
+  memrefOSlice.offset = 0;
 
   // initialize the matrices
   for (size_t i = 0; i < MAT_WIDTH_SQUARED; i++) {
@@ -63,17 +74,17 @@ int main() {
   // perform C code matmul to get the ground truth
   cCodeSquareMatmul(&memrefA, &memrefB, &memrefGolden);
 
-  // Create memref object for output slice stored in L1
-  TwoDMemrefI32_t memrefOSlice;  // output
-  memrefOSlice.data = (int32_t *)(snrt_l1_start_addr() +
-                                  sizeof(int32_t) * MAT_WIDTH_SQUARED * 2);
-  memrefOSlice.aligned_data = memrefOSlice.data;
-  memrefOSlice.offset = 0;
+  // total hack.
+ // cCodeSquareMatmul(&memrefA, &memrefB, &memrefC); // DELETE LATER!!!!
 
   set_accelerator_computation((kernel_ptr)_mlir_ciface_matmul_accelerator_work);
-  host_acc_perform_kernel_together((kernel_ptr)_mlir_ciface_tiled_matmul,
+  //_mlir_ciface_dummy
+  host_acc_perform_kernel_together_2_slices((kernel_ptr)_mlir_ciface_dummy,
                                    (void *)&memrefA, (void *)&memrefB,
-                                   (void *)&memrefC, (void *)&memrefOSlice);
+                                   (void *)&memrefC, (void *)&memrefOSlice, (void *)&memrefWSlice);  
+  // host_acc_perform_kernel_together((kernel_ptr)_mlir_ciface_tiled_matmul,
+  //                                  (void *)&memrefA, (void *)&memrefB,
+  //                                  (void *)&memrefC, (void *)&memrefOSlice);
   // check for correctness
   int nerr = 0;
   for (int i = 0; i < MAT_WIDTH_SQUARED; i++) {
@@ -95,6 +106,7 @@ int main() {
   }
 
   // free everything before exiting!
+  free(memrefB.data);
   free(memrefC.data);
   free(memrefGolden.data);
 
