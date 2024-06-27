@@ -195,7 +195,9 @@ void matmul_transformed(TwoDMemrefI8_t *x, TwoDMemrefI8_t *y,
   }) {llvm.emit_c_interface}: () -> ()
 ```
 
-#### c. MLIR transformed based on L1 - L3 split ("host" vs accelerator divide)
+#### c. MLIR transformed based on L1 - L3 split ("host" vs "accelerator" divide)
+
+![hardware](../../../zigzag-fork/pngs/host-acc-div-tiledMatmul10.png)
 
 Host:
 

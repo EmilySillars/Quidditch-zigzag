@@ -117,6 +117,8 @@ TODO
 
 #### c. MLIR transformed based on L1 - L3 split ("host" vs "accelerator" divide)
 
+![hardware](../../../zigzag-fork/pngs/host-acc-div-tiledMatmul11.png)
+
 Host:
 
 ```
