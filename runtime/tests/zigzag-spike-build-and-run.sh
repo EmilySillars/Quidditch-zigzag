@@ -2,8 +2,6 @@
 # Run this script from inside the runtime/tests directory
 
 basename=`basename $1 | sed 's/[.][^.]*$//'`
-echo $basename
-echo ${basename^}
 ## compile the mlir kernel
 sh compile-for-riscv.sh "$basename" &&\
 
