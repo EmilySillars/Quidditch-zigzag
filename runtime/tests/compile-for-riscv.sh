@@ -7,12 +7,113 @@ sh clean-out.sh $basename
 mkdir -p $basename/out
 
 # lower mlir to llvm
+echo "START: mlir-opt --one-shot-bufferize"
 mlir-opt $basename/$basename.mlir  --one-shot-bufferize='bufferize-function-boundaries' > $basename/out/$basename-bufferized.mlir
-mlir-opt $basename/out/$basename-bufferized.mlir -test-lower-to-llvm > $basename/out/$basename-in-llvm-dialect.mlir
+echo "FINISHED: mlir-opt --one-shot-bufferize"
+echo "START: mlir-opt -test-lower-to-llvm"
 
+mlir-opt $basename/out/$basename-bufferized.mlir \
+--test-lower-to-llvm \
+--expand-strided-metadata \
+--finalize-memref-to-llvm \
+--memref-expand \
+--reconcile-unrealized-casts \
+--test-lower-to-llvm > $basename/out/$basename-in-llvm-dialect.mlir
+
+
+# mlir-opt $basename/out/$basename-bufferized.mlir \
+# --convert-linalg-to-loops \
+# > $basename/out/$basename-lowered1.mlir
+
+# mlir-opt $basename/out/$basename-lowered1.mlir \
+# --convert-scf-to-cf \
+# > $basename/out/$basename-lowered2.mlir
+
+# mlir-opt $basename/out/$basename-lowered2.mlir \
+# --lower-affine \
+# > $basename/out/$basename-lowered3.mlir
+
+# mlir-opt $basename/out/$basename-lowered3.mlir \
+# --canonicalize \
+# > $basename/out/$basename-lowered4.mlir
+
+# mlir-opt $basename/out/$basename-lowered4.mlir \
+# --cse \
+# > $basename/out/$basename-lowered5.mlir
+
+# mlir-opt $basename/out/$basename-lowered5.mlir \
+# --convert-math-to-llvm \
+# > $basename/out/$basename-lowered6.mlir
+
+# mlir-opt $basename/out/$basename-lowered6.mlir \
+# --llvm-request-c-wrappers \
+# > $basename/out/$basename-lowered7.mlir
+
+# mlir-opt $basename/out/$basename-lowered7.mlir \
+# --expand-strided-metadata \
+# > $basename/out/$basename-lowered8.mlir
+
+# # made a typo and went from 8 to 10, skipping 9 (whoops!)
+# mlir-opt $basename/out/$basename-lowered8.mlir \
+# --convert-index-to-llvm=index-bitwidth=32 \
+# > $basename/out/$basename-lowered10.mlir
+
+# mlir-opt $basename/out/$basename-lowered10.mlir \
+# --convert-cf-to-llvm=index-bitwidth=32 \
+# > $basename/out/$basename-lowered11.mlir
+
+# mlir-opt $basename/out/$basename-lowered11.mlir \
+# --convert-arith-to-llvm=index-bitwidth=32 \
+# > $basename/out/$basename-lowered12.mlir
+
+# mlir-opt $basename/out/$basename-lowered12.mlir \
+# --convert-func-to-llvm='index-bitwidth=32' \
+# > $basename/out/$basename-lowered13.mlir
+
+# mlir-opt $basename/out/$basename-lowered13.mlir \
+# --finalize-memref-to-llvm='use-generic-functions index-bitwidth=32' \
+# > $basename/out/$basename-lowered14.mlir
+
+# mlir-opt $basename/out/$basename-lowered14.mlir \
+# --canonicalize \
+# > $basename/out/$basename-lowered15.mlir
+
+# mlir-opt $basename/out/$basename-lowered15.mlir \
+# --reconcile-unrealized-casts \
+# > $basename/out/$basename-lowered16.mlir
+
+# ))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
+# mlir-opt $basename/out/$basename-lowered#.mlir \
+#  \
+# > $basename/out/$basename-lowered#.mlir
+# > $basename/out/$basename-lowered#.mlir
+# > $basename/out/$basename-lowered#.mlir
+# > $basename/out/$basename-lowered#.mlir
+# > $basename/out/$basename-lowered#.mlir
+# > $basename/out/$basename-lowered#.mlir
+# > $basename/out/$basename-lowered#.mlir
+# > $basename/out/$basename-lowered#.mlir
+# > $basename/out/$basename-lowered#.mlir
+# > $basename/out/$basename-lowered#.mlir
+# > $basename/out/$basename-lowered#.mlir
+
+# --canonicalize \
+# --cse --convert-math-to-llvm --llvm-request-c-wrappers --expand-strided-metadata \
+# --convert-index-to-llvm=index-bitwidth=32 --convert-cf-to-llvm=index-bitwidth=32 \
+# --convert-arith-to-llvm=index-bitwidth=32 --convert-func-to-llvm='index-bitwidth=32' \
+# --finalize-memref-to-llvm='use-generic-functions index-bitwidth=32' --canonicalize \
+# --reconcile-unrealized-casts > $basename/out/$basename-in-llvm-dialect.mlir
+# ))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
+
+
+echo "END: mlir-opt -test-lower-to-llvm"
+
+echo "START: mlir-translate --mlir-to-llvmir"
 mlir-translate --mlir-to-llvmir -o $basename/out/$basename.ll $basename/out/$basename-in-llvm-dialect.mlir
+echo "END: mlir-translate --mlir-to-llvmir"
 
 # compile llvm to .o file (target riscv)
+echo "START: clang (llvm to .o)"
 clang \
 -Wno-unused-command-line-argument \
 -D__DEFINED_uint64_t \
@@ -32,3 +133,4 @@ clang \
 -x ir \
 -c $basename/out/$basename.ll \
 -o $basename/out/$basename.o
+echo "END: clang (llvm to .o)"
