@@ -10,8 +10,8 @@ mkdir -p $basename/out
 echo "START: mlir-opt --one-shot-bufferize"
 mlir-opt $basename/$basename.mlir  --one-shot-bufferize='bufferize-function-boundaries' > $basename/out/$basename-bufferized.mlir
 echo "FINISHED: mlir-opt --one-shot-bufferize"
-echo "START: mlir-opt -test-lower-to-llvm"
 
+echo "START: mlir-opt -test-lower-to-llvm"
 mlir-opt $basename/out/$basename-bufferized.mlir \
 --test-lower-to-llvm \
 --expand-strided-metadata \
@@ -19,8 +19,9 @@ mlir-opt $basename/out/$basename-bufferized.mlir \
 --memref-expand \
 --reconcile-unrealized-casts \
 --test-lower-to-llvm > $basename/out/$basename-in-llvm-dialect.mlir
+echo "FINISHED: mlir-opt -test-lower-to-llvm"
 
-
+# echo "START: mlir-opt pass by pass"
 # mlir-opt $basename/out/$basename-bufferized.mlir \
 # --convert-linalg-to-loops \
 # > $basename/out/$basename-lowered1.mlir
@@ -70,9 +71,13 @@ mlir-opt $basename/out/$basename-bufferized.mlir \
 # --convert-func-to-llvm='index-bitwidth=32' \
 # > $basename/out/$basename-lowered13.mlir
 
+# # lowering 13 to 14 is where memrefCopy gets introduced, along with "llvm.intr.memcpy"
 # mlir-opt $basename/out/$basename-lowered13.mlir \
 # --finalize-memref-to-llvm='use-generic-functions index-bitwidth=32' \
 # > $basename/out/$basename-lowered14.mlir
+# # mlir-opt $basename/out/$basename-lowered13.mlir \
+# # --finalize-memref-to-llvm='use-generic-functions index-bitwidth=32' \
+# # > $basename/out/$basename-lowered14.mlir
 
 # mlir-opt $basename/out/$basename-lowered14.mlir \
 # --canonicalize \
@@ -81,6 +86,39 @@ mlir-opt $basename/out/$basename-bufferized.mlir \
 # mlir-opt $basename/out/$basename-lowered15.mlir \
 # --reconcile-unrealized-casts \
 # > $basename/out/$basename-lowered16.mlir
+
+# cat $basename/out/$basename-lowered16.mlir > $basename/out/$basename-in-llvm-dialect.mlir
+# echo "FINISHED: mlir-opt pass by pass"
+
+
+echo "START: mlir-translate --mlir-to-llvmir"
+mlir-translate --mlir-to-llvmir -o $basename/out/$basename.ll $basename/out/$basename-in-llvm-dialect.mlir
+echo "FINISHED: mlir-translate --mlir-to-llvmir"
+
+# compile llvm to .o file (target riscv)
+echo "START: clang (llvm to .o)"
+clang \
+-Wno-unused-command-line-argument \
+-D__DEFINED_uint64_t \
+--target=riscv32-unknown-elf \
+-mcpu=generic-rv32 \
+-march=rv32imafdzfh \
+-mabi=ilp32d \
+-mcmodel=medany \
+-ftls-model=local-exec \
+-ffast-math \
+-fno-builtin-printf \
+-fno-common \
+-O3 \
+-std=gnu11 \
+-Wall \
+-Wextra \
+-x ir \
+-c $basename/out/$basename.ll \
+-o $basename/out/$basename.o
+echo "FINISHED: clang (llvm to .o)"
+
+
 
 # ))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
 # mlir-opt $basename/out/$basename-lowered#.mlir \
@@ -104,33 +142,3 @@ mlir-opt $basename/out/$basename-bufferized.mlir \
 # --finalize-memref-to-llvm='use-generic-functions index-bitwidth=32' --canonicalize \
 # --reconcile-unrealized-casts > $basename/out/$basename-in-llvm-dialect.mlir
 # ))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
-
-
-echo "END: mlir-opt -test-lower-to-llvm"
-
-echo "START: mlir-translate --mlir-to-llvmir"
-mlir-translate --mlir-to-llvmir -o $basename/out/$basename.ll $basename/out/$basename-in-llvm-dialect.mlir
-echo "END: mlir-translate --mlir-to-llvmir"
-
-# compile llvm to .o file (target riscv)
-echo "START: clang (llvm to .o)"
-clang \
--Wno-unused-command-line-argument \
--D__DEFINED_uint64_t \
---target=riscv32-unknown-elf \
--mcpu=generic-rv32 \
--march=rv32imafdzfh \
--mabi=ilp32d \
--mcmodel=medany \
--ftls-model=local-exec \
--ffast-math \
--fno-builtin-printf \
--fno-common \
--O3 \
--std=gnu11 \
--Wall \
--Wextra \
--x ir \
--c $basename/out/$basename.ll \
--o $basename/out/$basename.o
-echo "END: clang (llvm to .o)"
