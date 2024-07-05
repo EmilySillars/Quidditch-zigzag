@@ -2,7 +2,6 @@
 // https://github.com/KULeuven-MICAS/snax-mlir/blob/f651860981efe0da84c0e5231bfcb03faf16890a/kernels/simple_matmul/main.c
 
 #include <Quidditch/zigzag_dispatch/zigzag_dispatch.h>
-
 #include <assert.h>
 #include <cluster_interrupt_decls.h>
 #include <riscv.h>
@@ -13,7 +12,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <team_decls.h>
-
 #include "../lib-zigzag/zigzag_utils.h"
 
 uint32_t snrt_l1_start_addr();
@@ -33,53 +31,37 @@ int main() {
     return 0;
   }
 
-  uint32_t l1 = snrt_l1_start_addr();
-
-  // Create memref objects for data stored in L3
-  TwoDMemrefI32_t memrefC;  // output 104x104xi32
+  // Create memref objects for data stored in L3: 
+  // output and weight
+  TwoDMemrefI32_t memrefC;  // output
   memrefC.data = (int32_t *)malloc(sizeof(int32_t) * MAT_WIDTH_SQUARED);
   memrefC.aligned_data = memrefC.data;
   memrefC.offset = 0;
-  TwoDMemrefI32_t memrefGolden;  // golden 104x104xi32
+  TwoDMemrefI32_t memrefGolden; // ground truth output
   memrefGolden.data = (int32_t *)malloc(sizeof(int32_t) * MAT_WIDTH_SQUARED);
   memrefGolden.aligned_data = memrefGolden.data;
   memrefGolden.offset = 0;
-
-  // Create memref objects for data stored in L1
-  TwoDMemrefI8_t memrefA;  // input 104x104xi8
-  memrefA.data = (int8_t *)l1;
-  memrefA.aligned_data = memrefA.data;
-  memrefA.offset = 0;
-  l1 += (sizeof(int8_t) * MAT_WIDTH_SQUARED);
-
-  TwoDMemrefI8_t memrefB;  // weight 104x104xi8
-  memrefB.data =
-      (int8_t *)(l1);
+  TwoDMemrefI8_t memrefB;  // weight
+  memrefB.data = (int8_t *) malloc(sizeof(int8_t) * MAT_WIDTH_SQUARED);
   memrefB.aligned_data = memrefB.data;
   memrefB.offset = 0;
-  l1 += (sizeof(int8_t) * MAT_WIDTH_SQUARED);
 
-  // old output slice from ex 10
-  TwoDMemrefI32_t memrefOSlice;  // output 8x104xi32
-  memrefOSlice.data = (int32_t *)l1;
+  // Create memref objects for data stored in L1: 
+  // input, output-l1-slice, weight-l1-slice
+  TwoDMemrefI8_t memrefA;  // input
+  memrefA.data = (int8_t *)snrt_l1_start_addr();
+  memrefA.aligned_data = memrefA.data;
+  memrefA.offset = 0;
+  TwoDMemrefI8_t memrefWSlice;  // weight-l1-slice: 104x13
+  memrefWSlice.data =
+      (int8_t *)(snrt_l1_start_addr() + (MAT_WIDTH*13));
+  memrefWSlice.aligned_data = memrefWSlice.data;
+  memrefWSlice.offset = 0;
+  TwoDMemrefI32_t memrefOSlice;  // output-l1-slice: 104x13
+  memrefOSlice.data = (int32_t *)(snrt_l1_start_addr() +
+                                  (MAT_WIDTH*13*2));
   memrefOSlice.aligned_data = memrefOSlice.data;
   memrefOSlice.offset = 0;
-  l1 += (sizeof(int32_t) * 8*MAT_WIDTH);
-
-  // new L1 "allocations" for ex 11
-  TwoDMemrefI8_t memrefWeightSlice;  // weight-l1-slice: 104x13
-  memrefWeightSlice.data =
-      (int8_t *)l1;
-  memrefWeightSlice.aligned_data = memrefWeightSlice.data;
-  memrefWeightSlice.offset = 0;
-  l1 += (sizeof(int8_t)*MAT_WIDTH*13);
-
-  TwoDMemrefI32_t memrefOutputSlice;  // output-l1-slice: 104x13
-  memrefOutputSlice.data =
-      (int32_t *)l1;
-  memrefOutputSlice.aligned_data = memrefOutputSlice.data;
-  memrefOutputSlice.offset = 0;
-  l1 += (sizeof(int32_t)*MAT_WIDTH*13);
 
   // initialize the matrices
   for (size_t i = 0; i < MAT_WIDTH_SQUARED; i++) {
@@ -92,14 +74,14 @@ int main() {
   // perform C code matmul to get the ground truth
   cCodeSquareMatmul(&memrefA, &memrefB, &memrefGolden);
 
-  set_accelerator_computation((kernel_ptr)_mlir_ciface_matmul_accelerator_work);
-  // host_acc_perform_kernel_together((kernel_ptr)_mlir_ciface_tiled_matmul,
-  //                                  (void *)&memrefA, (void *)&memrefB,
-  //                                  (void *)&memrefC, (void *)&memrefOSlice);
+  // total hack.
+ // cCodeSquareMatmul(&memrefA, &memrefB, &memrefC); // DELETE LATER!!!!
 
-  host_acc_perform_kernel_together_2_slices(
-      (kernel_ptr)_mlir_ciface_tiled_matmul, (void *)&memrefA, (void *)&memrefB,
-      (void *)&memrefC, (void *)&memrefOutputSlice, (void *)&memrefWeightSlice);
+  set_accelerator_computation((kernel_ptr)_mlir_ciface_matmul_accelerator_work);
+  //_mlir_ciface_dummy
+  host_acc_perform_kernel_together_2_slices((kernel_ptr)_mlir_ciface_tiled_matmul,
+                                   (void *)&memrefA, (void *)&memrefB,
+                                   (void *)&memrefC, (void *)&memrefOSlice, (void *)&memrefWSlice);  
 
   // check for correctness
   int nerr = 0;
@@ -122,6 +104,7 @@ int main() {
   }
 
   // free everything before exiting!
+  free(memrefB.data);
   free(memrefC.data);
   free(memrefGolden.data);
 
