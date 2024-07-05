@@ -61,7 +61,10 @@
 
   // computation performed by accelerator as part of tiled matmul
   "func.func"() <{function_type = (memref<8x104xi8, strided<[104, 1], offset: ?>>, memref<104x104xi8, strided<[1, 104]>>, memref<8x104xi32, strided<[104, 1], offset: ?>>) -> (), sym_name = "matmul_accelerator_work"}> ({
-  ^bb0(%arg0: memref<8x104xi8, strided<[104, 1], offset: ?>>, %arg1: memref<104x104xi8, strided<[1,104]>>, %arg2: memref<8x104xi32, strided<[104, 1], offset: ?>>):
+  ^bb0(
+    %arg0: memref<8x104xi8, strided<[104, 1], offset: ?>>, 
+    %arg1: memref<104x104xi8, strided<[1,104]>>, 
+    %arg2: memref<8x104xi32, strided<[104, 1], offset: ?>>):
     // tile sizes
     %d1_1_bk_sz = arith.constant 8 : index
     %d2_1_bk_sz = arith.constant 8 : index

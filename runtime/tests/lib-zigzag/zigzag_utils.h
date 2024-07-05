@@ -38,6 +38,9 @@ void host_acc_perform_kernel_together_2_slices(kernel_ptr k, void *arg0, void *a
 void _mlir_ciface_dispatch_to_accelerator(uint32_t accID, TwoDMemrefI8_t *arg0,
                                           TwoDMemrefI8_t *arg1,
                                           TwoDMemrefI32_t *arg2);
+void _mlir_ciface_mango(uint32_t accID, TwoDMemrefI8_t *arg0,
+                                          TwoDMemrefI8_t *arg1,
+                                          TwoDMemrefI32_t *arg2);
 
 // DL Kernels Defined in MLIR
 extern void _mlir_ciface_dummy(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
@@ -45,7 +48,7 @@ extern void _mlir_ciface_dummy(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
 extern void _mlir_ciface_tiled_matmul(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
                                       TwoDMemrefI32_t *c,
                                       TwoDMemrefI32_t *l1OTile);
-extern void _mlir_ciface_tiled_matmul_2_slices(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
+extern void _mlir_ciface_pineapple(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
                                       TwoDMemrefI32_t *c,
                                       TwoDMemrefI32_t *OSlice, TwoDMemrefI8_t *WSlice);
                                       

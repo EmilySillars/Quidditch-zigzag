@@ -92,13 +92,13 @@ int main() {
   // perform C code matmul to get the ground truth
   cCodeSquareMatmul(&memrefA, &memrefB, &memrefGolden);
 
-  set_accelerator_computation((kernel_ptr)_mlir_ciface_matmul_accelerator_work);
+  set_accelerator_computation((kernel_ptr)_mlir_ciface_mango);
   // host_acc_perform_kernel_together((kernel_ptr)_mlir_ciface_tiled_matmul,
   //                                  (void *)&memrefA, (void *)&memrefB,
   //                                  (void *)&memrefC, (void *)&memrefOSlice);
 
   host_acc_perform_kernel_together_2_slices(
-      (kernel_ptr)_mlir_ciface_tiled_matmul, (void *)&memrefA, (void *)&memrefB,
+      (kernel_ptr)_mlir_ciface_pineapple, (void *)&memrefA, (void *)&memrefB,
       (void *)&memrefC, (void *)&memrefOutputSlice, (void *)&memrefWeightSlice);
 
   // check for correctness
@@ -116,7 +116,7 @@ int main() {
   if (nerr != 0) {
     printf("Output does not match the golden value!\n");
     print2DMemRefI32_t(&memrefC, 104);
-    print2DMemRefI32_t(&memrefGolden, 104);
+    //print2DMemRefI32_t(&memrefGolden, 104);
   } else {
     printf("Output Correct\n");
   }

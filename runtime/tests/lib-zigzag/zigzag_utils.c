@@ -17,8 +17,8 @@ void host_acc_perform_kernel_together(kernel_ptr k, void *arg0, void *arg1,
 void host_acc_perform_kernel_together_2_slices(kernel_ptr k, void *arg0,
                                                void *arg1, void *arg2,
                                                void *slice1, void *slice2) {
-  // TODO: fix so this uses pinapple                                              
-  _mlir_ciface_tiled_matmul(arg0, arg1, arg2, slice1);
+  // TODO: fix so this uses pinapple
+  _mlir_ciface_pineapple(arg0, arg1, arg2, slice1, slice2);
   //_mlir_ciface_tiled_matmul_2_slices(arg0, arg1, arg2, slice1, slice2);
 }
 
@@ -37,7 +37,16 @@ void _mlir_ciface_hola(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
   printf("hola world!\n");
 }
 
-void _mlir_ciface_memrefCopy8bit(TwoDMemrefI8_t *src, TwoDMemrefI8_t *dst) {}
+void _mlir_ciface_memrefCopy8bit(TwoDMemrefI8_t *src, TwoDMemrefI8_t *dst) {
+  for (size_t row = 0; row < src->shape[0]; row++) {
+    for (size_t col = 0; col < src->shape[1]; col++) {
+      dst->aligned_data[dst->offset + dst->stride[0] * row +
+                        col * dst->stride[1]] =
+          src->aligned_data[src->offset + src->stride[0] * row +
+                            col * src->stride[1]];
+    }
+  }
+}
 
 /*
   int32_t *data; // allocated pointer: Pointer to data buffer as allocated,
