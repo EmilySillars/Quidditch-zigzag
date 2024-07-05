@@ -14,8 +14,9 @@ void host_acc_perform_kernel_together(kernel_ptr k, void *arg0, void *arg1,
   }
 }
 
-void host_acc_perform_kernel_together_2_slices(kernel_ptr k, void *arg0, void *arg1,
-                                      void *arg2, void *slice1, void *slice2) {
+void host_acc_perform_kernel_together_2_slices(kernel_ptr k, void *arg0,
+                                               void *arg1, void *arg2,
+                                               void *slice1, void *slice2) {
   _mlir_ciface_dummy(arg0, arg1, arg2, slice1);
   //_mlir_ciface_tiled_matmul_2_slices(arg0, arg1, arg2, slice1, slice2);
 }
@@ -33,6 +34,33 @@ void _mlir_ciface_dispatch_to_accelerator(uint32_t accID, TwoDMemrefI8_t *arg0,
 void _mlir_ciface_hola(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
                        TwoDMemrefI32_t *c) {
   printf("hola world!\n");
+}
+
+void _mlir_ciface_memrefCopy8bit(TwoDMemrefI8_t *src, TwoDMemrefI8_t *dst) {}
+
+/*
+  int32_t *data; // allocated pointer: Pointer to data buffer as allocated,
+                 // only used for deallocating the memref
+  int32_t *aligned_data; // aligned pointer: Pointer to properly aligned data
+                         // that memref indexes
+  uint32_t offset;
+  uint32_t shape[2];
+  uint32_t stride[2];
+
+*/
+void _mlir_ciface_memrefCopy32bit(TwoDMemrefI32_t *src, TwoDMemrefI32_t *dst) {
+  // printf("src: shape=[%d,%d], offset = %d,stride=[%d,%d]\n", src->shape[0],
+  //        src->shape[1], src->offset, src->stride[0], src->stride[1]);
+  // printf("dst: shape=[%d,%d], offset = %d,stride=[%d,%d]\n", dst->shape[0],
+  //        dst->shape[1], dst->offset, dst->stride[0], dst->stride[1]);
+  for (size_t row = 0; row < src->shape[0]; row++) {
+    for (size_t col = 0; col < src->shape[1]; col++) {
+      dst->aligned_data[dst->offset + dst->stride[0] * row +
+                        col * dst->stride[1]] =
+          src->aligned_data[src->offset + src->stride[0] * row +
+                            col * src->stride[1]];
+    }
+  }
 }
 
 // c-code implementation of matmul (to check correctness of MLIR)

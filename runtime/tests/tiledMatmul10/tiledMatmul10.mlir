@@ -7,6 +7,7 @@
 // declaring external MLIR functions (implementations in C)
 "func.func"() <{function_type = (i32, memref<8x104xi8, strided<[104, 1], offset: ?>>, memref<104x104xi8, strided<[1,104]>>, memref<8x104xi32, strided<[104, 1], offset: ?>>) -> (), sym_name = "dispatch_to_accelerator", sym_visibility = "private"}> ({}) {llvm.emit_c_interface}: () -> ()
 "func.func"() <{function_type =  (memref<2x16xi8>, memref<16x2xi8, strided<[1,16]>>, memref<2x2xi32, strided<[16,1]>>) -> (), sym_name = "hola", sym_visibility = "private"}> ({}) {llvm.emit_c_interface}: () -> ()
+"func.func"() <{function_type =  (memref<8x104xi32, strided<[104, 1], offset: ?>>, memref<8x104xi32, strided<[104, 1], offset: ?>>) -> (), sym_name = "memrefCopy32bit", sym_visibility = "private"}> ({}) {llvm.emit_c_interface}: () -> ()
 
 // perform tiled matrix multiplication,
 // dispatching part of the work to the accelerator!
@@ -43,8 +44,10 @@
     func.call @dispatch_to_accelerator(%zero_i32, %inputTile, %arg1, %outputTileL1) 
     : (i32, memref<8x104xi8, strided<[104, 1], offset: ?>>, memref<104x104xi8, strided<[1,104]>>, memref<8x104xi32, strided<[104, 1], offset: ?>>) -> ()
 
-    memref.copy %outputTileL1, %outputTileL3 : memref<8x104xi32, strided<[104, 1], offset: ?>> to memref<8x104xi32, strided<[104, 1], offset: ?>>   
-     
+    // memref.copy %outputTileL1, %outputTileL3 : memref<8x104xi32, strided<[104, 1], offset: ?>> to memref<8x104xi32, strided<[104, 1], offset: ?>>   
+    func.call @memrefCopy32bit(%outputTileL1, %outputTileL3) : 
+    (memref<8x104xi32, strided<[104, 1], offset: ?>>, memref<8x104xi32, strided<[104, 1], offset: ?>>) -> ()
+
     // zero-out the L1 slice; there has to be a better way to do this, right?
     scf.for %i = %zero to %eight step %one iter_args() -> () { 
     scf.for %j = %zero to %oneOhFour step %one iter_args() -> () { 
