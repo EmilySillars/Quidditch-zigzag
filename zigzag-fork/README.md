@@ -42,6 +42,10 @@ cd runtime/tests
 | tbd 8                                                        |             |            |        |                                                              | ***TODO*** | ***TODO*** |
 | ~~*Tiled Matrix Multiplication 9*~~<br />```sh zigzag-spike-build-and-run.sh tiledMatmul9.mlir```<br />Full details [here](../runtime/tests/tiledMatmul9/README.md) | 600x600     | dynamic    | Fixed  | ZigZag w/ [gemm](https://github.com/KULeuven-MICAS/zigzag/blob/f53a6bf98b6eb4d4a592d3c5b1bf9cc6cce2eadc/zigzag/inputs/examples/hardware/Gemm.py) | ***TODO*** | ***TODO*** |
 
+#### Other Examples
+
+- part of an nsnet iree kernel
+
 ## Setup
 
 ### 1. Set up the Quidditch repo

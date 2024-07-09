@@ -73,6 +73,17 @@ void _mlir_ciface_memrefCopy32bit(TwoDMemrefI32_t *src, TwoDMemrefI32_t *dst) {
   }
 }
 
+void _mlir_ciface_memrefCopy32bit2(TwoDMemrefI32_t *src, TwoDMemrefI32_t *dst) {
+  for (size_t row = 0; row < src->shape[0]; row++) {
+    for (size_t col = 0; col < src->shape[1]; col++) {
+      dst->aligned_data[dst->offset + dst->stride[0] * row +
+                        col * dst->stride[1]] =
+          src->aligned_data[src->offset + src->stride[0] * row +
+                            col * src->stride[1]];
+    }
+  }
+}
+
 // c-code implementation of matmul (to check correctness of MLIR)
 void cCodeSquareMatmul(TwoDMemrefI8_t *x, TwoDMemrefI8_t *y,
                        TwoDMemrefI32_t *z) {
