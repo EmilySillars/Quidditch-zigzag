@@ -283,7 +283,7 @@ void linalgGeneric(Tensor_1x400 i, Tensor_1x400 w, Tensor 1x400 o){
 	  for (d1_2 = 0; d1_2 < D1_2; d1_2 ++) {
 	   for (d1_3 = 0; d1_3 < D1_3; d1_3 ++) {
 	    for (d0 = 0; d0 < 1; d0++) {
-	     d1 = (d1_0 * d1_bk_sz) + (d1_1 * d1_1_bk_sz) + (d1_2 * d1_2_bk_sz + d1_3)
+	     d1 = (d1_0 * d1_bk_sz) + (d1_1 * d1_1_bk_sz) + (d1_2 * d1_2_bk_sz) + d1_3
 	     o[d0][d1] = i[d0][d1] + w[d0][d1]	    
 	    }
 	   }	  
