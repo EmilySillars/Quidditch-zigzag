@@ -299,8 +299,6 @@ Accelerator:
   }) {llvm.emit_c_interface}: () -> ()
 ```
 
-
-
 ## IV. Running the transformed MLIR on Snitch
 
 ```
