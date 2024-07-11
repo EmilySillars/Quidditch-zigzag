@@ -8,7 +8,7 @@ mkdir -p $basename/out
 
 # lower mlir to llvm
 echo "START: mlir-opt --one-shot-bufferize"
-mlir-opt $basename/$basename.mlir  --one-shot-bufferize='bufferize-function-boundaries' > $basename/out/$basename-bufferized.mlir
+mlir-opt $basename/$basename.mlir --one-shot-bufferize='bufferize-function-boundaries' > $basename/out/$basename-bufferized.mlir
 echo "FINISHED: mlir-opt --one-shot-bufferize"
 
 # echo "START: mlir-opt -test-lower-to-llvm"
