@@ -10,7 +10,7 @@ Related to issue [here](https://github.com/xdslproject/xdsl/issues/2740#issue-23
 
 ### 1. Ignoring SSRs
 
-![this repo deals with everything in the blue box](../pngs/no-ssrs.png)
+![this repo deals with everything in the blue box](/home/hoppip/Downloads/no-ssrs.png)
 
 #### As a YAML file for ZigZag
 
