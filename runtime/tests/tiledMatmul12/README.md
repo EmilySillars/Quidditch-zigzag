@@ -113,34 +113,47 @@ Spatial Loops
 ```
 // loop bounds
 size_t B_S = 8;
-size_t A_0 = 8;
-size_t C_0 = 13;
-size_t C_1 = 4;
-size_t C_2 = 2;
-size_t A_1 = 13;
 
 // block sizes
 size_t b_s_bk_sz = 13;
-size_t a_0_bk_sz = 8;
 
 void dmaCore (Matrix_104x104 i, Matrix_104x104 w, Matrix_104x104 o){
+	// assume i and w are already in L1, and o is in L3
     for (size_t b_s = 0; b_s < B_S; b_s++) {
         size_t start = b_s * b_s_bk_sz;
         Shape shape = 104x13;
         Matrix_104_13 i_tile = subtile(i, start, shape);
         Matrix_104_13 w_tile = subtile(w, start, shape);
         Matrix_104_13 o_tile = subtile(o, start, shape);
+        
         // copy o_tile from L3 to L1
         Matrix_104_13 o_tile_L1;
         copyFromL3(o_tile,o_tile_L1);
-		computeCore(i_tile, w_tile, o_tile_L1);
+        
+        //deploy rest of work on compute core with id b_s
+		computeCore(i_tile, w_tile, o_tile_L1, b_s);
+		
 		// copy o_tile from L1 back to L3
 		copyFromL1(o_tile_L1, o_tile);
     }
 }
 
-void computeCore(Matrix_104x13 i, Matrix_104x13 w, Matrix_104x13 o){
+// recall:  O[a][b]+=I[a][c]*W[c][b]
 
+void computeCore(Matrix_104x13 i, Matrix_104x13 w, Matrix_104x13 o, int coreID){
+	if (myCoreId() != coreID) { return; }
+	// loop bounds
+	size_t A_0 = 8;
+    size_t C_0 = 13;
+    size_t C_1 = 4;
+    size_t C_2 = 2;
+    size_t A_1 = 13;
+	// loop blocks
+	size_t a_0_bk_sz = 8;
+	size_t c_0_bk_sz = ;
+	size_t c_1_bk_sz = ;
+	size_t c_2_bk_sz = ;
+	size_t a_1_bk_sz = ;
 
 }
 
