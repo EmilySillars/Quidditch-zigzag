@@ -44,7 +44,7 @@ cd runtime/tests
 
 #### Other Examples
 
-- part of an nsnet iree kernel
+- [part of an nsnet iree kernel](other-examples/nsnet-iree-kernel-FIXED.md)
 
 ## Setup
 
