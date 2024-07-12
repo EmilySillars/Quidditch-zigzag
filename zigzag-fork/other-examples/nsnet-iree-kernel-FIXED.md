@@ -8,7 +8,7 @@ Related to issue [here](https://github.com/xdslproject/xdsl/issues/2740#issue-23
 
 ## I. Hardware Description
 
-![this repo deals with everything in the blue box](/home/hoppip/Downloads/no-ssrs.png)
+![](../pngs/no-ssrs.png)
 
 #### As a YAML file for ZigZag
 
