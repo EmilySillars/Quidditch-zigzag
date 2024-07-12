@@ -81,15 +81,15 @@ for d2; d2 < 104; d2++;
 ```
 Loop ordering for matmul_104_104
 =============================================================================================
-Temporal Loops                      O                  I                  W                  
+Temporal Loops                      W                  O                  I                  
 =============================================================================================
-for B in [0, 13):                   l3                 l1                 l1                 
+for B in [0, 13):                   l1                 l3                 l1                 
 ---------------------------------------------------------------------------------------------
   for A in [0, 8):                  l1                 l1                 l1                 
 ---------------------------------------------------------------------------------------------
-    for C in [0, 13):               rf_x1_thru_x31     l1                 l1                 
+    for C in [0, 13):               l1                 rf_x1_thru_x31     l1                 
 ---------------------------------------------------------------------------------------------
-      for C in [0, 4):              rf_x1_thru_x31     l1                 rf_x1_thru_x31     
+      for C in [0, 4):              rf_x1_thru_x31     rf_x1_thru_x31     l1                 
 ---------------------------------------------------------------------------------------------
         for C in [0, 2):            rf_x1_thru_x31     rf_x1_thru_x31     rf_x1_thru_x31     
 ---------------------------------------------------------------------------------------------
@@ -102,20 +102,49 @@ Spatial Loops
 ---------------------------------------------------------------------------------------------
             parfor B in [0, 1):                                                              
 ---------------------------------------------------------------------------------------------
-
-Stall and slack per port of each memory instance:
-  rf_x1_thru_x31: {'r_port_1': 152760, 'w_port_1': 0}
-  l1: {'rw_port_1': 0}
-  l3: {'rw_port_1': 0}
-Latency: 2.965e+05
 ```
+
+![hardware](../../../zigzag-fork/pngs/host-acc-div-tiledMatmul12.png)
 
 ## III. Manual Transformation
 
 #### a. C code transformed
 
 ```
-TODO
+// loop bounds
+size_t B_S = 8;
+size_t A_0 = 8;
+size_t C_0 = 13;
+size_t C_1 = 4;
+size_t C_2 = 2;
+size_t A_1 = 13;
+
+// block sizes
+size_t b_s_bk_sz = 13;
+size_t a_0_bk_sz = 8;
+
+void dmaCore (Matrix_104x104 i, Matrix_104x104 w, Matrix_104x104 o){
+    for (size_t b_s = 0; b_s < B_S; b_s++) {
+        size_t start = b_s * b_s_bk_sz;
+        Shape shape = 104x13;
+        Matrix_104_13 i_tile = subtile(i, start, shape);
+        Matrix_104_13 w_tile = subtile(w, start, shape);
+        Matrix_104_13 o_tile = subtile(o, start, shape);
+        // copy o_tile from L3 to L1
+        Matrix_104_13 o_tile_L1;
+        copyFromL3(o_tile,o_tile_L1);
+		computeCore(i_tile, w_tile, o_tile_L1);
+		// copy o_tile from L1 back to L3
+		copyFromL1(o_tile_L1, o_tile);
+    }
+}
+
+void computeCore(Matrix_104x13 i, Matrix_104x13 w, Matrix_104x13 o){
+
+
+}
+
+
 ```
 
 #### b. MLIR transformed
@@ -126,7 +155,7 @@ TODO
 
 #### c. MLIR transformed based on L1 - L3 split ("host" vs "accelerator" divide)
 
-![hardware](../../../zigzag-fork/pngs/host-acc-div-tiledMatmul12.png)
+
 
 Host:
 
