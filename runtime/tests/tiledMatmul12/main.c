@@ -92,14 +92,18 @@ int main() {
   // perform C code matmul to get the ground truth
   cCodeSquareMatmul(&memrefA, &memrefB, &memrefGolden);
 
-  set_accelerator_computation((kernel_ptr)_mlir_ciface_mango);
+ // set_accelerator_computation((kernel_ptr)_mlir_ciface_mango);
   // host_acc_perform_kernel_together((kernel_ptr)_mlir_ciface_tiled_matmul,
   //                                  (void *)&memrefA, (void *)&memrefB,
   //                                  (void *)&memrefC, (void *)&memrefOSlice);
 
-  host_acc_perform_kernel_together_2_slices(
-      (kernel_ptr)_mlir_ciface_pineapple, (void *)&memrefA, (void *)&memrefB,
-      (void *)&memrefC, (void *)&memrefOutputSlice, (void *)&memrefWeightSlice);
+  // host_acc_perform_kernel_together_2_slices(
+  //     (kernel_ptr)_mlir_ciface_pineapple, (void *)&memrefA, (void *)&memrefB,
+  //     (void *)&memrefC, (void *)&memrefOutputSlice, (void *)&memrefWeightSlice);
+
+  host_perform_kernel(
+      (kernel_ptr)_mlir_ciface_mango, (void *)&memrefA, (void *)&memrefB,
+      (void *)&memrefC, (void *)0, (void *)&memrefWeightSlice, (void *)&memrefOutputSlice);
 
   // check for correctness
   int nerr = 0;

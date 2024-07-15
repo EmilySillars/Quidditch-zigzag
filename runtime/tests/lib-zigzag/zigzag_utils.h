@@ -22,7 +22,7 @@ we employ a "host-accelerator" abstraction.
 
 // "Host" function calls
 
-// Tell the accelerator(s) which computation it should perform.
+//  Tell the accelerator(s) which computation it(they) should perform.
 //  Note: all computations (derived from kernels) have three arguments,
 //  and are passed as function pointers
 //  for now, all accelerators must perform the same computation
@@ -33,6 +33,8 @@ void host_acc_perform_kernel_together(kernel_ptr k, void *arg0, void *arg1,
                                       void *arg2, void *arg3);
 void host_acc_perform_kernel_together_2_slices(kernel_ptr k, void *arg0, void *arg1,
                                       void *arg2, void *slice1, void *slice2);
+void host_perform_kernel(kernel_ptr k, void *arg0, void *arg1, void *arg2,
+                         void *arg0L1, void *arg1L1 void *arg2L1);
 
 // dispatch workload to accelerator with id accID
 void _mlir_ciface_dispatch_to_accelerator(uint32_t accID, TwoDMemrefI8_t *arg0,

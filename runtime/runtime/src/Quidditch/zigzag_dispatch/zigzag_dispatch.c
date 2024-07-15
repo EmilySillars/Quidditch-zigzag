@@ -15,42 +15,49 @@
 
 // dispatch using spinlocks
 
+// TODO: remove use of magic number 8
 // TODO: This should be cluster local.
 static struct cluster_state_t {
   int bins[9];
   atomic_bool sleep[9];
   atomic_bool exit;
-  void (*g)(void *a, void *b, void *c);
-  void *a;
-  void *b;
-  void *c;
+  kernel_ptr k[9];
+  void *a[9];
+  void *b[9];
+  void *c[9];
 } cluster_state = {
     {0, 0, 0, 0, 0, 0, 0, 0, 0},
     {false, false, false, false, false, false, false, false, false},
-    false};
+    false,
+    {0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0}
+    };
 
-void set_kernel(void (*g)(void *a, void *b, void *c)){
-  cluster_state.g = g;
+void set_kernel(kernel_ptr g){
+  for (size_t i = 0; i < 8; i++) {
+    cluster_state.k[i] = g;
+  }
 }
 
-void set_kernel_args(void *a, void *b, void *c){
-  cluster_state.a = a;
-  cluster_state.b = b;
-  cluster_state.c = c;
+void set_kernel_args(uint32_t coreID, void *a, void *b, void *c){
+  cluster_state.a[coreID] = a;
+  cluster_state.b[coreID] = b;
+  cluster_state.c[coreID] = c;
 }
 
 void compute_core_loop() {
+  uint32_t myId = snrt_cluster_core_idx();
   while (!cluster_state.exit) {
     // sleep
-    cluster_state.sleep[snrt_cluster_core_idx()] = true;
-    while (cluster_state.sleep[snrt_cluster_core_idx()]) {
+    cluster_state.sleep[myId] = true;
+    while (cluster_state.sleep[myId]) {
       ;
     }
     // If didn't get woken up to exit,
     if (!cluster_state.exit) {
       // do something
-      (*cluster_state.g)(cluster_state.a, cluster_state.b, cluster_state.c);
-      cluster_state.bins[snrt_cluster_core_idx()]++;
+      (*cluster_state.k[myId])(cluster_state.a[myId], cluster_state.b[myId], cluster_state.c[myId]);
+      cluster_state.bins[myId]++;
     }
   }
 }

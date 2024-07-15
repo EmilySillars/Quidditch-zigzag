@@ -31,6 +31,23 @@
    memref<104x104xi32, strided<[104,1]>>,     // arg2 (output)
    memref<104x104xi32, strided<[104,1]>>,     // arg3 (output space on l1)
    memref<104x104xi8, strided<[1, 104]>>      // arg4 (weight space on l1)
+  ) -> (), sym_name = "pamplemousse"}> ({
+  ^bb0(%arg0: memref<104x104xi8>, 
+       %arg1: memref<104x104xi8, strided<[1,104]>>, 
+       %arg2: memref<104x104xi32, strided<[104,1]>>, 
+       %outputL1: memref<104x104xi32, strided<[104,1]>>,
+       %weightL1: memref<104x104xi8, strided<[1,104]>>): 
+    "func.return"() : () -> ()
+  }) {llvm.emit_c_interface}: () -> ()
+
+// perform tiled matrix multiplication,
+// dispatching part of the work to the accelerator!
+  "func.func"() <{function_type = 
+  (memref<104x104xi8>,                        // arg0 (input)
+   memref<104x104xi8, strided<[1, 104]>>,     // arg1 (weight)
+   memref<104x104xi32, strided<[104,1]>>,     // arg2 (output)
+   memref<104x104xi32, strided<[104,1]>>,     // arg3 (output space on l1)
+   memref<104x104xi8, strided<[1, 104]>>      // arg4 (weight space on l1)
   ) -> (), sym_name = "pineapple"}> ({
   ^bb0(%arg0: memref<104x104xi8>, 
        %arg1: memref<104x104xi8, strided<[1,104]>>, 

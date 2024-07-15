@@ -7,6 +7,7 @@ void set_accelerator_computation(void (*k)(void *arg0, void *arg1,
 
 void host_acc_perform_kernel_together(kernel_ptr k, void *arg0, void *arg1,
                                       void *arg2, void *arg3) {
+  set_kernel(k);
   if (k == (kernel_ptr)_mlir_ciface_tiled_matmul) {
     _mlir_ciface_tiled_matmul(arg0, arg1, arg2, arg3);
   } else if (k == (kernel_ptr)_mlir_ciface_dummy) {
@@ -22,10 +23,22 @@ void host_acc_perform_kernel_together_2_slices(kernel_ptr k, void *arg0,
   //_mlir_ciface_tiled_matmul_2_slices(arg0, arg1, arg2, slice1, slice2);
 }
 
+void host_perform_kernel(kernel_ptr k, void *arg0, void *arg1, void *arg2,
+                         void *arg0L1, void *arg1L1 void *arg2L1) {
+  // set accelerator kernel
+  set_kernel(k);
+  // call host version of kernel
+  if (k == _mlir_ciface_mango) {
+    _mlir_ciface_pineapple(arg0, arg1, arg2, arg2L1, arg1L1);
+  } else {
+    _mlir_ciface_dummy(arg0, arg1, arg2, arg0L1);
+  }
+}
+
 void _mlir_ciface_dispatch_to_accelerator(uint32_t accID, TwoDMemrefI8_t *arg0,
                                           TwoDMemrefI8_t *arg1,
                                           TwoDMemrefI32_t *arg2) {
-  set_kernel_args(arg0, arg1, arg2);
+  set_kernel_args(accID, arg0, arg1, arg2);
   // perform tiled matmul on compute core # accID
   wake_up_compute_core(accID);
   wait_for_compute_core(accID);
