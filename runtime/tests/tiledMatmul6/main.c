@@ -94,7 +94,7 @@ int main() {
   if (nerr != 0) {
     printf("Output does not match the golden value!\n");
   } else {
-    printf("Output Correct\n");
+    printf("Output Correct6\n");
   }
 
   // free everything before exiting!

@@ -6,7 +6,7 @@ void set_accelerator_computation(void (*k)(void *arg0, void *arg1,
 }
 
 void host_perform_kernel(kernel_ptr k, void *arg0, void *arg1, void *arg2,
-                         void *arg0L1, void *arg1L1 void *arg2L1) {
+                         void *arg0L1, void *arg1L1, void *arg2L1) {
   // call host version of kernel
   if (k == _mlir_ciface_kernel_tiledMatmul12) {
    //_mlir_ciface_pineapple(arg0, arg1, arg2, arg2L1, arg1L1);

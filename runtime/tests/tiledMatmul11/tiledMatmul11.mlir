@@ -12,7 +12,7 @@
     memref<104x1xi32, strided<[104, 1], offset: ?>>)  // output slice
     -> (), sym_name = "dispatch_to_accelerator", sym_visibility = "private"}> ({}) {llvm.emit_c_interface}: () -> ()
 "func.func"() <{function_type =  (
-  memref<2x16xi8>, 
+  memref<104x104xi8, strided<[104,1]>>, 
   memref<16x2xi8, strided<[1,16]>>, 
   memref<2x2xi32, strided<[16,1]>>) 
   -> (), sym_name = "hola", sym_visibility = "private"}> ({}) {llvm.emit_c_interface}: () -> ()
@@ -29,7 +29,7 @@
   (memref<104x104xi8, strided<[104,1]>>,     // arg0 (input)
    memref<104x104xi8, strided<[1,104]>>,     // arg1 (weight)
    memref<104x104xi32, strided<[104,1]>>,    // arg2 (output)
-   memref<104x104xi32, strided<[104,1]>>,    // arg3 (input space on l1)
+   memref<104x104xi8, strided<[104,1]>>,     // arg3 (input space on l1)
    memref<104x104xi8, strided<[1,104]>>,     // arg4 (weight space on l1)
    memref<104x104xi32, strided<[104,1]>>     // arg3 (output space on l1)
   ) -> (), sym_name = "tiledMatmul11"}> ({
@@ -121,13 +121,13 @@
 // perform tiled matrix multiplication,
 // dispatching part of the work to the accelerator!
   "func.func"() <{function_type = 
-  (memref<104x104xi8>,                        // arg0 (input)
+  (memref<104x104xi8, strided<[104,1]>>,                        // arg0 (input)
    memref<104x104xi8, strided<[1, 104]>>,     // arg1 (weight)
    memref<104x104xi32, strided<[104,1]>>,     // arg2 (output)
    memref<104x104xi32, strided<[104,1]>>,     // arg3 (output space on l1)
    memref<104x104xi8, strided<[1, 104]>>      // arg4 (weight space on l1)
   ) -> (), sym_name = "pineapple"}> ({
-  ^bb0(%arg0: memref<104x104xi8>, 
+  ^bb0(%arg0: memref<104x104xi8, strided<[104,1]>>, 
        %arg1: memref<104x104xi8, strided<[1,104]>>, 
        %arg2: memref<104x104xi32, strided<[104,1]>>, 
        %outputL1: memref<104x104xi32, strided<[104,1]>>,
@@ -193,7 +193,7 @@
     func.call @dispatch_to_accelerator(%zero_i32, %arg0, %vSliceWL1, %vSliceOL1)
     : (
     i32, // coreID
-    memref<104x104xi8>, // input
+    memref<104x104xi8, strided<[104,1]>>, // input
     memref<104x1xi8, strided<[1, 104], offset: ?>>,   // weight slice
     memref<104x1xi32, strided<[104, 1], offset: ?>>)  // output slice
     -> ()

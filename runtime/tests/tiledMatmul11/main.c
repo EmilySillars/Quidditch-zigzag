@@ -44,6 +44,10 @@ int main() {
   memrefGolden.data = (int32_t *)malloc(sizeof(int32_t) * MAT_WIDTH_SQUARED);
   memrefGolden.aligned_data = memrefGolden.data;
   memrefGolden.offset = 0;
+  TwoDMemrefI8_t memrefB;  // weight 104x104xi8
+  memrefB.data = (int8_t *)malloc(sizeof(int32_t) * MAT_WIDTH_SQUARED);
+  memrefB.aligned_data = memrefB.data;
+  memrefB.offset = 0;
 
   // Create memref objects for data stored in L1
   TwoDMemrefI8_t memrefA;  // input 104x104xi8
@@ -52,20 +56,7 @@ int main() {
   memrefA.offset = 0;
   l1 += (sizeof(int8_t) * MAT_WIDTH_SQUARED);
 
-  TwoDMemrefI8_t memrefB;  // weight 104x104xi8
-  memrefB.data = (int8_t *)(l1);
-  memrefB.aligned_data = memrefB.data;
-  memrefB.offset = 0;
-  l1 += (sizeof(int8_t) * MAT_WIDTH_SQUARED);
-
-  // old output slice from ex 10
-  TwoDMemrefI32_t memrefOSlice;  // output 8x104xi32
-  memrefOSlice.data = (int32_t *)l1;
-  memrefOSlice.aligned_data = memrefOSlice.data;
-  memrefOSlice.offset = 0;
-  l1 += (sizeof(int32_t) * 8 * MAT_WIDTH);
-
-  // new L1 "allocations" for ex 11
+  // "allocate" L1 tiles for ex 11
   TwoDMemrefI8_t memrefWeightSlice;  // weight-l1-slice: 104x13
   memrefWeightSlice.data = (int8_t *)l1;
   memrefWeightSlice.aligned_data = memrefWeightSlice.data;
@@ -89,7 +80,7 @@ int main() {
   // perform C code matmul to get the ground truth
   cCodeSquareMatmul(&memrefA, &memrefB, &memrefGolden);
 
-  set_accelerator_computation(_mlir_ciface_kernel_tiledMatmul11);
+  set_accelerator_computation((kernel_ptr)_mlir_ciface_kernel_tiledMatmul11);
 
   // Launch kernel in host, which will dispatch computation to accelerators
   _mlir_ciface_tiledMatmul11(&memrefA, &memrefB, &memrefC, 0,
@@ -112,10 +103,11 @@ int main() {
     print2DMemRefI32_t(&memrefC, 104);
     // print2DMemRefI32_t(&memrefGolden, 104);
   } else {
-    printf("Output Correct\n");
+    printf("Output Correct11\n");
   }
 
   // free everything before exiting!
+  free(memrefB.data);
   free(memrefC.data);
   free(memrefGolden.data);
 
