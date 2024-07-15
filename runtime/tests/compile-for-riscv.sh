@@ -1,5 +1,6 @@
 #!/bin/sh
 basename=`basename $1 | sed 's/[.][^.]*$//'`
+echo "compile-for-riscv: basename is $basename"
 # remove previously generated files
 sh clean-out.sh $basename
 
