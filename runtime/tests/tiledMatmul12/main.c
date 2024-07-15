@@ -53,8 +53,7 @@ int main() {
   l1 += (sizeof(int8_t) * MAT_WIDTH_SQUARED);
 
   TwoDMemrefI8_t memrefB;  // weight 104x104xi8
-  memrefB.data =
-      (int8_t *)(l1);
+  memrefB.data = (int8_t *)(l1);
   memrefB.aligned_data = memrefB.data;
   memrefB.offset = 0;
   l1 += (sizeof(int8_t) * MAT_WIDTH_SQUARED);
@@ -64,22 +63,20 @@ int main() {
   memrefOSlice.data = (int32_t *)l1;
   memrefOSlice.aligned_data = memrefOSlice.data;
   memrefOSlice.offset = 0;
-  l1 += (sizeof(int32_t) * 8*MAT_WIDTH);
+  l1 += (sizeof(int32_t) * 8 * MAT_WIDTH);
 
   // new L1 "allocations" for ex 11
   TwoDMemrefI8_t memrefWeightSlice;  // weight-l1-slice: 104x13
-  memrefWeightSlice.data =
-      (int8_t *)l1;
+  memrefWeightSlice.data = (int8_t *)l1;
   memrefWeightSlice.aligned_data = memrefWeightSlice.data;
   memrefWeightSlice.offset = 0;
-  l1 += (sizeof(int8_t)*MAT_WIDTH*13);
+  l1 += (sizeof(int8_t) * MAT_WIDTH * 13);
 
   TwoDMemrefI32_t memrefOutputSlice;  // output-l1-slice: 104x13
-  memrefOutputSlice.data =
-      (int32_t *)l1;
+  memrefOutputSlice.data = (int32_t *)l1;
   memrefOutputSlice.aligned_data = memrefOutputSlice.data;
   memrefOutputSlice.offset = 0;
-  l1 += (sizeof(int32_t)*MAT_WIDTH*13);
+  l1 += (sizeof(int32_t) * MAT_WIDTH * 13);
 
   // initialize the matrices
   for (size_t i = 0; i < MAT_WIDTH_SQUARED; i++) {
@@ -92,18 +89,11 @@ int main() {
   // perform C code matmul to get the ground truth
   cCodeSquareMatmul(&memrefA, &memrefB, &memrefGolden);
 
- // set_accelerator_computation((kernel_ptr)_mlir_ciface_mango);
-  // host_acc_perform_kernel_together((kernel_ptr)_mlir_ciface_tiled_matmul,
-  //                                  (void *)&memrefA, (void *)&memrefB,
-  //                                  (void *)&memrefC, (void *)&memrefOSlice);
+  set_accelerator_computation(_mlir_ciface_kernel_tiledMatmul12);
 
-  // host_acc_perform_kernel_together_2_slices(
-  //     (kernel_ptr)_mlir_ciface_pineapple, (void *)&memrefA, (void *)&memrefB,
-  //     (void *)&memrefC, (void *)&memrefOutputSlice, (void *)&memrefWeightSlice);
-
-  host_perform_kernel(
-      (kernel_ptr)_mlir_ciface_mango, (void *)&memrefA, (void *)&memrefB,
-      (void *)&memrefC, (void *)0, (void *)&memrefWeightSlice, (void *)&memrefOutputSlice);
+  // Launch kernel in host, which will dispatch computation to accelerators
+  _mlir_ciface_tiledMatmul12(&memrefA, &memrefB, &memrefC, 0,
+                             &memrefWeightSlice, &memrefOutputSlice);
 
   // check for correctness
   int nerr = 0;
@@ -120,7 +110,7 @@ int main() {
   if (nerr != 0) {
     printf("Output does not match the golden value!\n");
     print2DMemRefI32_t(&memrefC, 104);
-    //print2DMemRefI32_t(&memrefGolden, 104);
+    // print2DMemRefI32_t(&memrefGolden, 104);
   } else {
     printf("Output Correct\n");
   }
