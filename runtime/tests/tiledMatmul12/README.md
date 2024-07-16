@@ -113,28 +113,35 @@ Spatial Loops
 Host:
 
 ```
-void dmaCore (Matrix_104x104 i, Matrix_104x104 w, Matrix_104x104 o) {
+void dmaCore (Matrix_104x104 i, Matrix_104x104 w, Matrix_104x104 o,) {
     // loop bounds
     size_t B_S = 8;
+    size_t B_0 = 13;
 
     // block sizes
     size_t b_s_bk_sz = 13;
+    size_t b_0_bk_sz = 1;
     
 	// assume i and w are already in L1, and o is in L3
     for (size_t b_s = 0; b_s < B_S; b_s++) {
         size_t start = b_s * b_s_bk_sz;
-        Shape shape = 104x13;
-        Matrix_104_13 w_tile = subtile(w, start, shape);
-        Matrix_104_13 o_tile = subtile(o, start, shape);
+        Matrix_104_13 w_tile = subtile(w, start, 104x13);
+        Matrix_104_13 o_tile = subtile(o, start, 104x13);
         
-        // copy o_tile from L3 to L1
-        Matrix_104_13 o_tile_L1;
-        copyFromL3(o_tile, o_tile_L1);
-        
-        // deploy rest of work on compute core with id b_s
-		computeCore(i, w_tile, o_tile_L1, b_s);
-		
-		// save pointers to o_tile and o_tile_L1
+        for (size_t b_0 = 0; b_0 < B_0; b_0++) {
+            size_t start = b_0 * b_0_bk_sz;
+            Matrix_104_1 o_tile2 = subtile(o, start, 104x1)
+            Matrix_104_1 w_tile2 = subtile(w, start, 104x1)	
+
+            // copy o_tile from L3 to L1
+            Matrix_104_13 o_tile_L1;
+            copyFromL3(o_tile2, o_tile2_L1);
+
+            // deploy rest of work on compute core with id b_s
+            computeCore(i, w_tile2, o_tile2_L1, b_s);
+
+            // save pointers to o_tile2 and o_tile2_L1
+    	}
     }
     
     // synchronization
@@ -144,8 +151,8 @@ void dmaCore (Matrix_104x104 i, Matrix_104x104 w, Matrix_104x104 o) {
         // deploy rest of work on compute core with id b_s
 		waitForComputeCore(b_s);
 		
-		// copy o_tile from L1 back to L3
-		copyFromL1(o_tile_L1, o_tile);
+		// copy o_tile2 from L1 back to L3
+		copyFromL1(o_tile2_L1, o_tile2);
     }
 }
 ```
@@ -157,11 +164,10 @@ Accelerator:
 // this example does not differentiate between L1 and registers, 
 // because will not model register level loads at this level, nor the MLIR level
 
-void computeCore (Matrix_104x104 i, Matrix_104x13 w, Matrix_104x13 o, int coreID) {
+void computeCore (Matrix_104x104 i, Matrix_104x1 w, Matrix_104x1 o, int coreID) {
 	if (myCoreId() != coreID) { return; }
 	
 	// loop bounds
-	size_t B_0 = 13;
 	size_t A_0 = 8;
     size_t C_0 = 13;
     size_t C_1 = 4;
@@ -169,25 +175,21 @@ void computeCore (Matrix_104x104 i, Matrix_104x13 w, Matrix_104x13 o, int coreID
     size_t A_1 = 13;
     
 	// loop blocks
-	size_t b_0_bk_sz = 1;
 	size_t a_0_bk_sz = 13;
 	size_t c_0_bk_sz = 8;
 	size_t c_1_bk_sz = 2;
 	size_t c_2_bk_sz = 1;
 	size_t a_1_bk_sz = 1;
 	
-	for (size_t b_0 = 0; b_0 < B_0; b_0++) {
-		size_t start = b_0 * b_0_bk_sz;
-		Matrix_104_1 o_tile = subtile(o, start, 104x1)
-		Matrix_104_1 w_tile = subtile(w, start, 104x1)		
+	
         for (size_t a_0 = 0; a_0 < A_0; a_0++) {
             start = a_0 * a_0_bk_sz;
             Matrix_13_104 i_tile = subtile(i, start, 13x104);
-            Matrix_13_1 o_tile_tile = subtile(o_tile, start, 13x1);	
+            Matrix_13_1 o_tile_tile = subtile(o, start, 13x1);	
             for (size_t c_0 = 0; c_0 < C_0; c_0++) {
                 start = c_0 * c_0_bk_sz;
                 Matrix_13_8 i_tile_tile = subtile(i_tile, start, 13x8);
-                Matrix_13_13 w_tile_tile = subtile(w_tile, start, 8x1);
+                Matrix_8_1 w_tile_tile = subtile(w, start, 8x1);
                 for (size_t c_1 = 0; c_1 < C_1; c_1++) {
                 	start = c_1 * c_1_bk_sz;
                 	Matrix_13_2 i_tile_tile_tile = subtile(i_tile_tile, start, 13x2);
@@ -206,7 +208,7 @@ void computeCore (Matrix_104x104 i, Matrix_104x13 w, Matrix_104x13 o, int coreID
                 }
             }
         }
-	}
+	
 }
 ```
 

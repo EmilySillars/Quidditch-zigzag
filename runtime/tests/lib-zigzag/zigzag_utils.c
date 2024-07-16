@@ -35,6 +35,10 @@ void _mlir_ciface_hola(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
   printf("hola world!\n");
 }
 
+void _mlir_ciface_printNum(uint32_t n) {
+  printf("%d\n",n);
+}
+
 void _mlir_ciface_memrefCopy8bit(TwoDMemrefI8_t *src, TwoDMemrefI8_t *dst) {
   for (size_t row = 0; row < src->shape[0]; row++) {
     for (size_t col = 0; col < src->shape[1]; col++) {
