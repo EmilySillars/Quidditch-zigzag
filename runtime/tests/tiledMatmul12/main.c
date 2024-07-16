@@ -37,6 +37,10 @@ int main() {
   uint32_t l1 = snrt_l1_start_addr();
 
   // Create memref objects for data stored in L3
+  TwoDMemrefI8_t memrefB;  // weight 104x104xi8
+  memrefB.data = (int8_t *)malloc(sizeof(int32_t) * MAT_WIDTH_SQUARED);
+  memrefB.aligned_data = memrefB.data;
+  memrefB.offset = 0;
   TwoDMemrefI32_t memrefC;  // output 104x104xi32
   memrefC.data = (int32_t *)malloc(sizeof(int32_t) * MAT_WIDTH_SQUARED);
   memrefC.aligned_data = memrefC.data;
@@ -45,10 +49,6 @@ int main() {
   memrefGolden.data = (int32_t *)malloc(sizeof(int32_t) * MAT_WIDTH_SQUARED);
   memrefGolden.aligned_data = memrefGolden.data;
   memrefGolden.offset = 0;
-  TwoDMemrefI8_t memrefB;  // weight 104x104xi8
-  memrefB.data = (int8_t *)malloc(sizeof(int32_t) * MAT_WIDTH_SQUARED);
-  memrefB.aligned_data = memrefB.data;
-  memrefB.offset = 0;
 
   // Create memref objects for data stored in L1
   TwoDMemrefI8_t memrefA;  // input 104x104xi8
@@ -112,7 +112,7 @@ int main() {
   free(memrefC.data);
   free(memrefGolden.data);
 
-  // tell all compute cores (really just compute core 0) to exit
+  // tell all compute cores to exit
   tell_compute_cores_to_exit();
   return nerr;
 }

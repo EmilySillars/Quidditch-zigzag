@@ -161,7 +161,7 @@ int main() {
     printf("Output does not match the golden value!\n");
     // print2DMemRefI32_t(&memrefC,16);
   } else {
-    printf("Output Correct9\n");
+    printf("Output Correct\n");
   }
   // print2DMemRefI32_t(&memrefC,20);
   // // cCodeSquareMatmul(&memrefA, &memrefB, &memrefC );

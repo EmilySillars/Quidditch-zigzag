@@ -134,6 +134,16 @@ void dmaCore (Matrix_104x104 i, Matrix_104x104 w, Matrix_104x104 o) {
         // deploy rest of work on compute core with id b_s
 		computeCore(i, w_tile, o_tile_L1, b_s);
 		
+		// save pointers to o_tile and o_tile_L1
+    }
+    
+    // synchronization
+    // copy results from each compute core back to L3
+    for (size_t b_s = 0; b_s < B_S; b_s++) {
+                
+        // deploy rest of work on compute core with id b_s
+		waitForComputeCore(b_s);
+		
 		// copy o_tile from L1 back to L3
 		copyFromL1(o_tile_L1, o_tile);
     }

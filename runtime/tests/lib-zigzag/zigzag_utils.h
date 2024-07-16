@@ -41,6 +41,8 @@ void host_perform_kernel(kernel_ptr k, void *arg0, void *arg1, void *arg2,
 void _mlir_ciface_dispatch_to_accelerator(uint32_t accID, TwoDMemrefI8_t *arg0,
                                           TwoDMemrefI8_t *arg1,
                                           TwoDMemrefI32_t *arg2);
+// wait for accelerator work to complete (sychronization)
+void _mlir_ciface_wait_for_accelerator(uint32_t accID);
 void _mlir_ciface_mango(uint32_t accID, TwoDMemrefI8_t *arg0,
                                           TwoDMemrefI8_t *arg1,
                                           TwoDMemrefI32_t *arg2);

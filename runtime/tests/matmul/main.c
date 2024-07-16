@@ -187,7 +187,7 @@ int main() {
   if (nerr != 0) {
     printf("Output does not match the golden value!\n");
   } else {
-    printf("Output Correctmatmul\n");
+    printf("Output Correct\n");
   }
 
   return nerr;

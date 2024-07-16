@@ -177,7 +177,7 @@ int main() {
     printf("Output does not match the golden value!\n");
     print2DMemRefI32_t(&memrefC,16);
   } else {
-    printf("Output Correct2\n");
+    printf("Output Correct\n");
   }
 
   return nerr;

@@ -69,7 +69,7 @@ int main() {
     printf("Output does not match the golden value!\n");
     // print2DMemRefI32_t(&memrefC,16); // debugging
   } else {
-    printf("Output Correct5\n");
+    printf("Output Correct\n");
   }
 
   // free everything before exiting!
