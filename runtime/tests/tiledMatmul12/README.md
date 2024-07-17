@@ -74,22 +74,22 @@ for d2; d2 < 104; d2++;
 
 - [This is the yaml fed to ZigZag](https://github.com/EmilySillars/zigzag/blob/manual-examples/zigzag/inputs/hardware/snitch-cluster-only-integers.yaml)
 
-- Full documentation of feeding to ZigZag and getting output [here](https://github.com/EmilySillars/zigzag/blob/manual-examples/emily-notes.md#snitch-cluster).
+- Full documentation of feeding to ZigZag and getting output [here](https://github.com/EmilySillars/zigzag/blob/58e38adf8191e2b983c5e0ec97480ed97ef797dd/modeling-snitch-with-zigzag.md).
 
 ## II. Output from ZigZag
 
 ```
 Loop ordering for matmul_104_104
 =============================================================================================
-Temporal Loops                      O                  I                  W                  
+Temporal Loops                      W                  O                  I                  
 =============================================================================================
-for B in [0, 13):                   l3                 l1                 l1                 
+for B in [0, 13):                   l1                 l3                 l1                 
 ---------------------------------------------------------------------------------------------
   for A in [0, 8):                  l1                 l1                 l1                 
 ---------------------------------------------------------------------------------------------
-    for C in [0, 13):               rf_x1_thru_x31     l1                 l1                 
+    for C in [0, 13):               l1                 rf_x1_thru_x31     l1                 
 ---------------------------------------------------------------------------------------------
-      for C in [0, 4):              rf_x1_thru_x31     l1                 rf_x1_thru_x31     
+      for C in [0, 4):              rf_x1_thru_x31     rf_x1_thru_x31     l1                 
 ---------------------------------------------------------------------------------------------
         for C in [0, 2):            rf_x1_thru_x31     rf_x1_thru_x31     rf_x1_thru_x31     
 ---------------------------------------------------------------------------------------------
@@ -102,31 +102,134 @@ Spatial Loops
 ---------------------------------------------------------------------------------------------
             parfor B in [0, 1):                                                              
 ---------------------------------------------------------------------------------------------
-
-Stall and slack per port of each memory instance:
-  rf_x1_thru_x31: {'r_port_1': 152760, 'w_port_1': 0}
-  l1: {'rw_port_1': 0}
-  l3: {'rw_port_1': 0}
-Latency: 2.965e+05
 ```
+
+![hardware](../../../zigzag-fork/pngs/host-acc-div-tiledMatmul12.png)
+
+Comments:
+
+|           |           | `B=8` |           | `B=13` |             | `A=8` |                 | `C=13` |         | `C=4` |           | `C=2` |             | `A=13`        |       |
+| --------- | --------- | ----- | --------- | ------ | ----------- | ----- | --------------- | ------ | ------- | ----- | --------- | ----- | ----------- | ------------- | ----- |
+| `I[a][c]` | `104x104` | `->`  | `104x104` | `->`   | `104x104`   | `->`  | `13x104`        | `->`   | `13x8`  | `->`  | `13x2`    | `->`  | `13x1`      | `->`          | `1x1` |
+| `W[c][b]` | `104x104` | `->`  | `104x13`  | `->`   | `104x1`     | `->`  | `104x1`         | `->`   | `8x1`   | `->`  | `2x1`     | `->`  | `1x1`       | `->`          | `1x1` |
+| `O[a][b]` | `104x104` | `->`  | `104x13`  | `->`   | `104x1`     | `->`  | `13x1`          | `->`   | `13x1`  | `->`  | `13x1`    | `->`  | `13x1`      | `->`          | `1x1` |
+| **RF**    |           |       | 0         |        | 0           |       | 0               |        | 104     |       | 15        |       | 27          |               | 3     |
+| **L1**    |           |       | 1352      |        | 10816 + 104 |       | 1352 + 104 + 13 |        | 21      |       | 26        |       | 0           |               | 0     |
+| **L3**    |           |       | 10816     |        | 104         |       | 0               |        | 0       |       | 0         |       | 0           |               | 0     |
+| `I tile`  |           |       | 1         |        | 1           |       | 8,1             |        | 13,8,1  |       | 4,13,8,1  |       | 2,4,13,8,1  | 13,2,4,13,8,1 |       |
+| `W tile`  |           |       | 8         |        | 13,8        |       | 13,8            |        | 13,13,8 |       | 4,13,13,8 |       | 2,4,13,13,8 | 2,4,13,13,8   |       |
+| `O tile`  |           |       | 8         |        | 13, 8       |       | 8,13,8          |        | 8,13,8  |       | 8,13,8    |       | 8,13,8      | 13,8,13,8     |       |
+
+
 
 ## III. Manual Transformation
 
-#### a. C code transformed
+#### a. C-ish pseudocode transformed based on "host vs. accelerator" divide
+
+Host:
 
 ```
-TODO
+// recall:  O[a][b]+=I[a][c]*W[c][b]
+void dmaCore (Matrix_104x104 i, Matrix_104x104 w, Matrix_104x104 o,) {
+    // loop bounds
+    size_t B_S = 8;
+    size_t B_0 = 13;
+
+    // block sizes
+    size_t b_s_bk_sz = 13;
+    size_t b_0_bk_sz = 1;
+    
+	// assume i and w are already in L1, and o is in L3
+    for (size_t b_s = 0; b_s < B_S; b_s++) {
+        size_t start = b_s * b_s_bk_sz;
+        Matrix_104_13 w_tile = subtile(w, start, 104x13);
+        Matrix_104_13 o_tile = subtile(o, start, 104x13);
+        
+        for (size_t b_0 = 0; b_0 < B_0; b_0++) {
+            size_t start = b_0 * b_0_bk_sz;
+            Matrix_104_1 o_tile2 = subtile(o, start, 104x1)
+            Matrix_104_1 w_tile2 = subtile(w, start, 104x1)	
+
+            // copy o_tile from L3 to L1
+            Matrix_104_13 o_tile_L1;
+            copyFromL3(o_tile2, o_tile2_L1);
+
+            // deploy rest of work on compute core with id b_s
+            computeCore(i, w_tile2, o_tile2_L1, b_s);
+
+            // save pointers to o_tile2 and o_tile2_L1
+    	}
+    }
+    
+    // synchronization
+    // copy results from each compute core back to L3
+    for (size_t b_s = 0; b_s < B_S; b_s++) {
+                
+        // deploy rest of work on compute core with id b_s
+		waitForComputeCore(b_s);
+		
+		// copy o_tile2 from L1 back to L3
+		copyFromL1(o_tile2_L1, o_tile2);
+    }
+}
 ```
 
-#### b. MLIR transformed
+Accelerator:
 
 ```
-TODO
+// recall:  O[a][b]+=I[a][c]*W[c][b]
+// this example does not differentiate between L1 and registers, 
+// because will not model register level loads at this level, nor the MLIR level
+
+void computeCore (Matrix_104x104 i, Matrix_104x1 w, Matrix_104x1 o, int coreID) {
+	if (myCoreId() != coreID) { return; }
+	
+	// loop bounds
+	size_t A_0 = 8;
+    size_t C_0 = 13;
+    size_t C_1 = 4;
+    size_t C_2 = 2;
+    size_t A_1 = 13;
+    
+	// loop blocks
+	size_t a_0_bk_sz = 13;
+	size_t c_0_bk_sz = 8;
+	size_t c_1_bk_sz = 2;
+	size_t c_2_bk_sz = 1;
+	size_t a_1_bk_sz = 1;
+	
+	
+        for (size_t a_0 = 0; a_0 < A_0; a_0++) {
+            start = a_0 * a_0_bk_sz;
+            Matrix_13_104 i_tile = subtile(i, start, 13x104);
+            Matrix_13_1 o_tile_tile = subtile(o, start, 13x1);	
+            for (size_t c_0 = 0; c_0 < C_0; c_0++) {
+                start = c_0 * c_0_bk_sz;
+                Matrix_13_8 i_tile_tile = subtile(i_tile, start, 13x8);
+                Matrix_8_1 w_tile_tile = subtile(w, start, 8x1);
+                for (size_t c_1 = 0; c_1 < C_1; c_1++) {
+                	start = c_1 * c_1_bk_sz;
+                	Matrix_13_2 i_tile_tile_tile = subtile(i_tile_tile, start, 13x2);
+                	Matrix_2_1 w_tile_tile_tile - subtile(w_tile_tile, start, 2x1);
+                    for (size_t c_2 = 0; c_2 < C_2; c_2++) {
+                    	start = c_2 * c_2_bk_sz;
+                    	Matrix_13x1 i_tile_4 = subtile(i_tile_tile_tile, start, 13x1);
+                    	Matrix_1_1 w_tile_4 = subtile(w_tile_tile_tile, start, 1x1);                    
+                        for (size_t a_1 = 0; a_1 < A_1; a_1++) {
+                        	start = a_1 * a_1_bk_sz;
+                        	Matrix_1_1 i_tile_5 = subtile(i_tile_4, start, 1x1);
+                        	Matrix_1_1 o_tile_3 = subtile(o_tile_tile, start, 1x1)
+                        	o_tile_3 += (i_tile_5 * w_tile_4);
+                        }
+                    }
+                }
+            }
+        }
+	
+}
 ```
 
 #### c. MLIR transformed based on L1 - L3 split ("host" vs "accelerator" divide)
-
-![hardware](../../../zigzag-fork/pngs/host-acc-div-tiledMatmul12.png)
 
 Host:
 
@@ -139,8 +242,6 @@ Accelerator:
 ```
  TODO
 ```
-
-
 
 ## IV. Running the transformed MLIR on Snitch
 

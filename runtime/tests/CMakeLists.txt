@@ -133,6 +133,16 @@ add_executable(TiledMatmul12 tiledMatmul12/main.c
                            tiledMatmul12/out/tiledMatmul12.o)
 target_link_libraries(TiledMatmul12 snRuntime Quidditch::zigzag_dispatch::zigzag_dispatch)
 
+# add description!
+add_executable(TiledMatmul15 tiledMatmul15/main.c
+                           lib-zigzag/data.c
+                           lib-zigzag/data.h
+                           lib-zigzag/memref.h 
+                           lib-zigzag/zigzag_utils.h
+                           lib-zigzag/zigzag_utils.c
+                           tiledMatmul15/out/tiledMatmul15.o)
+target_link_libraries(TiledMatmul15 snRuntime Quidditch::zigzag_dispatch::zigzag_dispatch)
+
 
 add_test(NAME HolaWorld COMMAND HolaWorld)
 set_property(TEST HolaWorld PROPERTY

@@ -22,6 +22,7 @@
     %d0_1_bk_sz = arith.constant 8 : index
     // constants
     %zero_i32 = arith.constant 0: i32
+    %five_i32 = arith.constant 0: i32
 
     // enter scf FOR LOOP
     scf.for %d0_1 = %zero to %thirteen step %one iter_args() -> () { // this loop uses both L3 and L1
@@ -41,7 +42,7 @@
     : memref<104x104xi8> to memref<8x104xi8, strided<[104, 1], offset: ?>>
 
     // dispatch mini matmul to accelerator
-    func.call @dispatch_to_accelerator(%zero_i32, %inputTile, %arg1, %outputTileL1) 
+    func.call @dispatch_to_accelerator(%five_i32, %inputTile, %arg1, %outputTileL1) 
     : (i32, memref<8x104xi8, strided<[104, 1], offset: ?>>, memref<104x104xi8, strided<[1,104]>>, memref<8x104xi32, strided<[104, 1], offset: ?>>) -> ()
 
     // memref.copy %outputTileL1, %outputTileL3 : memref<8x104xi32, strided<[104, 1], offset: ?>> to memref<8x104xi32, strided<[104, 1], offset: ?>>   

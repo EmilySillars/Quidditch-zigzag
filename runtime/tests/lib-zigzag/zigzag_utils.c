@@ -1,8 +1,7 @@
 #include "zigzag_utils.h"
 
-void set_accelerator_computation(void (*k)(void *arg0, void *arg1,
-                                           void *arg2)) {
-  set_kernel(k);
+void set_accelerator_computation(uint32_t accID, kernel_ptr k) {
+  set_kernel(accID,k);
 }
 
 void host_acc_perform_kernel_together(kernel_ptr k, void *arg0, void *arg1,
@@ -25,7 +24,7 @@ void host_acc_perform_kernel_together_2_slices(kernel_ptr k, void *arg0,
 void _mlir_ciface_dispatch_to_accelerator(uint32_t accID, TwoDMemrefI8_t *arg0,
                                           TwoDMemrefI8_t *arg1,
                                           TwoDMemrefI32_t *arg2) {
-  set_kernel_args(arg0, arg1, arg2);
+  set_kernel_args(accID, arg0, arg1, arg2);
   // perform tiled matmul on compute core # accID
   wake_up_compute_core(accID);
   wait_for_compute_core(accID);
@@ -48,7 +47,53 @@ void _mlir_ciface_memrefCopy8bit(TwoDMemrefI8_t *src, TwoDMemrefI8_t *dst) {
   }
 }
 
+void _mlir_ciface_memrefCopy8bit_I_104x104(TwoDMemrefI8_t *src, TwoDMemrefI8_t *dst) {
+  for (size_t row = 0; row < src->shape[0]; row++) {
+    for (size_t col = 0; col < src->shape[1]; col++) {
+      dst->aligned_data[dst->offset + (dst->stride[0] * row) +
+                        (col * dst->stride[1])] =
+          src->aligned_data[src->offset + (src->stride[0] * row) +
+                            (col * src->stride[1])];
+    }
+  }
+}
+
+void _mlir_ciface_memrefCopy8bit_W_104x104(TwoDMemrefI8_t *src, TwoDMemrefI8_t *dst) {
+  for (size_t row = 0; row < src->shape[0]; row++) {
+    for (size_t col = 0; col < src->shape[1]; col++) {
+      // printf("I see the value %d",dst->aligned_data[dst->offset + (dst->stride[0] * row) +
+      //                   (col * dst->stride[1])]);
+      dst->aligned_data[dst->offset + (dst->stride[0] * row) +
+                        (col * dst->stride[1])] =
+          src->aligned_data[src->offset + (src->stride[0] * row) +
+                            (col * src->stride[1])];
+    }
+  }
+}
+
 void _mlir_ciface_memrefCopy32bit(TwoDMemrefI32_t *src, TwoDMemrefI32_t *dst) {
+  for (size_t row = 0; row < src->shape[0]; row++) {
+    for (size_t col = 0; col < src->shape[1]; col++) {
+      dst->aligned_data[dst->offset + dst->stride[0] * row +
+                        col * dst->stride[1]] =
+          src->aligned_data[src->offset + src->stride[0] * row +
+                            col * src->stride[1]];
+    }
+  }
+}
+
+void _mlir_ciface_memrefCopy32bit_O_104x13(TwoDMemrefI32_t *src, TwoDMemrefI32_t *dst){
+  for (size_t row = 0; row < src->shape[0]; row++) {
+    for (size_t col = 0; col < src->shape[1]; col++) {
+      dst->aligned_data[dst->offset + dst->stride[0] * row +
+                        col * dst->stride[1]] =
+          src->aligned_data[src->offset + src->stride[0] * row +
+                            col * src->stride[1]];
+    }
+  }
+}
+
+void _mlir_ciface_memrefCopy32bit_O_104x1(TwoDMemrefI32_t *src, TwoDMemrefI32_t *dst){
   for (size_t row = 0; row < src->shape[0]; row++) {
     for (size_t col = 0; col < src->shape[1]; col++) {
       dst->aligned_data[dst->offset + dst->stride[0] * row +

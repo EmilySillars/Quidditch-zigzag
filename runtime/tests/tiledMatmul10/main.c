@@ -70,7 +70,7 @@ int main() {
   memrefOSlice.aligned_data = memrefOSlice.data;
   memrefOSlice.offset = 0;
 
-  set_accelerator_computation((kernel_ptr)_mlir_ciface_matmul_accelerator_work);
+  set_accelerator_computation(5, (kernel_ptr)_mlir_ciface_matmul_accelerator_work);
   host_acc_perform_kernel_together((kernel_ptr)_mlir_ciface_tiled_matmul,
                                    (void *)&memrefA, (void *)&memrefB,
                                    (void *)&memrefC, (void *)&memrefOSlice);

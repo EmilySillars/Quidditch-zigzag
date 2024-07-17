@@ -26,21 +26,28 @@ we employ a "host-accelerator" abstraction.
 //  Note: all computations (derived from kernels) have three arguments,
 //  and are passed as function pointers
 //  for now, all accelerators must perform the same computation
-void set_accelerator_computation(void (*k)(void *arg0, void *arg1, void *arg2));
+void set_accelerator_computation(uint32_t accID,
+                                 void (*k)(void *arg0, void *arg1, void *arg2));
 
 // Launch kernel in host, which will dispatch computation to accelerator
 void host_acc_perform_kernel_together(kernel_ptr k, void *arg0, void *arg1,
                                       void *arg2, void *arg3);
-void host_acc_perform_kernel_together_2_slices(kernel_ptr k, void *arg0, void *arg1,
-                                      void *arg2, void *slice1, void *slice2);
+void host_acc_perform_kernel_together_2_slices(kernel_ptr k, void *arg0,
+                                               void *arg1, void *arg2,
+                                               void *slice1, void *slice2);
 
 // dispatch workload to accelerator with id accID
 void _mlir_ciface_dispatch_to_accelerator(uint32_t accID, TwoDMemrefI8_t *arg0,
                                           TwoDMemrefI8_t *arg1,
                                           TwoDMemrefI32_t *arg2);
-void _mlir_ciface_mango(uint32_t accID, TwoDMemrefI8_t *arg0,
-                                          TwoDMemrefI8_t *arg1,
-                                          TwoDMemrefI32_t *arg2);
+void _mlir_ciface_tiledMatmul12_kernel(TwoDMemrefI8_t *arg0,
+                        TwoDMemrefI8_t *arg1, TwoDMemrefI32_t *arg2);
+
+void _mlir_ciface_mango(TwoDMemrefI8_t *arg0,
+                        TwoDMemrefI8_t *arg1, TwoDMemrefI32_t *arg2);
+void _mlir_ciface_mangoDummy(uint32_t accID, TwoDMemrefI8_t *arg0,
+                        TwoDMemrefI8_t *arg1, TwoDMemrefI32_t *arg2);
+
 
 // DL Kernels Defined in MLIR
 extern void _mlir_ciface_dummy(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
@@ -49,9 +56,19 @@ extern void _mlir_ciface_tiled_matmul(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
                                       TwoDMemrefI32_t *c,
                                       TwoDMemrefI32_t *l1OTile);
 extern void _mlir_ciface_pineapple(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
-                                      TwoDMemrefI32_t *c,
-                                      TwoDMemrefI32_t *OSlice, TwoDMemrefI8_t *WSlice);
-                                      
+                                   TwoDMemrefI32_t *c, TwoDMemrefI32_t *OSlice,
+                                   TwoDMemrefI8_t *WSlice);
+extern void _mlir_ciface_tiledMatmul12(uint32_t coreID, TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
+                                       TwoDMemrefI32_t *c,
+                                       TwoDMemrefI8_t *sliceI,
+                                       TwoDMemrefI8_t *sliceW,
+                                       TwoDMemrefI32_t *sliceO);
+extern void _mlir_ciface_tiledMatmul15(uint32_t coreID, TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
+                                       TwoDMemrefI32_t *c,
+                                       TwoDMemrefI8_t *sliceI,
+                                       TwoDMemrefI8_t *sliceW,
+                                       TwoDMemrefI32_t *sliceO);
+
 // Helper functions for DL Kernels Defined in MLIR
 extern void _mlir_ciface_matmul_accelerator_work(TwoDMemrefI8_t *arg0,
                                                  TwoDMemrefI8_t *arg1,
@@ -76,5 +93,9 @@ extern void _mlir_ciface_dummy(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
 void _mlir_ciface_hola(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
                        TwoDMemrefI32_t *c);
 void _mlir_ciface_memrefCopy8bit(TwoDMemrefI8_t *src, TwoDMemrefI8_t *dst);
+void _mlir_ciface_memrefCopy8bit_I_104x104(TwoDMemrefI8_t *src, TwoDMemrefI8_t *dst);
+void _mlir_ciface_memrefCopy8bit_W_104x104(TwoDMemrefI8_t *src, TwoDMemrefI8_t *dst);
 void _mlir_ciface_memrefCopy32bit(TwoDMemrefI32_t *src, TwoDMemrefI32_t *dst);
 void _mlir_ciface_memrefCopy32bit2(TwoDMemrefI32_t *src, TwoDMemrefI32_t *dst);
+void _mlir_ciface_memrefCopy32bit_O_104x13(TwoDMemrefI32_t *src, TwoDMemrefI32_t *dst);
+void _mlir_ciface_memrefCopy32bit_O_104x1(TwoDMemrefI32_t *src, TwoDMemrefI32_t *dst);

@@ -67,8 +67,8 @@ int main() {
   cCodeSquareMatmul(&memrefA, &memrefB, &memrefGolden);
 
   // perform matmul on compute core #5
-  set_kernel(matmul_kernel);
-  set_kernel_args((void *) &memrefA, (void *) &memrefB, (void*) &memrefC);
+  set_kernel(5, matmul_kernel);
+  set_kernel_args(5, (void *) &memrefA, (void *) &memrefB, (void*) &memrefC);
   wake_up_compute_core(5);
   wait_for_compute_core(5);
 
