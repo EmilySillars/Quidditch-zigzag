@@ -20,15 +20,6 @@ extern void _mlir_ciface_matmul(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
 // this tile_compute function is not used in this program
 extern void _mlir_ciface_tile_compute(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
                                 TwoDMemrefI32_t *c);
-// some more c functions that the mlir code has access to - not used in this program
-void _mlir_ciface_hola(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b, TwoDMemrefI32_t *c){
-  printf("hola world!\n");
-}
-int trouble = 0; // bad global integer - TODO: get rid of this
-void _mlir_ciface_dispatch_to_accelerator(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b, TwoDMemrefI32_t *c){
-  printf("calling tile compute... %d\n",trouble);
-  trouble ++;
-}
 
 // only kernel supported
 void matmul_kernel(void *a, void *b, void *c){
@@ -76,7 +67,8 @@ int main() {
   cCodeSquareMatmul(&memrefA, &memrefB, &memrefGolden);
 
   // perform matmul on compute core #5
-  set_kernel(matmul_kernel, (void *) &memrefA, (void *) &memrefB, (void*) &memrefC);
+  set_kernel(matmul_kernel);
+  set_kernel_args((void *) &memrefA, (void *) &memrefB, (void*) &memrefC);
   wake_up_compute_core(5);
   wait_for_compute_core(5);
 

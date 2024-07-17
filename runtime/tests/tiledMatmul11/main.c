@@ -118,7 +118,7 @@ int main() {
     print2DMemRefI32_t(&memrefC, 104);
     //print2DMemRefI32_t(&memrefGolden, 104);
   } else {
-    printf("Output Correct\n");
+    printf("Output Correctfghj\n");
   }
 
   // free everything before exiting!

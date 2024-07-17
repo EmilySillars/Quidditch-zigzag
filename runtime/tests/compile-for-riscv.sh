@@ -1,7 +1,7 @@
 #!/bin/sh
 basename=`basename $1 | sed 's/[.][^.]*$//'`
 # remove previously generated files
-sh clean-out.sh $basename
+sh clean-out.sh $basename 2> /dev/null
 
 # make an output directory if doesn't already exist
 mkdir -p $basename/out
