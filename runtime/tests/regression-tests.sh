@@ -21,7 +21,7 @@ tiledMatmul12.mlir \
 echo "" > regression-tests.log
 if [[ $1 == "-t" ]]; then
    sh compile-for-riscv.sh "$2" 
-   . spike-link-and-run.sh "$2"
+   . spike-build-and-run-verbose.sh "$2"
 elif [[ $1 == "-rb" ]]; then
    for i in $tests
    do
@@ -31,26 +31,11 @@ elif [[ $1 == "-rb" ]]; then
    done
    for i in $tests
    do
-   . spike-link-and-run.sh "$i"
-   done
-elif [[ $1 == "-s" ]]; then
-   tests="tiledMatmul11.mlir \
-   tiledMatmul12.mlir"
-   for i in $tests
-   do
-      echo "Compiling MLIR $i for riscv..."
-      echo "Compiling MLIR $i for riscv... ------------------------------------------------------V" >> regression-tests.log
-      sh compile-for-riscv.sh "$i" 2>> regression-tests.log >> regression-tests.log
-   done
-   for i in $tests
-   do
-   . spike-link-and-run.sh "$i"
+   . spike-build-and-run.sh "$i"
    done
 else
    for i in $tests
    do
-   . spike-link-and-run.sh "$i"
+   . spike-build-and-run.sh "$i"
    done
 fi
-
-

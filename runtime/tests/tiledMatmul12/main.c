@@ -76,7 +76,7 @@ int main() {
   memrefGolden.stride[1] = 1;
 
   // new L1 "allocations" for ex 11
- TwoDMemrefI8_t memrefInputSlice;  // weight-l1-slice: 104x13
+ TwoDMemrefI8_t memrefInputSlice;  // input-l1: 104x104
   memrefInputSlice.data = (int8_t *)l1;
   memrefInputSlice.aligned_data = memrefInputSlice.data;
   memrefInputSlice.offset = 0;
@@ -84,7 +84,7 @@ int main() {
   memrefInputSlice.shape[1] = 13;
   memrefInputSlice.stride[0] = 104;
   memrefInputSlice.stride[1] = 1;
-  l1 += (sizeof(int8_t) * MAT_WIDTH * 13);
+  l1 += (sizeof(int8_t) * MAT_WIDTH_SQUARED);
 
   TwoDMemrefI8_t memrefWeightSlice;  // weight-l1-slice: 104x13
   memrefWeightSlice.data = (int8_t *)l1;
@@ -118,9 +118,9 @@ int main() {
     memrefC.aligned_data[i] = (int32_t)0;
   }
   
-  print2DMemRefI8_t(&memrefA,MAT_WIDTH);
-  print2DMemRefI8_t(&memrefB,MAT_WIDTH);
-  print2DMemRefI32_t(&memrefC,MAT_WIDTH);
+  // print2DMemRefI8_t(&memrefA,MAT_WIDTH);
+  // print2DMemRefI8_t(&memrefB,MAT_WIDTH);
+  // print2DMemRefI32_t(&memrefC,MAT_WIDTH);
 
   // perform C code matmul to get the ground truth
   cCodeSquareMatmul(&memrefA, &memrefB, &memrefGolden);

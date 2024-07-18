@@ -8,8 +8,19 @@ basename=`basename $1 | sed 's/[.][^.]*$//'`
 cd ../build &&\
 echo "TESTING $basename ------------------------------------------------------V" >> ../tests/regression-tests.log
 rm tests/${basename^} 2> /dev/null
-cmake .. -GNinja -DCMAKE_TOOLCHAIN_FILE=../toolchain/ToolchainFile.cmake >> ../tests/regression-tests.log
-ninja ${basename^} #>> ../tests/regression-tests.log
+if ! cmake .. -GNinja -DCMAKE_TOOLCHAIN_FILE=../toolchain/ToolchainFile.cmake >> ../tests/regression-tests.log; then
+    echo "FAILED $basename: cmake error"
+    # return to runtime/tests directory
+    cd ../tests
+    return
+fi
+if ! ninja ${basename^} >> ../tests/regression-tests.log; then
+    echo "FAILED $basename: build error"
+    # return to runtime/tests directory
+    cd ../tests
+    return
+fi
+
 
 # run the program
 $SPIKE/spike -m0x10000000:0x40000,0x80000000:0x80000000 --disable-dtb -p9 tests/${basename^} > ../tests/out/$basename.txt
@@ -17,23 +28,12 @@ $SPIKE/spike -m0x10000000:0x40000,0x80000000:0x80000000 --disable-dtb -p9 tests/
 # return to runtime/tests directory
 cd ../tests
 
-# compare results with ground truth
-comparisonResult=$(diff ../tests/correct/$basename.txt ../tests/out/$basename.txt)
-if [[ $comparisonResult ]]; then
-echo "FAILED $basename"
+if ! diff ../tests/correct/$basename.txt ../tests/out/$basename.txt 2> /dev/null; then
+    echo "FAILED $basename: output differs"
     echo "FAILED $basename: Output differs:" >> regression-tests.log
-    diff ../tests/correct/$basename.txt ../tests/out/$basename.txt >> regression-tests.log
+    diff ../tests/correct/$basename.txt ../tests/out/$basename.txt 2>> regression-tests.log
+   
 else
     echo "$basename OK."
 fi
-
-# scripting notes/reference
-# files=$(ls -A)
-# if [[ $? != 0 ]]; then
-#     echo "Command failed."
-# elif [[ $files ]]; then
-#     echo "Files found."
-# else
-#     echo "No files found."
-# fi
 
