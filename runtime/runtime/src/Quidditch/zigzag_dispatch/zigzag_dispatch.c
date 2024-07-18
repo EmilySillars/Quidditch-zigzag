@@ -1,7 +1,7 @@
 
 
 #include "zigzag_dispatch.h"
-#include "../../../../../runtime/tests/lib-zigzag/memref.h"
+
 #include <assert.h>
 #include <cluster_interrupt_decls.h>
 #include <riscv.h>
@@ -12,6 +12,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <team_decls.h>
+
+#include "../../../../../runtime/tests/lib-zigzag/memref.h"
 
 // dispatch using spinlocks
 
@@ -24,19 +26,34 @@ static struct cluster_state_t {
   void *a;
   void *b;
   void *c;
+  kernel_ptr k[9];
+  void *opI[9];
+  void *opW[9];
+  void *opO[9];
 } cluster_state = {
     {0, 0, 0, 0, 0, 0, 0, 0, 0},
     {false, false, false, false, false, false, false, false, false},
-    false};
+    false,
+    (kernel_ptr)0,
+    (void *)0,
+    (void *)0,
+    (void *)0,
+    {0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0}};
 
-void set_kernel(void (*g)(void *a, void *b, void *c)){
+void set_kernel(uint32_t coreID, void (*g)(void *a, void *b, void *c)) {
   cluster_state.g = g;
+  cluster_state.k[coreID] = g;
 }
 
-void set_kernel_args(void *a, void *b, void *c){
+void set_kernel_args(uint32_t coreID, void *a, void *b, void *c) {
   cluster_state.a = a;
   cluster_state.b = b;
   cluster_state.c = c;
+  cluster_state.opI[coreID] = a;
+  cluster_state.opW[coreID] = b;
+  cluster_state.opO[coreID] = c;
 }
 
 void compute_core_loop() {
