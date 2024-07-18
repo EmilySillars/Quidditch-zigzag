@@ -67,6 +67,7 @@ void compute_core_loop() {
     if (!cluster_state.exit) {
       // do something
       (*cluster_state.g)(cluster_state.a, cluster_state.b, cluster_state.c);
+     // (*cluster_state.g)(cluster_state.opI[snrt_cluster_core_idx()], cluster_state.opW[snrt_cluster_core_idx()], cluster_state.opO[snrt_cluster_core_idx()]);
       cluster_state.bins[snrt_cluster_core_idx()]++;
     }
   }

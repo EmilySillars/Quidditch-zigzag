@@ -21,7 +21,9 @@
   memref<104x13xi8, strided<[1, 104], offset: ?>>) 
   -> (), sym_name = "memrefCopy8bit", sym_visibility = "private"}> ({}) {llvm.emit_c_interface}: () -> ()
 "func.func"() <{function_type = (memref<104x1xi32, strided<[104, 1], offset: ?>>, memref<104x1xi32, strided<[104, 1], offset: ?>>) -> (), sym_name = "memrefCopy32bit", sym_visibility = "private"}> ({}) {llvm.emit_c_interface}: () -> ()
-
+"func.func"() <{function_type = (
+    i32) // coreID
+    -> (), sym_name = "wait_for_accelerator", sym_visibility = "private"}> ({}) {llvm.emit_c_interface}: () -> ()
 
 // perform tiled matrix multiplication,
 // dispatching part of the work to the accelerator!
@@ -103,6 +105,8 @@
     memref<104x1xi8, strided<[1, 104], offset: ?>>,   // weight slice
     memref<104x1xi32, strided<[104, 1], offset: ?>>)  // output slice
     -> ()
+
+    func.call @wait_for_accelerator(%five_i32) : (i32) -> ()
 
     // copy Output L1 back to L3
     func.call @memrefCopy32bit(%vSliceOL1,%vSliceOL3) : 

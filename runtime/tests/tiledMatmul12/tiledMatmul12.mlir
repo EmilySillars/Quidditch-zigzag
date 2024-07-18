@@ -3,33 +3,10 @@
 #map2 = affine_map<(d0, d1, d2) -> ()>
 #map3 = affine_map<(d0, d1, d2) -> (d0, d1)>
 "builtin.module"() ({
-
-
-
-// =============================================================================================
-// Temporal Loops                      W                  O                  I                  
-// =============================================================================================
-// for B in [0, 13):                   l1                 l3                 l1                 
-// ---------------------------------------------------------------------------------------------
-//   for A in [0, 8):                  l1                 l1                 l1                 
-// ---------------------------------------------------------------------------------------------
-//     for C in [0, 13):               l1                 rf_x1_thru_x31     l1                 
-// ---------------------------------------------------------------------------------------------
-//       for C in [0, 4):              rf_x1_thru_x31     rf_x1_thru_x31     l1                 
-// ---------------------------------------------------------------------------------------------
-//         for C in [0, 2):            rf_x1_thru_x31     rf_x1_thru_x31     rf_x1_thru_x31     
-// ---------------------------------------------------------------------------------------------
-//           for A in [0, 13):         rf_x1_thru_x31     rf_x1_thru_x31     rf_x1_thru_x31     
-// ---------------------------------------------------------------------------------------------
-// =============================================================================================
-// Spatial Loops                                                                                
-// =============================================================================================
-//             parfor B in [0, 8):                                                              
-// ---------------------------------------------------------------------------------------------
-//             parfor B in [0, 1):                                                              
-// ----------------------------------------
-
 // declaring external MLIR functions (implementations in C)
+"func.func"() <{function_type = (
+    i32) // coreID
+    -> (), sym_name = "wait_for_accelerator", sym_visibility = "private"}> ({}) {llvm.emit_c_interface}: () -> ()
 "func.func"() <{function_type = (
     i32, // coreID
     memref<104x104xi8, strided<[104, 1], offset: ?>>, // input
@@ -153,6 +130,8 @@
     memref<104x1xi8, strided<[1, 104], offset: ?>>,   // weight slice
     memref<104x1xi32, strided<[104, 1], offset: ?>>)  // output slice
     -> ()
+
+    func.call @wait_for_accelerator(%coreID) : (i32) -> ()
 
     // We copy L1 Output back to L3
     func.call @memrefCopy32bit_O_104x1(%sliceOL1_2, %sliceOL3_2) : 
@@ -316,6 +295,8 @@
     memref<104x1xi8, strided<[1, 104], offset: ?>>,   // weight slice
     memref<104x1xi32, strided<[104, 1], offset: ?>>)  // output slice
     -> ()
+
+    //func.call @wait_for_accelerator(%five_i32) : (i32) -> ()
 
     // copy Output L1 back to L3
     func.call @memrefCopy32bit(%vSliceOL1,%vSliceOL3) : 

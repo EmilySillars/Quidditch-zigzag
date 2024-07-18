@@ -117,29 +117,14 @@ int main() {
   for (size_t i = 0; i < MAT_WIDTH_SQUARED; i++) {
     memrefC.aligned_data[i] = (int32_t)0;
   }
-  
-  // print2DMemRefI8_t(&memrefA,MAT_WIDTH);
-  // print2DMemRefI8_t(&memrefB,MAT_WIDTH);
-  // print2DMemRefI32_t(&memrefC,MAT_WIDTH);
+
 
   // perform C code matmul to get the ground truth
   cCodeSquareMatmul(&memrefA, &memrefB, &memrefGolden);
 
-  // set_accelerator_computation(5, (kernel_ptr)_mlir_ciface_mango);
   set_accelerator_computation(5, (kernel_ptr)_mlir_ciface_tiledMatmul12_kernel);
-  // host_acc_perform_kernel_together((kernel_ptr)_mlir_ciface_tiled_matmul,
-  //                                  (void *)&memrefA, (void *)&memrefB,
-  //                                  (void *)&memrefC, (void *)&memrefOSlice);
-
-  // host_acc_perform_kernel_together_2_slices(
-  //     (kernel_ptr)_mlir_ciface_pineapple, (void *)&memrefA, (void *)&memrefB,
-  //     (void *)&memrefC, (void *)&memrefOutputSlice, (void *)&memrefWeightSlice);
-
-  // _mlir_ciface_tiledMatmul12(5, &memrefA, &memrefB, &memrefC, 0, &memrefWeightSlice, &memrefOutputSlice);
-  //_mlir_ciface_dummy2(5, &memrefA, &memrefB, &memrefC, &memrefInputSlice, &memrefWeightSlice, &memrefOutputSlice);
+ 
   _mlir_ciface_tiledMatmul12(5, &memrefA, &memrefB, &memrefC, &memrefInputSlice, &memrefWeightSlice, &memrefOutputSlice);
-
-  //_mlir_ciface_tiledMatmul12(5, &memrefA, &memrefB, &memrefC, 0, &memrefWeightSlice, &memrefOutputSlice);
 
   // check for correctness
   int nerr = 0;

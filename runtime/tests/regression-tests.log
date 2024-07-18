@@ -109,7 +109,7 @@ START: clang (llvm to .o)
 warning: overriding the module target triple with riscv32-unknown-unknown-elf [-Woverride-module]
 1 warning generated.
 FINISHED: clang (llvm to .o)
-Compiling MLIR tiledMatmul15.mlir for riscv... ------------------------------------------------------V
+Compiling MLIR tiledMatmul12.mlir for riscv... ------------------------------------------------------V
 START: mlir-opt --one-shot-bufferize
 FINISHED: mlir-opt --one-shot-bufferize
 START: mlir-opt pass by pass
@@ -120,7 +120,7 @@ START: clang (llvm to .o)
 warning: overriding the module target triple with riscv32-unknown-unknown-elf [-Woverride-module]
 1 warning generated.
 FINISHED: clang (llvm to .o)
-Compiling MLIR tiledMatmul12.mlir for riscv... ------------------------------------------------------V
+Compiling MLIR tiledMatmul13.mlir for riscv... ------------------------------------------------------V
 START: mlir-opt --one-shot-bufferize
 FINISHED: mlir-opt --one-shot-bufferize
 START: mlir-opt pass by pass
@@ -182,7 +182,7 @@ TESTING tiledMatmul2 ------------------------------------------------------V
 -- Disabling compiler loader (platform does not support library loading)
 -- Configuring IREE runtime plugins
 -- Runtime tracing disabled
--- Configuring done (0.3s)
+-- Configuring done (0.2s)
 -- Generating done (0.1s)
 -- Build files have been written to: /home/hoppip/Quidditch-zigzag/runtime/build
 [0/2] Re-checking globbed directories...
@@ -224,7 +224,7 @@ TESTING tiledMatmul5 ------------------------------------------------------V
 -- Disabling compiler loader (platform does not support library loading)
 -- Configuring IREE runtime plugins
 -- Runtime tracing disabled
--- Configuring done (0.3s)
+-- Configuring done (0.2s)
 -- Generating done (0.1s)
 -- Build files have been written to: /home/hoppip/Quidditch-zigzag/runtime/build
 [0/2] Re-checking globbed directories...
@@ -271,22 +271,6 @@ TESTING tiledMatmul11 ------------------------------------------------------V
 -- Build files have been written to: /home/hoppip/Quidditch-zigzag/runtime/build
 [0/2] Re-checking globbed directories...
 [1/1] Linking C executable tests/TiledMatmul11
-TESTING tiledMatmul15 ------------------------------------------------------V
--- Could not find nvcc, please set CUDAToolkit_ROOT.
--- IREE HAL drivers:
--- IREE HAL local executable library loaders:
--- IREE HAL local executable plugin mechanisms:
--- Not adding LLVM/MLIR because the configuration does not require it
--- Disabling compiler loader (platform does not support library loading)
--- Configuring IREE runtime plugins
--- Runtime tracing disabled
--- Configuring done (0.3s)
--- Generating done (0.1s)
--- Build files have been written to: /home/hoppip/Quidditch-zigzag/runtime/build
-[0/2] Re-checking globbed directories...
-[1/1] Linking C executable tests/TiledMatmul15
-FAILED tiledMatmul15: Output differs:
-diff: ../tests/correct/tiledMatmul15.txt: No such file or directory
 TESTING tiledMatmul12 ------------------------------------------------------V
 -- Could not find nvcc, please set CUDAToolkit_ROOT.
 -- IREE HAL drivers:
@@ -301,3 +285,17 @@ TESTING tiledMatmul12 ------------------------------------------------------V
 -- Build files have been written to: /home/hoppip/Quidditch-zigzag/runtime/build
 [0/2] Re-checking globbed directories...
 [1/1] Linking C executable tests/TiledMatmul12
+TESTING tiledMatmul13 ------------------------------------------------------V
+-- Could not find nvcc, please set CUDAToolkit_ROOT.
+-- IREE HAL drivers:
+-- IREE HAL local executable library loaders:
+-- IREE HAL local executable plugin mechanisms:
+-- Not adding LLVM/MLIR because the configuration does not require it
+-- Disabling compiler loader (platform does not support library loading)
+-- Configuring IREE runtime plugins
+-- Runtime tracing disabled
+-- Configuring done (0.2s)
+-- Generating done (0.1s)
+-- Build files have been written to: /home/hoppip/Quidditch-zigzag/runtime/build
+[0/2] Re-checking globbed directories...
+[1/1] Linking C executable tests/TiledMatmul13

@@ -8,7 +8,10 @@
 "func.func"() <{function_type = (i32, memref<8x104xi8, strided<[104, 1], offset: ?>>, memref<104x104xi8, strided<[1,104]>>, memref<8x104xi32, strided<[104, 1], offset: ?>>) -> (), sym_name = "dispatch_to_accelerator", sym_visibility = "private"}> ({}) {llvm.emit_c_interface}: () -> ()
 "func.func"() <{function_type =  (memref<2x16xi8>, memref<16x2xi8, strided<[1,16]>>, memref<2x2xi32, strided<[16,1]>>) -> (), sym_name = "hola", sym_visibility = "private"}> ({}) {llvm.emit_c_interface}: () -> ()
 "func.func"() <{function_type =  (memref<8x104xi32, strided<[104, 1], offset: ?>>, memref<8x104xi32, strided<[104, 1], offset: ?>>) -> (), sym_name = "memrefCopy32bit", sym_visibility = "private"}> ({}) {llvm.emit_c_interface}: () -> ()
-
+"func.func"() <{function_type = (
+    i32) // coreID
+    -> (), sym_name = "wait_for_accelerator", sym_visibility = "private"}> ({}) {llvm.emit_c_interface}: () -> ()
+    
 // perform tiled matrix multiplication,
 // dispatching part of the work to the accelerator!
   "func.func"() <{function_type = (memref<104x104xi8>, memref<104x104xi8, strided<[1, 104]>>, memref<104x104xi32, strided<[104,1]>>, memref<104x104xi32, strided<[104,1]>>) -> (), sym_name = "tiled_matmul"}> ({
@@ -44,6 +47,8 @@
     // dispatch mini matmul to accelerator
     func.call @dispatch_to_accelerator(%five_i32, %inputTile, %arg1, %outputTileL1) 
     : (i32, memref<8x104xi8, strided<[104, 1], offset: ?>>, memref<104x104xi8, strided<[1,104]>>, memref<8x104xi32, strided<[104, 1], offset: ?>>) -> ()
+
+    func.call @wait_for_accelerator(%five_i32) : (i32) -> ()
 
     // memref.copy %outputTileL1, %outputTileL3 : memref<8x104xi32, strided<[104, 1], offset: ?>> to memref<8x104xi32, strided<[104, 1], offset: ?>>   
     func.call @memrefCopy32bit(%outputTileL1, %outputTileL3) : 

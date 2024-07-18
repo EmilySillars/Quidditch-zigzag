@@ -27,6 +27,9 @@ void _mlir_ciface_dispatch_to_accelerator(uint32_t accID, TwoDMemrefI8_t *arg0,
   set_kernel_args(accID, arg0, arg1, arg2);
   // perform tiled matmul on compute core # accID
   wake_up_compute_core(accID);
+}
+
+void  _mlir_ciface_wait_for_accelerator(uint32_t accID){
   wait_for_compute_core(accID);
 }
 

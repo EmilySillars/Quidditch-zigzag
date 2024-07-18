@@ -14,8 +14,8 @@ tiledMatmul5.mlir \
 tiledMatmul6.mlir \
 tiledMatmul10.mlir \
 tiledMatmul11.mlir \
-tiledMatmul15.mlir \
 tiledMatmul12.mlir \
+tiledMatmul13.mlir \
 "
 
 echo "" > regression-tests.log
