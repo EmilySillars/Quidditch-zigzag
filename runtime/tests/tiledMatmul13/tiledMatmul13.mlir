@@ -57,7 +57,7 @@
     memref<104x104xi8, strided<[104,1], offset: ?>>,    // input slice L1
     memref<104x104xi8, strided<[1, 104], offset: ?>>,   // weight slice L1
     memref<104x104xi32, strided<[104, 1], offset: ?>>)  // output slice  L1
-    -> (), sym_name = "tiledMatmul12"}> ({
+    -> (), sym_name = "tiledMatmul13"}> ({
   ^bb0(%coreID : i32,
        %arg0: memref<104x104xi8, strided<[104, 1], offset: ?>>, 
        %arg1: memref<104x104xi8, strided<[1,104], offset: ?>>, 
@@ -118,6 +118,7 @@
     // slice of L1 output @(104x1)
     %sliceOL1_2 = memref.subview %sliceOL1[%zero, %b1_0][104,1][1,1]
     : memref<104x13xi32, strided<[104, 1], offset: ?>> to memref<104x1xi32, strided<[104, 1], offset: ?>>
+    
     // We copy this slice of operand Output from L3 to L1
     func.call @memrefCopy32bit_O_104x1(%sliceOL3_2, %sliceOL1_2) : 
     (memref<104x1xi32, strided<[104, 1], offset: ?>>, memref<104x1xi32, strided<[104, 1], offset: ?>>) -> ()
@@ -142,6 +143,8 @@
      memref.store %zero_i32, %sliceOL1_2[%i, %zero] : memref<104x1xi32, strided<[104, 1], offset: ?>>
     } // end of %i for
     } // end of b1_0 for
+
+    
     } // end of b0_0 for
   "func.return"() : () -> ()
   }) {llvm.emit_c_interface}: () -> ()
@@ -152,7 +155,7 @@
     memref<104x104xi8, strided<[104, 1], offset: ?>>, // input
     memref<104x1xi8, strided<[1, 104], offset: ?>>,   // weight slice
     memref<104x1xi32, strided<[104, 1], offset: ?>>)  // output slice
-    -> (), sym_name = "tiledMatmul12_kernel"}> ({
+    -> (), sym_name = "tiledMatmul13_kernel"}> ({
   ^bb0(
     %arg0: memref<104x104xi8, strided<[104, 1], offset: ?>>, 
     %arg1: memref<104x1xi8, strided<[1, 104], offset: ?>>, 
