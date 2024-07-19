@@ -26,12 +26,17 @@ extern void _mlir_ciface_tiled_matmul(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
 extern void _mlir_ciface_matmul_accelerator_work(TwoDMemrefI8_t *a,
                                                  TwoDMemrefI8_t *b,
                                                  TwoDMemrefI32_t *c);
-extern void _mlir_ciface_dummy2(uint32_t coreID, TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
+extern void _mlir_ciface_dummy2(uint32_t coreID, TwoDMemrefI8_t *a,
+                                TwoDMemrefI8_t *b, TwoDMemrefI32_t *c,
+                                TwoDMemrefI8_t *sliceI, TwoDMemrefI8_t *sliceW,
+                                TwoDMemrefI32_t *sliceO);
+extern void _mlir_ciface_tiledMatmul13(uint32_t coreID, TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
                                        TwoDMemrefI32_t *c,
                                        TwoDMemrefI8_t *sliceI,
                                        TwoDMemrefI8_t *sliceW,
                                        TwoDMemrefI32_t *sliceO);
-
+extern void _mlir_ciface_tiledMatmul13_kernel(TwoDMemrefI8_t *arg0,
+                        TwoDMemrefI8_t *arg1, TwoDMemrefI32_t *arg2);
 
 int main() {
   if (!snrt_is_dm_core()) {
@@ -76,7 +81,7 @@ int main() {
   memrefGolden.stride[1] = 1;
 
   // new L1 "allocations" for ex 11
- TwoDMemrefI8_t memrefInputSlice;  // input-l1: 104x104
+  TwoDMemrefI8_t memrefInputSlice;  // input-l1: 104x104
   memrefInputSlice.data = (int8_t *)l1;
   memrefInputSlice.aligned_data = memrefInputSlice.data;
   memrefInputSlice.offset = 0;
@@ -117,29 +122,14 @@ int main() {
   for (size_t i = 0; i < MAT_WIDTH_SQUARED; i++) {
     memrefC.aligned_data[i] = (int32_t)0;
   }
-  
-  // print2DMemRefI8_t(&memrefA,MAT_WIDTH);
-  // print2DMemRefI8_t(&memrefB,MAT_WIDTH);
-  // print2DMemRefI32_t(&memrefC,MAT_WIDTH);
 
   // perform C code matmul to get the ground truth
   cCodeSquareMatmul(&memrefA, &memrefB, &memrefGolden);
 
-  // set_accelerator_computation(5, (kernel_ptr)_mlir_ciface_mango);
-  set_accelerator_computation(5, (kernel_ptr)_mlir_ciface_tiledMatmul12_kernel);
-  // host_acc_perform_kernel_together((kernel_ptr)_mlir_ciface_tiled_matmul,
-  //                                  (void *)&memrefA, (void *)&memrefB,
-  //                                  (void *)&memrefC, (void *)&memrefOSlice);
+  set_accelerator_computation(5, (kernel_ptr)_mlir_ciface_tiledMatmul13_kernel);
 
-  // host_acc_perform_kernel_together_2_slices(
-  //     (kernel_ptr)_mlir_ciface_pineapple, (void *)&memrefA, (void *)&memrefB,
-  //     (void *)&memrefC, (void *)&memrefOutputSlice, (void *)&memrefWeightSlice);
-
-  // _mlir_ciface_tiledMatmul12(5, &memrefA, &memrefB, &memrefC, 0, &memrefWeightSlice, &memrefOutputSlice);
-  //_mlir_ciface_dummy2(5, &memrefA, &memrefB, &memrefC, &memrefInputSlice, &memrefWeightSlice, &memrefOutputSlice);
-  _mlir_ciface_tiledMatmul12(5, &memrefA, &memrefB, &memrefC, &memrefInputSlice, &memrefWeightSlice, &memrefOutputSlice);
-
-  //_mlir_ciface_tiledMatmul12(5, &memrefA, &memrefB, &memrefC, 0, &memrefWeightSlice, &memrefOutputSlice);
+  _mlir_ciface_tiledMatmul13(5, &memrefA, &memrefB, &memrefC, &memrefInputSlice,
+                             &memrefWeightSlice, &memrefOutputSlice);
 
   // check for correctness
   int nerr = 0;
