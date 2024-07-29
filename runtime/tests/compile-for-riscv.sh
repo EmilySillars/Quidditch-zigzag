@@ -82,6 +82,10 @@ echo "START: mlir-translate --mlir-to-llvmir"
 mlir-translate --mlir-to-llvmir -o $basename/out/$basename.ll $basename/out/$basename-in-llvm-dialect.mlir
 echo "FINISHED: mlir-translate --mlir-to-llvmir"
 
+echo "START: llvm-link"
+llvm-link $basename/out/$basename.ll  lib-zigzag/memrefCopy.ll -o $basename/out/$basename-w-memrefCopy.ll
+echo "FINISHED: llvm-link"
+
 # compile llvm to .o file (target riscv)
 echo "START: clang (llvm to .o)"
 clang \
@@ -101,9 +105,31 @@ clang \
 -Wall \
 -Wextra \
 -x ir \
--c $basename/out/$basename.ll \
+-c $basename/out/$basename-w-memrefCopy.ll \
 -o $basename/out/$basename.o
 echo "FINISHED: clang (llvm to .o)"
+
+# clang \
+# -Wno-unused-command-line-argument \
+# -D__DEFINED_uint64_t \
+# --target=riscv32-unknown-elf \
+# -mcpu=generic-rv32 \
+# -march=rv32imafdzfh \
+# -mabi=ilp32d \
+# -mcmodel=medany \
+# -ftls-model=local-exec \
+# -ffast-math \
+# -fno-builtin-printf \
+# -fno-common \
+# -O3 \
+# -std=gnu11 \
+# -Wall \
+# -Wextra \
+# -c $basename/temporary.c \
+# -o $basename/out/$basename.o
+
+
+
 
 
 

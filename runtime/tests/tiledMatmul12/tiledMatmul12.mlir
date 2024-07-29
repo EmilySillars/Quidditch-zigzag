@@ -67,8 +67,12 @@
        %outputL1: memref<104x104xi32, strided<[104,1], offset: ?>>): 
 
        // we start by moving the Input and Weight operands into L1:
-      func.call @memrefCopy8bit_I_104x104(%arg0,  %inputL1) 
-      : (memref<104x104xi8, strided<[104, 1], offset: ?>>, memref<104x104xi8, strided<[104, 1], offset: ?>>) -> ()
+       func.call @memrefCopy8bit_I_104x104(%arg0,  %inputL1) 
+       : (memref<104x104xi8, strided<[104, 1], offset: ?>>, memref<104x104xi8, strided<[104, 1], offset: ?>>) -> ()
+       //memref.copy %arg0,  %inputL1 : memref<104x104xi8, strided<[104, 1], offset: ?>> to memref<104x104xi8, strided<[104, 1], offset: ?>>
+       
+       // https://mlir.llvm.org/docs/Dialects/MemRef/#memrefextract_aligned_pointer_as_index-memrefextractalignedpointerasindexop
+       //llvm.call @memrefCopy8bit(%arg0,  %inputL1) : (!llvm.ptr, !llvm.ptr) -> ()
        func.call @memrefCopy8bit_W_104x104(%arg1,  %weightL1) 
       : (memref<104x104xi8, strided<[1,104], offset: ?>>, memref<104x104xi8, strided<[1,104], offset: ?>>) -> ()
       
@@ -136,6 +140,8 @@
     // We copy L1 Output back to L3
     func.call @memrefCopy32bit_O_104x1(%sliceOL1_2, %sliceOL3_2) : 
     (memref<104x1xi32, strided<[104, 1], offset: ?>>, memref<104x1xi32, strided<[104, 1], offset: ?>>) -> ()
+    //memref.copy %sliceOL1_2, %sliceOL3_2 : memref<104x1xi32, strided<[104, 1], offset: ?>> to memref<104x1xi32, strided<[104, 1], offset: ?>> 
+    
 
     // zero-out the Output L1 slice; there has to be a better way to do this, right?
     scf.for %i = %zero to %oneOhFour step %one iter_args() -> () { 
