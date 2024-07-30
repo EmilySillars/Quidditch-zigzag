@@ -103,6 +103,8 @@ Spatial Loops
 -------------------------------------------------------------------------------------------
 ```
 
+![hardware](../../../zigzag-fork/pngs/tiledMatmul12-mapping-diagram.png)
+
 ![hardware](../../../zigzag-fork/pngs/host-acc-divide.png)
 
 ## III. Manual Transformation
@@ -144,18 +146,18 @@ DMAcore(input, weight, output){
 	// copy all input from L3 to L1;
     for (c2 = 0; c2 < 4; c2++){
         // copy weight tile from L3 to L1
-        copyFromL3toL1(weight[c2*c2_bk_sz][0], stride[c2_bk_sz][104])
+        copyFromL3toL1(weight[c2*c2_bk_sz][0], shape[c2_bk_sz][104])
         for(c1 = 0; c1 < 2; c1++){
             for(b1 = 0; b1 < 13; b1++){
                 for (a1 = 0; a1 < 13; a1++) {
                     // copy output tile from L3 to L1.
-                    copyFromL3toL1(output[a1*a1_bk_sz][b1*b1_bk_sz], stride[a1_bk_sz][b1_bk_sz])
+                    copyFromL3toL1(output[a1*a1_bk_sz][b1*b1_bk_sz], shape[a1_bk_sz][b1_bk_sz])
                     for (coreID = 0; coreID < 8; coreID ++) {
                         dispatchToComputeCore(coreID);    
                     }
                     waitForAllComputeCores();
                     // copy output tile from L1 to L3.
-                    copyFromL1toL3(output[a1*a1_bk_sz][b1*b1_bk_sz], stride[a1_bk_sz][b1_bk_sz])
+                    copyFromL1toL3(output[a1*a1_bk_sz][b1*b1_bk_sz], shape[a1_bk_sz][b1_bk_sz])
                 }
             }
         }
@@ -184,20 +186,110 @@ computeCore(a1, b1, c1, c2, a1_bk_sz, b1_bk_sz, c1_bk_sz, c2_bk_sz, inputTile, w
 
 #### b. MLIR Equivalent
 
-```
-todo
-```
-
 Host:
 
 ```
+"func.func"() <{function_type = 
+    (index,                                              // coreID
+    memref<104x104xi8, strided<[104, 1], offset: ?>>,   // input L3
+    memref<104x104xi8, strided<[1, 104], offset: ?>>,   // weight L3
+    memref<104x104xi32, strided<[104, 1], offset: ?>>,  // output L3
+    memref<104x104xi8, strided<[104,1], offset: ?>>,    // input slice L1
+    memref<104x104xi8, strided<[1, 104], offset: ?>>,   // weight slice L1
+    memref<104x104xi32, strided<[104, 1], offset: ?>>)  // output slice  L1
+    -> (), sym_name = "dmaCore"}> ({
+  ^bb0(%coreID : index,
+       %input: memref<104x104xi8, strided<[104, 1], offset: ?>>, 
+       %weight: memref<104x104xi8, strided<[1,104], offset: ?>>, 
+       %output: memref<104x104xi32, strided<[104,1], offset: ?>>, 
+       %inputL1: memref<104x104xi8, strided<[104,1], offset: ?>>,
+       %weightL1: memref<104x104xi8, strided<[1,104], offset: ?>>,
+       %outputL1: memref<104x104xi32, strided<[104,1], offset: ?>>): 
 
+      // indices
+      %zero = arith.constant 0 : index
+      %one = arith.constant 1 : index
+      %four = arith.constant 4 : index
+      %two = arith.constant  2 : index
+      %eight = arith.constant  8 : index
+      %thirteen = arith.constant 13 : index  
+      // tile sizes
+      %a1_bk_sz = arith.constant 8 : index
+      %b1_bk_sz = arith.constant 8 : index
+      %c1_bk_sz = arith.constant 13 : index
+      %c2_bk_sz = arith.constant 26 : index
+    
+      // constants
+      // %zero_i32 = arith.constant 0: i32
+      // %sixTwentyFour_i32 = arith.constant 624: i32
+      // %one_i32 = arith.constant 1 : i32
+      // %three_i8 = arith.constant 3 : i8
+
+      // copy input from L3 to L1
+      func.call @memrefCopy8bit_I_104x104(%input,  %inputL1) 
+      : (memref<104x104xi8, strided<[104, 1], offset: ?>>, memref<104x104xi8, strided<[104, 1], offset: ?>>) -> ()
+     
+
+      scf.for %c2 = %zero to %four step %one iter_args() -> () {
+        
+        // copy weight slice 26x104 from L3 to L1
+        %slice_W_L3_offset = arith.muli %c2, %c2_bk_sz : index
+        %slice_W_L3 = memref.subview %weight[%slice_W_L3_offset, %zero][26,104][1,1]
+        :  memref<104x104xi8, strided<[1,104], offset: ?>> to memref<26x104xi8, strided<[1, 104], offset: ?>>
+        %slice_W_L1 = memref.subview %weightL1[%slice_W_L3_offset, %zero][26,104][1,1]
+        :  memref<104x104xi8, strided<[1,104], offset: ?>> to memref<26x104xi8, strided<[1, 104], offset: ?>>
+        func.call @memrefCopy8bit_W_26x104( %slice_W_L3,   %slice_W_L1)
+        : (memref<26x104xi8, strided<[1, 104], offset: ?>>,memref<26x104xi8, strided<[1, 104], offset: ?>>) -> ()
+       
+        scf.for %c1 = %zero to %two step %one iter_args() -> () {
+          scf.for %b1 = %zero to %thirteen step %one iter_args() -> () {
+            scf.for %a1 = %zero to %thirteen step %one iter_args() -> () {
+              
+              // copy output tile 8x8 from L3 to L1.
+              %slice_O_L3_offset_r = arith.muli %a1, %a1_bk_sz : index
+              %slice_O_L3_offset_c = arith.muli %b1, %b1_bk_sz : index
+              %slice_O_L3 = memref.subview %output[%slice_O_L3_offset_r,%slice_O_L3_offset_c][8,8][1,1]
+              : memref<104x104xi32, strided<[104, 1], offset: ?>>  to  memref<8x8xi32, strided<[104, 1], offset: ?>>
+              %slice_O_L1 = memref.subview %outputL1[%slice_O_L3_offset_r,%slice_O_L3_offset_c][8,8][1,1]
+              : memref<104x104xi32, strided<[104, 1], offset: ?>>  to  memref<8x8xi32, strided<[104, 1], offset: ?>>
+              func.call @memrefCopy32bit_O_8x8(%slice_O_L3, %slice_O_L1)
+              : (memref<8x8xi32, strided<[104, 1], offset: ?>>,memref<8x8xi32, strided<[104, 1], offset: ?>>) -> ()
+              
+              // save outer loop counters for use by all 8 cores
+              func.call @save_outer_loop_counters(%a1,%b1,%c1,%c2,%a1_bk_sz,%b1_bk_sz,%c1_bk_sz,%c2_bk_sz)
+              : (index,index,index,index,index,index,index,index) -> ()
+              
+              // dispatch tile computation work to each core
+              scf.for %id = %zero to %eight step %one iter_args() -> (){
+                func.call @dispatch_to_accelerator(%id, %inputL1, %slice_W_L1, %slice_O_L1)
+                : (
+                index, 
+                memref<104x104xi8, strided<[104, 1], offset: ?>>, // input
+                memref<26x104xi8, strided<[1, 104], offset: ?>>,   // weight slice
+                memref<8x8xi32, strided<[104, 1], offset: ?>>)  // output slice
+                -> ()
+
+              }
+              // wait for all compute cores
+              func.call @wait_for_all_accelerators() : () -> ()
+              // copy output tile from L1 to L3.
+              func.call @memrefCopy32bit_O_8x8(%slice_O_L1, %slice_O_L3)
+              : (memref<8x8xi32, strided<[104, 1], offset: ?>>,memref<8x8xi32, strided<[104, 1], offset: ?>>) -> ()
+            }
+
+          }
+
+        }
+
+      }
+  "func.return"() : () -> ()
+  }) {llvm.emit_c_interface}: () -> ()
 ```
 
 Accelerator:
 
 ```
-
+TODO
 ```
 
 ## IV. Run the example
@@ -221,139 +313,5 @@ verilator:
 
 ```
 sh zigzag-verilator-build-and-run.sh tiledMatmul12.mlir
-```
-
-# ZigZag Question
-
-```
-# mainstage.run()
-
-answers = mainstage.run()
-
-cme = answers[0][0]
-from zigzag.visualization.results.print_mapping import print_mapping
-
-print_mapping(cme)
-
-print("hola")
-# python main.py --model zigzag/inputs/workload/resnet18-one-layer.yaml --accelerator zigzag/inputs/hardware/tpu_like.yaml --mapping zigzag/inputs/mapping/tpu_like.yaml
-# python main.py --model zigzag/inputs/workload/matmul-104-x-104.yaml --accelerator zigzag/inputs/hardware/snitch-cluster-only-integers.yaml --mapping zigzag/inputs/mapping/snitch-cluster-only-integers-mapping.yaml
-
-# python main.py --model snitch-cluster-ex/inputs/workload/matmul-104-x-104.yaml --accelerator snitch-cluster-ex/inputs/hardware/snitch-cluster-only-integers.yaml --mapping snitch-cluster-ex/inputs/mapping/snitch-cluster-only-integers-mapping.yaml
-
-
-```
-
-Problem: different zigzag output but same inputs:
-
-my commit: b4c6f47446cdeddeb09f55e1d5b7ab9c0e9ebfc1
-
-my fork: https://github.com/EmilySillars/zigzag/tree/master
-
-
-
-```
-(zigzag-master-env) [hoppip@inf-205-94 zigzag]$ python main.py --model snitch-cluster-ex/inputs/workload/matmul-104-x-104.yaml --accelerator snitch-cluster-ex/inputs/hardware/snitch-cluster-only-integers.yaml --mapping snitch-cluster-ex/inputs/mapping/snitch-cluster-only-integers-mapping.yaml
-2024-07-29 11:01:08,260 - zigzag.parser.workload_factory.__init__ +208 - WARNING - Operator MatMul not defined in mapping. Using default mapping instead.
-2024-07-29 11:01:08,271 - zigzag.stages.WorkloadStage.run +53 - INFO - Processing  matmul_104_104...
-2024-07-29 11:01:08,271 - zigzag.stages.SpatialMappingGeneratorStage.run +96 - INFO - matmul_104_104: Launching spatial mapping 1/3 :{D1: {B: 8}}.
-100%|████████████████████████████████████████████████████████████████████| 720/720 [00:00<00:00, 860.67it/s]
-2024-07-29 11:01:09,111 - zigzag.stages.save_stages.run +48 - INFO - Saved CostModelEvaluation(matmul_104_104, core 1) with energy 3.362e+06 and latency 2.966e+05 to outputs/yaml-yaml/matmul_104_104_complete.json
-2024-07-29 11:01:09,111 - zigzag.stages.SpatialMappingGeneratorStage.run +96 - INFO - matmul_104_104: Launching spatial mapping 2/3 :{D1: {A: 8}}.
-100%|████████████████████████████████████████████████████████████████████| 720/720 [00:00<00:00, 866.21it/s]
-2024-07-29 11:01:09,943 - zigzag.stages.save_stages.run +48 - INFO - Saved CostModelEvaluation(matmul_104_104, core 1) with energy 3.486e+06 and latency 2.966e+05 to outputs/yaml-yaml/matmul_104_104_complete.json
-2024-07-29 11:01:09,943 - zigzag.stages.SpatialMappingGeneratorStage.run +96 - INFO - matmul_104_104: Launching spatial mapping 3/3 :{D1: {C: 8}}.
-100%|████████████████████████████████████████████████████████████████████| 720/720 [00:00<00:00, 845.34it/s]
-2024-07-29 11:01:10,796 - zigzag.stages.save_stages.run +48 - INFO - Saved CostModelEvaluation(matmul_104_104, core 1) with energy 5.715e+06 and latency 3.060e+05 to outputs/yaml-yaml/matmul_104_104_complete.json
-Loop ordering for matmul_104_104
-===========================================================================================
-Temporal Loops                    W                  O                  I                  
-===========================================================================================
-for A in [0, 8):                  l1                 l3                 l3                 
--------------------------------------------------------------------------------------------
-  for B in [0, 13):               l1                 l3                 l1                 
--------------------------------------------------------------------------------------------
-    for C in [0, 2):              l1                 rf_x1_thru_x31     l1                 
--------------------------------------------------------------------------------------------
-      for C in [0, 13):           l1                 rf_x1_thru_x31     l1                 
--------------------------------------------------------------------------------------------
-        for C in [0, 4):          rf_x1_thru_x31     rf_x1_thru_x31     rf_x1_thru_x31     
--------------------------------------------------------------------------------------------
-          for A in [0, 13):       rf_x1_thru_x31     rf_x1_thru_x31     rf_x1_thru_x31     
--------------------------------------------------------------------------------------------
-===========================================================================================
-Spatial Loops                                                                              
-===========================================================================================
-            parfor B in [0, 8):                                                            
--------------------------------------------------------------------------------------------
-
-(zigzag-master-env) [hoppip@inf-205-94 zigzag]$ python main.py --model snitch-cluster-ex/inputs/workload/matmul-104-x-104.yaml --accelerator snitch-cluster-ex/inputs/hardware/snitch-cluster-only-integers.yaml --mapping snitch-cluster-ex/inputs/mapping/snitch-cluster-only-integers-mapping.yaml
-2024-07-29 11:01:13,678 - zigzag.parser.workload_factory.__init__ +208 - WARNING - Operator MatMul not defined in mapping. Using default mapping instead.
-2024-07-29 11:01:13,689 - zigzag.stages.WorkloadStage.run +53 - INFO - Processing  matmul_104_104...
-2024-07-29 11:01:13,689 - zigzag.stages.SpatialMappingGeneratorStage.run +96 - INFO - matmul_104_104: Launching spatial mapping 1/3 :{D1: {B: 8}}.
-100%|████████████████████████████████████████████████████████████████████| 720/720 [00:00<00:00, 873.41it/s]
-2024-07-29 11:01:14,517 - zigzag.stages.save_stages.run +48 - INFO - Saved CostModelEvaluation(matmul_104_104, core 1) with energy 3.362e+06 and latency 2.966e+05 to outputs/yaml-yaml/matmul_104_104_complete.json
-2024-07-29 11:01:14,517 - zigzag.stages.SpatialMappingGeneratorStage.run +96 - INFO - matmul_104_104: Launching spatial mapping 2/3 :{D1: {C: 8}}.
-100%|████████████████████████████████████████████████████████████████████| 720/720 [00:00<00:00, 865.26it/s]
-2024-07-29 11:01:15,350 - zigzag.stages.save_stages.run +48 - INFO - Saved CostModelEvaluation(matmul_104_104, core 1) with energy 5.715e+06 and latency 3.060e+05 to outputs/yaml-yaml/matmul_104_104_complete.json
-2024-07-29 11:01:15,350 - zigzag.stages.SpatialMappingGeneratorStage.run +96 - INFO - matmul_104_104: Launching spatial mapping 3/3 :{D1: {A: 8}}.
-100%|████████████████████████████████████████████████████████████████████| 720/720 [00:00<00:00, 884.97it/s]
-2024-07-29 11:01:16,165 - zigzag.stages.save_stages.run +48 - INFO - Saved CostModelEvaluation(matmul_104_104, core 1) with energy 3.486e+06 and latency 2.966e+05 to outputs/yaml-yaml/matmul_104_104_complete.json
-Loop ordering for matmul_104_104
-===========================================================================================
-Temporal Loops                    O                  I                  W                  
-===========================================================================================
-for A in [0, 8):                  l3                 l3                 l1                 
--------------------------------------------------------------------------------------------
-  for B in [0, 13):               l3                 l1                 l1                 
--------------------------------------------------------------------------------------------
-    for C in [0, 2):              rf_x1_thru_x31     l1                 l1                 
--------------------------------------------------------------------------------------------
-      for C in [0, 13):           rf_x1_thru_x31     l1                 l1                 
--------------------------------------------------------------------------------------------
-        for C in [0, 4):          rf_x1_thru_x31     rf_x1_thru_x31     rf_x1_thru_x31     
--------------------------------------------------------------------------------------------
-          for A in [0, 13):       rf_x1_thru_x31     rf_x1_thru_x31     rf_x1_thru_x31     
--------------------------------------------------------------------------------------------
-===========================================================================================
-Spatial Loops                                                                              
-===========================================================================================
-            parfor B in [0, 8):                                                            
--------------------------------------------------------------------------------------------
-
-(zigzag-master-env) [hoppip@inf-205-94 zigzag]$ python main.py --model snitch-cluster-ex/inputs/workload/matmul-104-x-104.yaml --accelerator snitch-cluster-ex/inputs/hardware/snitch-cluster-only-integers.yaml --mapping snitch-cluster-ex/inputs/mapping/snitch-cluster-only-integers-mapping.yaml
-2024-07-29 11:01:18,178 - zigzag.parser.workload_factory.__init__ +208 - WARNING - Operator MatMul not defined in mapping. Using default mapping instead.
-2024-07-29 11:01:18,190 - zigzag.stages.WorkloadStage.run +53 - INFO - Processing  matmul_104_104...
-2024-07-29 11:01:18,190 - zigzag.stages.SpatialMappingGeneratorStage.run +96 - INFO - matmul_104_104: Launching spatial mapping 1/3 :{D1: {C: 8}}.
-100%|████████████████████████████████████████████████████████████████████| 720/720 [00:00<00:00, 842.41it/s]
-2024-07-29 11:01:19,047 - zigzag.stages.save_stages.run +48 - INFO - Saved CostModelEvaluation(matmul_104_104, core 1) with energy 5.715e+06 and latency 3.060e+05 to outputs/yaml-yaml/matmul_104_104_complete.json
-2024-07-29 11:01:19,048 - zigzag.stages.SpatialMappingGeneratorStage.run +96 - INFO - matmul_104_104: Launching spatial mapping 2/3 :{D1: {B: 8}}.
-100%|████████████████████████████████████████████████████████████████████| 720/720 [00:00<00:00, 875.09it/s]
-2024-07-29 11:01:19,872 - zigzag.stages.save_stages.run +48 - INFO - Saved CostModelEvaluation(matmul_104_104, core 1) with energy 3.362e+06 and latency 2.966e+05 to outputs/yaml-yaml/matmul_104_104_complete.json
-2024-07-29 11:01:19,872 - zigzag.stages.SpatialMappingGeneratorStage.run +96 - INFO - matmul_104_104: Launching spatial mapping 3/3 :{D1: {A: 8}}.
-100%|████████████████████████████████████████████████████████████████████| 720/720 [00:00<00:00, 874.14it/s]
-2024-07-29 11:01:20,696 - zigzag.stages.save_stages.run +48 - INFO - Saved CostModelEvaluation(matmul_104_104, core 1) with energy 3.486e+06 and latency 2.966e+05 to outputs/yaml-yaml/matmul_104_104_complete.json
-Loop ordering for matmul_104_104
-===========================================================================================
-Temporal Loops                    I                  W                  O                  
-===========================================================================================
-for A in [0, 8):                  l3                 l1                 l3                 
--------------------------------------------------------------------------------------------
-  for B in [0, 13):               l1                 l1                 l3                 
--------------------------------------------------------------------------------------------
-    for B in [0, 4):              l1                 l1                 l1                 
--------------------------------------------------------------------------------------------
-      for C in [0, 13):           l1                 l1                 rf_x1_thru_x31     
--------------------------------------------------------------------------------------------
-        for B in [0, 2):          rf_x1_thru_x31     rf_x1_thru_x31     rf_x1_thru_x31     
--------------------------------------------------------------------------------------------
-          for A in [0, 13):       rf_x1_thru_x31     rf_x1_thru_x31     rf_x1_thru_x31     
--------------------------------------------------------------------------------------------
-===========================================================================================
-Spatial Loops                                                                              
-===========================================================================================
-            parfor C in [0, 8):                                                            
--------------------------------------------------------------------------------------------
-
 ```
 

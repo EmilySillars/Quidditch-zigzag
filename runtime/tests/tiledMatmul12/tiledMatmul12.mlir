@@ -385,9 +385,13 @@
     %zero_i32 = arith.constant 0: i32
 
     // tile sizes
-    %b0_bk_sz = arith.divui %b1_bk_sz, %eight : index
-    %c0_bk_sz = arith.divui %c1_bk_sz , %thirteen : index
-    %a0_bk_sz =  arith.divui %a1_bk_sz , %eight : index
+    // %b0_bk_sz = arith.divui %b1_bk_sz, %eight : index
+    // %c0_bk_sz = arith.divui %c1_bk_sz , %thirteen : index
+    // %a0_bk_sz =  arith.divui %a1_bk_sz , %eight : index
+
+    %b0_bk_sz = arith.constant 1 : index
+    %c0_bk_sz = arith.constant 1 : index
+    %a0_bk_sz = arith.constant 1 : index
 
     scf.for %b0 = %zero to %eight step %one iter_args() -> () { 
        scf.for %c0 = %zero to %thirteen step %one iter_args() -> () {
@@ -425,7 +429,7 @@
         %prod = arith.muli %inputEltCasted, %weightEltCasted : i32
         %newOutputElt = arith.addi %prod, %outputElt : i32
 
-        //memref.store %newOutputElt, %arg2[%o_a, %o_b] : memref<8x8xi32, strided<[104, 1], offset: ?>>
+       // memref.store %newOutputElt, %arg2[%o_a, %o_b] : memref<8x8xi32, strided<[104, 1], offset: ?>>
         memref.store %sixTwentyFour_i32, %arg2[%o_a, %o_b] : memref<8x8xi32, strided<[104, 1], offset: ?>>
         //memref.store %sixTwentyFour_i32, %arg2[%zero, %zero] : memref<8x8xi32, strided<[104, 1], offset: ?>>
        }
