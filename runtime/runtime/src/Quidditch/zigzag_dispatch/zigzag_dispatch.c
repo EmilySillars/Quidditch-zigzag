@@ -22,7 +22,7 @@ static struct cluster_state_t {
   int bins[9];
   atomic_bool sleep[9];
   atomic_bool exit;
-  void (*g)(void *a, void *b, void *c);
+  //  void (*g)(void *a, void *b, void *c);
   void *a;
   void *b;
   void *c;
@@ -31,30 +31,55 @@ static struct cluster_state_t {
   uint32_t b1;
   uint32_t c1;
   uint32_t c2;
-  uint32_t  a1_bk_sz;
-  uint32_t  b1_bk_sz;
-  uint32_t  c1_bk_sz;
-  uint32_t  c2_bk_sz;
+  uint32_t a1_bk_sz;
+  uint32_t b1_bk_sz;
+  uint32_t c1_bk_sz;
+  uint32_t c2_bk_sz;
   void *opI[9];
   void *opW[9];
   void *opO[9];
 } cluster_state = {
-    {0, 0, 0, 0, 0, 0, 0, 0, 0}, // bins
-    {false, false, false, false, false, false, false, false, false}, // sleep
-    false, // exit
-    (kernel_ptr)0, // kernel pointer g
-    (void *)0,     // a
-    (void *)0,     // b
-    (void *)0,     // c
-    {0, 0, 0, 0, 0, 0, 0, 0, 0}, // kernel pointer k
-    0,0,0,0,0,0,0,0,
-    {0, 0, 0, 0, 0, 0, 0, 0, 0}, // opI
-    {0, 0, 0, 0, 0, 0, 0, 0, 0}, // opW
-    {0, 0, 0, 0, 0, 0, 0, 0, 0}}; // opO
+    {0, 0, 0, 0, 0, 0, 0, 0, 0},                                      // bins
+    {false, false, false, false, false, false, false, false, false},  // sleep
+    false,                                                            // exit
+    (kernel_ptr)0,                // kernel pointer g
+    (void *)0,                    // a
+    (void *)0,                    // b
+    (void *)0,                    // c
+    {0, 0, 0, 0, 0, 0, 0, 0, 0},  // kernel pointer k
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    {0, 0, 0, 0, 0, 0, 0, 0, 0},   // opI
+    {0, 0, 0, 0, 0, 0, 0, 0, 0},   // opW
+    {0, 0, 0, 0, 0, 0, 0, 0, 0}};  // opO
 
-void set_kernel(uint32_t coreID, void (*g)(void *a, void *b, void *c)) {
-  cluster_state.g = g;
+void set_kernel(uint32_t coreID,
+                void (*g)(void *a, void *b, void *c, uint32_t a1, uint32_t b1,
+                          uint32_t c1, uint32_t c2, uint32_t a1_bk_sz,
+                          uint32_t b1_bk_sz, uint32_t c1_bk_sz,
+                          uint32_t c2_bk_sz)) {
+  // cluster_state.g = g;
   cluster_state.k[coreID] = g;
+}
+
+void save_outer_loop_counters(uint32_t a1_c, uint32_t b1_c, uint32_t c1_c,
+                              uint32_t c2_c, uint32_t a1_bk_sz_c,
+                              uint32_t b1_bk_sz_c, uint32_t c1_bk_sz_c,
+                              uint32_t c2_bk_sz_c) {
+  cluster_state.a1 = a1_c;
+  cluster_state.b1 = b1_c;
+  cluster_state.c1 = c1_c;
+  cluster_state.c2 = c2_c;
+  cluster_state.a1_bk_sz = a1_bk_sz_c;
+  cluster_state.b1_bk_sz = b1_bk_sz_c;
+  cluster_state.c1_bk_sz = c1_bk_sz_c;
+  cluster_state.c2_bk_sz = c2_bk_sz_c;
 }
 
 void set_kernel_args(uint32_t coreID, void *a, void *b, void *c) {
@@ -76,8 +101,14 @@ void compute_core_loop() {
     // If didn't get woken up to exit,
     if (!cluster_state.exit) {
       // do something
-     // (*cluster_state.g)(cluster_state.a, cluster_state.b, cluster_state.c);
-      (*cluster_state.k[snrt_cluster_core_idx()])(cluster_state.opI[snrt_cluster_core_idx()], cluster_state.opW[snrt_cluster_core_idx()], cluster_state.opO[snrt_cluster_core_idx()]);
+      // (*cluster_state.g)(cluster_state.a, cluster_state.b, cluster_state.c);
+      (*cluster_state.k[snrt_cluster_core_idx()])(
+          cluster_state.opI[snrt_cluster_core_idx()],
+          cluster_state.opW[snrt_cluster_core_idx()],
+          cluster_state.opO[snrt_cluster_core_idx()], cluster_state.a1,
+          cluster_state.b1, cluster_state.c1, cluster_state.c2,
+          cluster_state.a1_bk_sz, cluster_state.b1_bk_sz,
+          cluster_state.c1_bk_sz, cluster_state.c2_bk_sz);
       cluster_state.bins[snrt_cluster_core_idx()]++;
     }
   }

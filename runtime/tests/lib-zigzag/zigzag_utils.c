@@ -1,7 +1,7 @@
 #include "zigzag_utils.h"
 
 void set_accelerator_computation(uint32_t accID, kernel_ptr k) {
-  set_kernel(accID,k);
+  set_kernel(accID, k);
 }
 
 void host_acc_perform_kernel_together(kernel_ptr k, void *arg0, void *arg1,
@@ -21,6 +21,16 @@ void host_acc_perform_kernel_together_2_slices(kernel_ptr k, void *arg0,
   //_mlir_ciface_tiled_matmul_2_slices(arg0, arg1, arg2, slice1, slice2);
 }
 
+void _mlir_ciface_save_outer_loop_counters(uint32_t a1_c, uint32_t b1_c,
+                                           uint32_t c1_c, uint32_t c2_c,
+                                           uint32_t a1_bk_sz_c,
+                                           uint32_t b1_bk_sz_c,
+                                           uint32_t c1_bk_sz_c,
+                                           uint32_t c2_bk_sz_c) {
+  save_outer_loop_counters(a1_c, b1_c, c1_c, c2_c, a1_bk_sz_c, b1_bk_sz_c,
+                           c1_bk_sz_c, c2_bk_sz_c);
+}
+
 void _mlir_ciface_dispatch_to_accelerator(uint32_t accID, TwoDMemrefI8_t *arg0,
                                           TwoDMemrefI8_t *arg1,
                                           TwoDMemrefI32_t *arg2) {
@@ -29,15 +39,11 @@ void _mlir_ciface_dispatch_to_accelerator(uint32_t accID, TwoDMemrefI8_t *arg0,
   wake_up_compute_core(accID);
 }
 
-void  _mlir_ciface_wait_for_accelerator(uint32_t accID){
+void _mlir_ciface_wait_for_accelerator(uint32_t accID) {
   wait_for_compute_core(accID);
 }
 
-
-void  _mlir_ciface_wait_for_all_accelerators(){
-  wait_for_all_compute_cores();
-}
-
+void _mlir_ciface_wait_for_all_accelerators() { wait_for_all_compute_cores(); }
 
 // A C function accessible to MLIR
 void _mlir_ciface_hola(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
@@ -56,7 +62,8 @@ void _mlir_ciface_memrefCopy8bit(TwoDMemrefI8_t *src, TwoDMemrefI8_t *dst) {
   }
 }
 
-void _mlir_ciface_memrefCopy8bit_I_104x104(TwoDMemrefI8_t *src, TwoDMemrefI8_t *dst) {
+void _mlir_ciface_memrefCopy8bit_I_104x104(TwoDMemrefI8_t *src,
+                                           TwoDMemrefI8_t *dst) {
   for (size_t row = 0; row < src->shape[0]; row++) {
     for (size_t col = 0; col < src->shape[1]; col++) {
       dst->aligned_data[dst->offset + (dst->stride[0] * row) +
@@ -67,10 +74,12 @@ void _mlir_ciface_memrefCopy8bit_I_104x104(TwoDMemrefI8_t *src, TwoDMemrefI8_t *
   }
 }
 
-void _mlir_ciface_memrefCopy8bit_W_104x104(TwoDMemrefI8_t *src, TwoDMemrefI8_t *dst) {
+void _mlir_ciface_memrefCopy8bit_W_104x104(TwoDMemrefI8_t *src,
+                                           TwoDMemrefI8_t *dst) {
   for (size_t row = 0; row < src->shape[0]; row++) {
     for (size_t col = 0; col < src->shape[1]; col++) {
-      // printf("I see the value %d",dst->aligned_data[dst->offset + (dst->stride[0] * row) +
+      // printf("I see the value %d",dst->aligned_data[dst->offset +
+      // (dst->stride[0] * row) +
       //                   (col * dst->stride[1])]);
       dst->aligned_data[dst->offset + (dst->stride[0] * row) +
                         (col * dst->stride[1])] =
@@ -91,7 +100,8 @@ void _mlir_ciface_memrefCopy32bit(TwoDMemrefI32_t *src, TwoDMemrefI32_t *dst) {
   }
 }
 
-void _mlir_ciface_memrefCopy32bit_O_104x13(TwoDMemrefI32_t *src, TwoDMemrefI32_t *dst){
+void _mlir_ciface_memrefCopy32bit_O_104x13(TwoDMemrefI32_t *src,
+                                           TwoDMemrefI32_t *dst) {
   for (size_t row = 0; row < src->shape[0]; row++) {
     for (size_t col = 0; col < src->shape[1]; col++) {
       dst->aligned_data[dst->offset + dst->stride[0] * row +
@@ -102,7 +112,8 @@ void _mlir_ciface_memrefCopy32bit_O_104x13(TwoDMemrefI32_t *src, TwoDMemrefI32_t
   }
 }
 
-void _mlir_ciface_memrefCopy32bit_O_104x1(TwoDMemrefI32_t *src, TwoDMemrefI32_t *dst){
+void _mlir_ciface_memrefCopy32bit_O_104x1(TwoDMemrefI32_t *src,
+                                          TwoDMemrefI32_t *dst) {
   for (size_t row = 0; row < src->shape[0]; row++) {
     for (size_t col = 0; col < src->shape[1]; col++) {
       dst->aligned_data[dst->offset + dst->stride[0] * row +

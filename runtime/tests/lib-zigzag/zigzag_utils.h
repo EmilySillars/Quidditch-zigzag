@@ -27,7 +27,7 @@ we employ a "host-accelerator" abstraction.
 //  and are passed as function pointers
 //  for now, all accelerators must perform the same computation
 void set_accelerator_computation(uint32_t accID,
-                                 void (*k)(void *arg0, void *arg1, void *arg2));
+                                  kernel_ptr k);
 
 // Launch kernel in host, which will dispatch computation to accelerator
 void host_acc_perform_kernel_together(kernel_ptr k, void *arg0, void *arg1,

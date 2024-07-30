@@ -8,18 +8,29 @@
 #include "../../../../../runtime/tests/lib-zigzag/memref.h"
 
 // dispatch using spinlocks
-
-typedef void (*kernel_ptr)(void *arg0, void *arg1, void *arg2);
+// a1, b1, c1, c2, a1_bk_sz, b1_bk_sz, c1_bk_sz, c2_bk_sz
+typedef void (*kernel_ptr)(void *arg0, void *arg1, void *arg2, uint32_t a1,
+                           uint32_t b1, uint32_t c1, uint32_t c2,
+                           uint32_t a1_bk_sz, uint32_t b1_bk_sz,
+                           uint32_t c1_bk_sz, uint32_t c2_bk_sz);
 
 extern void _mlir_ciface_mlirFunc(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
                                   TwoDMemrefI32_t *c);
 
 // select the kernel the compute cores should execute
-void set_kernel(uint32_t coreID, void (*g)(void *a, void *b, void *c));
+void set_kernel(uint32_t coreID, void (*g)(void *a, void *b, void *c, uint32_t a1,
+                           uint32_t b1, uint32_t c1, uint32_t c2,
+                           uint32_t a1_bk_sz, uint32_t b1_bk_sz,
+                           uint32_t c1_bk_sz, uint32_t c2_bk_sz));
+// todo: documentation
+void save_outer_loop_counters(uint32_t a1_c, uint32_t b1_c, uint32_t c1_c,
+                              uint32_t c2_c, uint32_t a1_bk_sz_c,
+                              uint32_t b1_bk_sz_c, uint32_t c1_bk_sz_c,
+                              uint32_t c2_bk_sz_c);
 
 // provide valid addresses for the kernel's arguments
 void set_kernel_args(uint32_t coreID, void *a, void *b, void *c);
-                
+
 // busy wait until DMA core says to exit or perform a computation
 void compute_core_loop(void);
 

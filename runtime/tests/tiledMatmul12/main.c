@@ -37,7 +37,10 @@ extern void _mlir_ciface_tiledMatmul12(uint32_t coreID, TwoDMemrefI8_t *a, TwoDM
                                        TwoDMemrefI8_t *sliceW,
                                        TwoDMemrefI32_t *sliceO);
 extern void _mlir_ciface_tiledMatmul12_kernel(TwoDMemrefI8_t *arg0,
-                        TwoDMemrefI8_t *arg1, TwoDMemrefI32_t *arg2);
+                        TwoDMemrefI8_t *arg1, TwoDMemrefI32_t *arg2, uint32_t a1,
+                           uint32_t b1, uint32_t c1, uint32_t c2,
+                           uint32_t a1_bk_sz, uint32_t b1_bk_sz,
+                           uint32_t c1_bk_sz, uint32_t c2_bk_sz);
 
 int main() {
   if (!snrt_is_dm_core()) {
