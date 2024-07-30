@@ -45,6 +45,9 @@ void _mlir_ciface_mango(TwoDMemrefI8_t *arg0,
                         TwoDMemrefI8_t *arg1, TwoDMemrefI32_t *arg2);
 void _mlir_ciface_mangoDummy(uint32_t accID, TwoDMemrefI8_t *arg0,
                         TwoDMemrefI8_t *arg1, TwoDMemrefI32_t *arg2);
+// documentation TODO
+void  _mlir_ciface_wait_for_accelerator(uint32_t accID);
+void  _mlir_ciface_wait_for_all_accelerators();
 
 
 // DL Kernels Defined in MLIR

@@ -25,7 +25,7 @@
     %d0_1_bk_sz = arith.constant 8 : index
     // constants
     %zero_i32 = arith.constant 0: i32
-    %five_i32 = arith.constant 0: i32
+    %five_i32 = arith.constant 5: i32
 
     // enter scf FOR LOOP
     scf.for %d0_1 = %zero to %thirteen step %one iter_args() -> () { // this loop uses both L3 and L1

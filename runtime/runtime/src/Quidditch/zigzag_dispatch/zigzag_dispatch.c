@@ -27,20 +27,30 @@ static struct cluster_state_t {
   void *b;
   void *c;
   kernel_ptr k[9];
+  uint32_t a1;
+  uint32_t b1;
+  uint32_t c1;
+  uint32_t c2;
+  uint32_t  a1_bk_sz;
+  uint32_t  b1_bk_sz;
+  uint32_t  c1_bk_sz;
+  uint32_t  c2_bk_sz;
   void *opI[9];
   void *opW[9];
   void *opO[9];
 } cluster_state = {
-    {0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {false, false, false, false, false, false, false, false, false},
-    false,
-    (kernel_ptr)0,
-    (void *)0,
-    (void *)0,
-    (void *)0,
-    {0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0}};
+    {0, 0, 0, 0, 0, 0, 0, 0, 0}, // bins
+    {false, false, false, false, false, false, false, false, false}, // sleep
+    false, // exit
+    (kernel_ptr)0, // kernel pointer g
+    (void *)0,     // a
+    (void *)0,     // b
+    (void *)0,     // c
+    {0, 0, 0, 0, 0, 0, 0, 0, 0}, // kernel pointer k
+    0,0,0,0,0,0,0,0,
+    {0, 0, 0, 0, 0, 0, 0, 0, 0}, // opI
+    {0, 0, 0, 0, 0, 0, 0, 0, 0}, // opW
+    {0, 0, 0, 0, 0, 0, 0, 0, 0}}; // opO
 
 void set_kernel(uint32_t coreID, void (*g)(void *a, void *b, void *c)) {
   cluster_state.g = g;
@@ -66,8 +76,8 @@ void compute_core_loop() {
     // If didn't get woken up to exit,
     if (!cluster_state.exit) {
       // do something
-      (*cluster_state.g)(cluster_state.a, cluster_state.b, cluster_state.c);
-     // (*cluster_state.g)(cluster_state.opI[snrt_cluster_core_idx()], cluster_state.opW[snrt_cluster_core_idx()], cluster_state.opO[snrt_cluster_core_idx()]);
+     // (*cluster_state.g)(cluster_state.a, cluster_state.b, cluster_state.c);
+      (*cluster_state.k[snrt_cluster_core_idx()])(cluster_state.opI[snrt_cluster_core_idx()], cluster_state.opW[snrt_cluster_core_idx()], cluster_state.opO[snrt_cluster_core_idx()]);
       cluster_state.bins[snrt_cluster_core_idx()]++;
     }
   }

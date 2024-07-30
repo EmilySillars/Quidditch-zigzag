@@ -33,6 +33,12 @@ void  _mlir_ciface_wait_for_accelerator(uint32_t accID){
   wait_for_compute_core(accID);
 }
 
+
+void  _mlir_ciface_wait_for_all_accelerators(){
+  wait_for_all_compute_cores();
+}
+
+
 // A C function accessible to MLIR
 void _mlir_ciface_hola(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
                        TwoDMemrefI32_t *c) {
