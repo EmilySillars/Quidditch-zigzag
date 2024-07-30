@@ -89,6 +89,21 @@ void _mlir_ciface_memrefCopy8bit_W_104x104(TwoDMemrefI8_t *src,
   }
 }
 
+void _mlir_ciface_memrefCopy8bit_W_26x104(TwoDMemrefI8_t *src,
+                                           TwoDMemrefI8_t *dst) {
+  for (size_t row = 0; row < src->shape[0]; row++) {
+    for (size_t col = 0; col < src->shape[1]; col++) {
+      // printf("I see the value %d",dst->aligned_data[dst->offset +
+      // (dst->stride[0] * row) +
+      //                   (col * dst->stride[1])]);
+      dst->aligned_data[dst->offset + (dst->stride[0] * row) +
+                        (col * dst->stride[1])] =
+          src->aligned_data[src->offset + (src->stride[0] * row) +
+                            (col * src->stride[1])];
+    }
+  }
+}
+
 void _mlir_ciface_memrefCopy32bit(TwoDMemrefI32_t *src, TwoDMemrefI32_t *dst) {
   for (size_t row = 0; row < src->shape[0]; row++) {
     for (size_t col = 0; col < src->shape[1]; col++) {
@@ -101,6 +116,18 @@ void _mlir_ciface_memrefCopy32bit(TwoDMemrefI32_t *src, TwoDMemrefI32_t *dst) {
 }
 
 void _mlir_ciface_memrefCopy32bit_O_104x13(TwoDMemrefI32_t *src,
+                                           TwoDMemrefI32_t *dst) {
+  for (size_t row = 0; row < src->shape[0]; row++) {
+    for (size_t col = 0; col < src->shape[1]; col++) {
+      dst->aligned_data[dst->offset + dst->stride[0] * row +
+                        col * dst->stride[1]] =
+          src->aligned_data[src->offset + src->stride[0] * row +
+                            col * src->stride[1]];
+    }
+  }
+}
+
+void _mlir_ciface_memrefCopy32bit_O_8x8(TwoDMemrefI32_t *src,
                                            TwoDMemrefI32_t *dst) {
   for (size_t row = 0; row < src->shape[0]; row++) {
     for (size_t col = 0; col < src->shape[1]; col++) {

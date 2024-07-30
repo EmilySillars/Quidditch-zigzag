@@ -136,11 +136,13 @@ void wait_for_compute_core(uint32_t coreID) {
 }
 
 void wait_for_all_compute_cores() {
+  //printf("waiting for compute cores...\n");
   while (!(cluster_state.sleep[0] && cluster_state.sleep[1] &&
            cluster_state.sleep[2] && cluster_state.sleep[3] &&
            cluster_state.sleep[4] && cluster_state.sleep[5] &&
            cluster_state.sleep[6] && cluster_state.sleep[7])) {
   }
+  //printf("all the compute cores are done!\n");
 }
 
 void printBins() {
@@ -148,4 +150,8 @@ void printBins() {
          cluster_state.bins[1], cluster_state.bins[2], cluster_state.bins[3],
          cluster_state.bins[4], cluster_state.bins[5], cluster_state.bins[6],
          cluster_state.bins[7], cluster_state.bins[8]);
+}
+
+uint32_t _mlir_ciface_myID() {
+  return (uint32_t) snrt_cluster_core_idx();
 }

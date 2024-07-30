@@ -41,6 +41,16 @@ extern void _mlir_ciface_tiledMatmul12_kernel(TwoDMemrefI8_t *arg0,
                            uint32_t b1, uint32_t c1, uint32_t c2,
                            uint32_t a1_bk_sz, uint32_t b1_bk_sz,
                            uint32_t c1_bk_sz, uint32_t c2_bk_sz);
+extern void _mlir_ciface_dmaCore(uint32_t coreID, TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
+                                       TwoDMemrefI32_t *c,
+                                       TwoDMemrefI8_t *sliceI,
+                                       TwoDMemrefI8_t *sliceW,
+                                       TwoDMemrefI32_t *sliceO);
+extern void _mlir_ciface_computeCore(TwoDMemrefI8_t *arg0,
+                        TwoDMemrefI8_t *arg1, TwoDMemrefI32_t *arg2, uint32_t a1,
+                           uint32_t b1, uint32_t c1, uint32_t c2,
+                           uint32_t a1_bk_sz, uint32_t b1_bk_sz,
+                           uint32_t c1_bk_sz, uint32_t c2_bk_sz);
 
 int main() {
   if (!snrt_is_dm_core()) {
@@ -131,9 +141,16 @@ int main() {
   // perform C code matmul to get the ground truth
   cCodeSquareMatmul(&memrefA, &memrefB, &memrefGolden);
 
-  set_accelerator_computation(5, (kernel_ptr)_mlir_ciface_tiledMatmul12_kernel);
+  set_accelerator_computation(5, (kernel_ptr)_mlir_ciface_computeCore);
+  set_accelerator_computation(0, (kernel_ptr)_mlir_ciface_computeCore);
+  set_accelerator_computation(1, (kernel_ptr)_mlir_ciface_computeCore);
+  set_accelerator_computation(2, (kernel_ptr)_mlir_ciface_computeCore);
+  set_accelerator_computation(3, (kernel_ptr)_mlir_ciface_computeCore);
+  set_accelerator_computation(4, (kernel_ptr)_mlir_ciface_computeCore);
+  set_accelerator_computation(6, (kernel_ptr)_mlir_ciface_computeCore);
+  set_accelerator_computation(7, (kernel_ptr)_mlir_ciface_computeCore);
  
-  _mlir_ciface_tiledMatmul12(5, &memrefA, &memrefB, &memrefC, &memrefInputSlice, &memrefWeightSlice, &memrefOutputSlice);
+  _mlir_ciface_dmaCore(5, &memrefA, &memrefB, &memrefC, &memrefInputSlice, &memrefWeightSlice, &memrefOutputSlice);
 
   // check for correctness
   int nerr = 0;

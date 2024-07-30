@@ -46,3 +46,5 @@ void wait_for_compute_core(uint32_t coreID);
 
 // for debugging
 void printBins(void);
+
+uint32_t _mlir_ciface_myID() ;

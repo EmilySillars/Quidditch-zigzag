@@ -92,7 +92,9 @@ void _mlir_ciface_hola(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
 void _mlir_ciface_memrefCopy8bit(TwoDMemrefI8_t *src, TwoDMemrefI8_t *dst);
 void _mlir_ciface_memrefCopy8bit_I_104x104(TwoDMemrefI8_t *src, TwoDMemrefI8_t *dst);
 void _mlir_ciface_memrefCopy8bit_W_104x104(TwoDMemrefI8_t *src, TwoDMemrefI8_t *dst);
+void _mlir_ciface_memrefCopy8bit_W_26x104(TwoDMemrefI8_t *src, TwoDMemrefI8_t *dst);
 void _mlir_ciface_memrefCopy32bit(TwoDMemrefI32_t *src, TwoDMemrefI32_t *dst);
 void _mlir_ciface_memrefCopy32bit2(TwoDMemrefI32_t *src, TwoDMemrefI32_t *dst);
 void _mlir_ciface_memrefCopy32bit_O_104x13(TwoDMemrefI32_t *src, TwoDMemrefI32_t *dst);
 void _mlir_ciface_memrefCopy32bit_O_104x1(TwoDMemrefI32_t *src, TwoDMemrefI32_t *dst);
+void _mlir_ciface_memrefCopy32bit_O_8x8(TwoDMemrefI32_t *src, TwoDMemrefI32_t *dst);
