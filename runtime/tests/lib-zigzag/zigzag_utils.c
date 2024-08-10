@@ -96,12 +96,179 @@ void _mlir_ciface_memrefCopy8bit_W_26x104(TwoDMemrefI8_t *src,
       // printf("I see the value %d",dst->aligned_data[dst->offset +
       // (dst->stride[0] * row) +
       //                   (col * dst->stride[1])]);
+      // printf("I'm about to copy over %d",src->aligned_data[src->offset +
+      // (src->stride[0] * row) +
+      //                   (col * src->stride[1])]);
+      // do the copy
       dst->aligned_data[dst->offset + (dst->stride[0] * row) +
                         (col * dst->stride[1])] =
           src->aligned_data[src->offset + (src->stride[0] * row) +
                             (col * src->stride[1])];
     }
   }
+}
+
+void setValMemref8Bit(TwoDMemrefI8_t *src, int8_t val) {
+  for (size_t row = 0; row < src->shape[0]; row++) {
+    for (size_t col = 0; col < src->shape[1]; col++) {
+      size_t index = (src->offset) + (src->stride[0] * row) +
+                            (col * src->stride[1]);
+      src->aligned_data[index] = val;
+      // if(index >= src->shape[0]*src->shape[1]){
+      //   printf("index is %d which is >= %d. row is %d col is %d. stride[0] is %d stride[1] is %d\n",index, src->shape[0]*src->shape[1], row, col, src->stride[0],src->stride[1]);
+        
+      // }
+    }
+  }
+}
+
+// void _mlir_ciface_print_memref_8_bit(TwoDMemrefI8_t *src) {
+//   printf("printing memref with shape %d x %d, offset %d: stride: [%d,%d]\n[",src->shape[0],src->shape[1], src->offset,src->stride[0],src->stride[1]);
+//   for (size_t row = 0; row < src->shape[0]; row++) {
+//     for (size_t col = 0; col < src->shape[1]; col++) {
+//       // printf("I see the value %d",dst->aligned_data[dst->offset +
+//       // (dst->stride[0] * row) +
+//       //                   (col * dst->stride[1])]);
+//       printf(" %d ",src->aligned_data[src->offset +
+//       (src->stride[0] * row) +
+//                         (col * src->stride[1])]);
+//     }
+//     printf("\n");
+//   }
+//   //  for (size_t row = 0; row < 104; row++) {
+//   //   for (size_t col = 0; col < 104; col++) {
+//   //     // printf("I see the value %d",dst->aligned_data[dst->offset +
+//   //     // (dst->stride[0] * row) +
+//   //     //                   (col * dst->stride[1])]);
+//   //     printf(" %d ",(src->aligned_data)[row+(col*104)]);
+//   //   }
+//   //   printf("\n");
+//   // }
+//   // for(size_t j = 0; j < (src->shape[0]*src->shape[1]); j++){
+//   //   printf(" %d ",src->aligned_data[j]);
+//   // }
+//   printf("]\n");
+// }
+
+// void _mlir_ciface_print_memref_8_bit(TwoDMemrefI8_t *src) {
+//   printf("printing memref with shape %d x %d, offset %d: stride: [%d,%d]\n[",src->shape[0],src->shape[1], src->offset,src->stride[0],src->stride[1]);
+// if(src->stride[0] == 1){
+//   for(size_t j = 0; j < (src->shape[0]*src->shape[1]); j++){
+//     if((j % src->stride[0]) == 0){
+//       printf("\n %d ",src->aligned_data[j]);
+//     }
+//     else{
+//        printf(" %d ",src->aligned_data[j]);
+//     }
+//   }
+// }
+// else{
+//   for(size_t j = 0; j < (src->shape[0]*src->shape[1]); j++){
+//     if((j % src->stride[0]) == 0){
+//       printf("\n %d ",src->aligned_data[j]);
+//     }
+//     else{
+//        printf(" %d ",src->aligned_data[j]);
+//     }
+//   }
+
+// }
+//   printf("]\n");
+// }
+
+void _mlir_ciface_print_memref_8_bit_FLAT(TwoDMemrefI8_t *src) {
+  printf("FLAT printing memref with shape %d x %d, offset %d: stride: [%d,%d]\n[",src->shape[0],src->shape[1], src->offset,src->stride[0],src->stride[1]);
+  for (size_t i = 0; i < src->shape[0]*src->shape[1]; i++) {
+    if(i % src->shape[0] == 0){
+      printf("\n %d ",src->aligned_data[i]);
+
+    }
+    else{
+      printf(" %d ",src->aligned_data[i]);
+    }
+
+  }
+  printf("]\n");
+}
+
+void _mlir_ciface_print_memref_8_bit_NOT_FLAT(TwoDMemrefI8_t *src) {
+  printf("NOT FLAT printing memref with shape %d x %d, offset %d: stride: [%d,%d]\n[",src->shape[0],src->shape[1], src->offset,src->stride[0],src->stride[1]);
+  for (size_t i = 0; i < src->shape[0]; i++) {
+    for (size_t j = 0; j < src->shape[1]; j++) {
+      size_t index = i*(src->stride[0]) + j*(src->stride[1]);
+      printf(" %d ", src->aligned_data[index]);
+
+    }
+    printf("\n");
+  }
+  printf("]\n");
+}
+
+void _mlir_ciface_print_memref_8_bit(TwoDMemrefI8_t *src) {
+  printf("printing memref with shape %d x %d, offset %d: stride: [%d,%d]\n[",src->shape[0],src->shape[1], src->offset,src->stride[0],src->stride[1]);
+  for (size_t row = 0; row < src->shape[0]; row++) {
+    for (size_t col = 0; col < src->shape[1]; col++) {
+      printf(" %d ",src->aligned_data[src->offset +
+      (src->stride[0] * row) +
+                        (col * src->stride[1])]);
+    }
+    printf("\n");
+  }
+  printf("]\n");
+}
+
+void _mlir_ciface_print_memref_32_bit(TwoDMemrefI32_t *src) {
+  printf("printing memref with shape %d x %d, offset %d: stride: [%d,%d]\n[",src->shape[0],src->shape[1], src->offset,src->stride[0],src->stride[1]);
+  for (size_t row = 0; row < src->shape[0]; row++) {
+    for (size_t col = 0; col < src->shape[1]; col++) {
+      printf(" %d ",src->aligned_data[src->offset +
+      (src->stride[0] * row) +
+                        (col * src->stride[1])]);
+    }
+    printf("\n");
+  }
+  printf("]\n");
+}
+
+void _mlir_ciface_print_index(int32_t i) {
+ if(i == 624){
+  printf("\n");
+ }else{
+  printf("{ %d }",i);
+ }
+}
+
+void _mlir_ciface_print_weight_elt(int32_t c, int32_t b, int32_t i ) {
+ if(_mlir_ciface_myID() == 0){
+  if(i != 3){
+    printf("w[%d][%d]=%d\n",c,b,i);
+  }
+ }
+}
+
+void _mlir_ciface_print_weight_elt2(int32_t c, int32_t b, int32_t i, int32_t a1, int32_t b0, int32_t b1, int32_t c0, int32_t c1, int32_t c2 ) {
+ //if(_mlir_ciface_myID() == 0){
+  if(i != 3){
+   printf("w[%d][%d]=%d\t, a1:%d b0:%d b1:%d c0:%d c1:%d c2:%d \n",c,b,i,a1, b0, b1, c0, c1, c2);
+   //printf("a1:%d b0:%d b1:%d c0:%d c1:%d c2:%d \n",a1, b0, b1, c0, c1, c2);
+  }
+// }
+}
+
+// void _mlir_ciface_print_weight_elt(int32_t c, int32_t b, int32_t i ) {
+ 
+//   if(i != 3){
+//     printf("w[%d][%d]=%d\n",c,b,i);
+//   }
+ 
+// }
+
+void _mlir_ciface_print_i32(int32_t i) {
+ if(i == 624){
+  printf("\n");
+ }else{
+  printf("={ %d }",i);
+ }
 }
 
 void _mlir_ciface_memrefCopy32bit(TwoDMemrefI32_t *src, TwoDMemrefI32_t *dst) {
@@ -127,7 +294,19 @@ void _mlir_ciface_memrefCopy32bit_O_104x13(TwoDMemrefI32_t *src,
   }
 }
 
-void _mlir_ciface_memrefCopy32bit_O_8x8(TwoDMemrefI32_t *src,
+void _mlir_ciface_memrefCopy32bit_O_8x8_down(TwoDMemrefI32_t *src,
+                                           TwoDMemrefI32_t *dst) {
+  for (size_t row = 0; row < src->shape[0]; row++) {
+    for (size_t col = 0; col < src->shape[1]; col++) {
+      dst->aligned_data[dst->offset + dst->stride[0] * row +
+                        col * dst->stride[1]] =
+          src->aligned_data[src->offset + src->stride[0] * row +
+                            col * src->stride[1]];
+    }
+  }
+}
+
+void _mlir_ciface_memrefCopy32bit_O_8x8_up(TwoDMemrefI32_t *src,
                                            TwoDMemrefI32_t *dst) {
   for (size_t row = 0; row < src->shape[0]; row++) {
     for (size_t col = 0; col < src->shape[1]; col++) {
@@ -151,6 +330,13 @@ void _mlir_ciface_memrefCopy32bit_O_104x1(TwoDMemrefI32_t *src,
   }
 }
 
+/*
+NEXT STEPS:
+1) write intuitive matmul and compare with MAC matmul.
+2) IF they give the SAME results, figure out why tiled matmul is WRONG.
+3) IF they give different results, see if transposed weight matrix is the issue.??
+*/
+
 // c-code implementation of matmul (to check correctness of MLIR)
 void cCodeSquareMatmul(TwoDMemrefI8_t *x, TwoDMemrefI8_t *y,
                        TwoDMemrefI32_t *z) {
@@ -165,6 +351,22 @@ void cCodeSquareMatmul(TwoDMemrefI8_t *x, TwoDMemrefI8_t *y,
         z->aligned_data[z_index] +=
             x->aligned_data[x_index] * y->aligned_data[y_index];
       }
+    }
+  }
+}
+
+void cCodeSquareMatmul_intuitive(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
+                       TwoDMemrefI32_t *c) {
+  int a_index, b_index, c_index = 0;
+  for (int d0 = 0; d0 < MAT_WIDTH; d0++) {
+    for (int d1 = 0; d1 < MAT_WIDTH; d1++) {
+      //c[d0][d1] += a[d0][d1] * b[d1][d0]
+      c_index = (d0 * MAT_WIDTH) + d1;
+      a_index = c_index;
+      b_index = (d1 * MAT_WIDTH) + d0;
+      c->aligned_data[c_index] +=
+            a->aligned_data[a_index] * b->aligned_data[b_index];
+
     }
   }
 }

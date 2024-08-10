@@ -20,37 +20,18 @@ uint32_t snrt_l1_start_addr();
 uint32_t snrt_l1_end_addr();
 
 // External functions implemented in MLIR
-extern void _mlir_ciface_tiled_matmul(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
-                                      TwoDMemrefI32_t *c,
-                                      TwoDMemrefI32_t *l1OTile);
-extern void _mlir_ciface_matmul_accelerator_work(TwoDMemrefI8_t *a,
-                                                 TwoDMemrefI8_t *b,
-                                                 TwoDMemrefI32_t *c);
-extern void _mlir_ciface_dummy2(uint32_t coreID, TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
-                                       TwoDMemrefI32_t *c,
-                                       TwoDMemrefI8_t *sliceI,
-                                       TwoDMemrefI8_t *sliceW,
-                                       TwoDMemrefI32_t *sliceO);
-extern void _mlir_ciface_tiledMatmul12(uint32_t coreID, TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
-                                       TwoDMemrefI32_t *c,
-                                       TwoDMemrefI8_t *sliceI,
-                                       TwoDMemrefI8_t *sliceW,
-                                       TwoDMemrefI32_t *sliceO);
-extern void _mlir_ciface_tiledMatmul12_kernel(TwoDMemrefI8_t *arg0,
-                        TwoDMemrefI8_t *arg1, TwoDMemrefI32_t *arg2, uint32_t a1,
-                           uint32_t b1, uint32_t c1, uint32_t c2,
-                           uint32_t a1_bk_sz, uint32_t b1_bk_sz,
-                           uint32_t c1_bk_sz, uint32_t c2_bk_sz);
-extern void _mlir_ciface_dmaCore(uint32_t coreID, TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
-                                       TwoDMemrefI32_t *c,
-                                       TwoDMemrefI8_t *sliceI,
-                                       TwoDMemrefI8_t *sliceW,
-                                       TwoDMemrefI32_t *sliceO);
-extern void _mlir_ciface_computeCore(TwoDMemrefI8_t *arg0,
-                        TwoDMemrefI8_t *arg1, TwoDMemrefI32_t *arg2, uint32_t a1,
-                           uint32_t b1, uint32_t c1, uint32_t c2,
-                           uint32_t a1_bk_sz, uint32_t b1_bk_sz,
-                           uint32_t c1_bk_sz, uint32_t c2_bk_sz);
+extern void _mlir_ciface_simple_matmul(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
+                                       TwoDMemrefI32_t *c);
+
+extern void _mlir_ciface_dmaCore(uint32_t coreID, TwoDMemrefI8_t *a,
+                                 TwoDMemrefI8_t *b, TwoDMemrefI32_t *c,
+                                 TwoDMemrefI8_t *sliceI, TwoDMemrefI8_t *sliceW,
+                                 TwoDMemrefI32_t *sliceO);
+extern void _mlir_ciface_computeCore(TwoDMemrefI8_t *arg0, TwoDMemrefI8_t *arg1,
+                                     TwoDMemrefI32_t *arg2, uint32_t a1,
+                                     uint32_t b1, uint32_t c1, uint32_t c2,
+                                     uint32_t a1_bk_sz, uint32_t b1_bk_sz,
+                                     uint32_t c1_bk_sz, uint32_t c2_bk_sz);
 
 int main() {
   if (!snrt_is_dm_core()) {
@@ -61,7 +42,7 @@ int main() {
   uint32_t l1 = snrt_l1_start_addr();
 
   // Create memref objects for data stored in L3
-  TwoDMemrefI8_t memrefA;  // weight 104x104xi8
+  TwoDMemrefI8_t memrefA;  // input 104x104xi8
   memrefA.data = (int8_t *)malloc(sizeof(int8_t) * MAT_WIDTH_SQUARED);
   memrefA.aligned_data = memrefA.data;
   memrefA.offset = 0;
@@ -94,37 +75,37 @@ int main() {
   memrefGolden.stride[0] = 104;
   memrefGolden.stride[1] = 1;
 
-  // new L1 "allocations" for ex 11
- TwoDMemrefI8_t memrefInputSlice;  // input-l1: 104x104
+  // new L1 "allocations" for ex 12
+  TwoDMemrefI8_t memrefInputSlice;  // input-l1: 104x104
   memrefInputSlice.data = (int8_t *)l1;
   memrefInputSlice.aligned_data = memrefInputSlice.data;
   memrefInputSlice.offset = 0;
   memrefInputSlice.shape[0] = 104;
-  memrefInputSlice.shape[1] = 13;
+  memrefInputSlice.shape[1] = 104;
   memrefInputSlice.stride[0] = 104;
   memrefInputSlice.stride[1] = 1;
   l1 += (sizeof(int8_t) * MAT_WIDTH_SQUARED);
 
-  TwoDMemrefI8_t memrefWeightSlice;  // weight-l1-slice: 104x13
+  TwoDMemrefI8_t memrefWeightSlice;  // weight-l1-slice: 26x104
   memrefWeightSlice.data = (int8_t *)l1;
   memrefWeightSlice.aligned_data = memrefWeightSlice.data;
   memrefWeightSlice.offset = 0;
-  memrefWeightSlice.shape[0] = 104;
-  memrefWeightSlice.shape[1] = 13;
-  memrefWeightSlice.stride[0] = 1;
-  memrefWeightSlice.stride[1] = 104;
-  l1 += (sizeof(int8_t) * MAT_WIDTH * 13);
+  memrefWeightSlice.shape[0] = 26;
+  memrefWeightSlice.shape[1] = 104;
+  memrefWeightSlice.stride[0] = 104;
+  memrefWeightSlice.stride[1] = 1;
+  l1 += (sizeof(int8_t) * MAT_WIDTH * 26);
 
-  TwoDMemrefI32_t memrefOutputSlice;  // output-l1-slice: 104x13
+  TwoDMemrefI32_t memrefOutputSlice;  // output-l1-slice: 8x8
   memrefOutputSlice.data = (int32_t *)l1;
   memrefOutputSlice.aligned_data = memrefOutputSlice.data;
   memrefOutputSlice.offset = 0;
   memrefOutputSlice.offset = 0;
-  memrefOutputSlice.shape[0] = 104;
-  memrefOutputSlice.shape[1] = 13;
-  memrefOutputSlice.stride[0] = 104;
+  memrefOutputSlice.shape[0] = 8;
+  memrefOutputSlice.shape[1] = 8;
+  memrefOutputSlice.stride[0] = 8;
   memrefOutputSlice.stride[1] = 1;
-  l1 += (sizeof(int32_t) * MAT_WIDTH * 13);
+  l1 += (sizeof(int32_t) * 8 * 8);
 
   // initialize the matrices
   for (size_t i = 0; i < MAT_WIDTH_SQUARED; i++) {
@@ -136,21 +117,34 @@ int main() {
   for (size_t i = 0; i < MAT_WIDTH_SQUARED; i++) {
     memrefC.aligned_data[i] = (int32_t)0;
   }
+  // zero out L1 slices
+  for (size_t i = 0; i < MAT_WIDTH_SQUARED; i++) {
+    memrefInputSlice.aligned_data[i] = (int8_t)0;
+  }
 
+  for (size_t i = 0; i < (MAT_WIDTH * 26); i++) {
+    memrefWeightSlice.aligned_data[i] = (int8_t)0;
+  }
+
+  for (size_t i = 0; i < 64; i++) {
+    memrefOutputSlice.aligned_data[i] = (int32_t)0;
+  }
 
   // perform C code matmul to get the ground truth
   cCodeSquareMatmul(&memrefA, &memrefB, &memrefGolden);
-
-  set_accelerator_computation(5, (kernel_ptr)_mlir_ciface_computeCore);
+  // TODO: create a function to set ALL compute cores to same kernel at once
   set_accelerator_computation(0, (kernel_ptr)_mlir_ciface_computeCore);
   set_accelerator_computation(1, (kernel_ptr)_mlir_ciface_computeCore);
   set_accelerator_computation(2, (kernel_ptr)_mlir_ciface_computeCore);
   set_accelerator_computation(3, (kernel_ptr)_mlir_ciface_computeCore);
   set_accelerator_computation(4, (kernel_ptr)_mlir_ciface_computeCore);
+  set_accelerator_computation(5, (kernel_ptr)_mlir_ciface_computeCore);
   set_accelerator_computation(6, (kernel_ptr)_mlir_ciface_computeCore);
   set_accelerator_computation(7, (kernel_ptr)_mlir_ciface_computeCore);
- 
-  _mlir_ciface_dmaCore(5, &memrefA, &memrefB, &memrefC, &memrefInputSlice, &memrefWeightSlice, &memrefOutputSlice);
+
+  // perform tiled matmul, dma core distributing work to compute cores
+  _mlir_ciface_dmaCore(5, &memrefA, &memrefB, &memrefC, &memrefInputSlice,
+                       &memrefWeightSlice, &memrefOutputSlice);
 
   // check for correctness
   int nerr = 0;

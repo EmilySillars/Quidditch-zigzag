@@ -76,6 +76,8 @@ extern void _mlir_ciface_matmul_accelerator_work(TwoDMemrefI8_t *arg0,
 // compute matrix multiplication (for checking mlir matmul correctness)
 void cCodeSquareMatmul(TwoDMemrefI8_t *x, TwoDMemrefI8_t *y,
                        TwoDMemrefI32_t *z);
+void cCodeSquareMatmul_intuitive(TwoDMemrefI8_t *a, TwoDMemrefI8_t *b,
+                       TwoDMemrefI32_t *c);
 
 // printing functions to help with debugging
 void print2DMemRefI8_t(TwoDMemrefI8_t *x, int32_t width);
@@ -98,3 +100,8 @@ void _mlir_ciface_memrefCopy32bit2(TwoDMemrefI32_t *src, TwoDMemrefI32_t *dst);
 void _mlir_ciface_memrefCopy32bit_O_104x13(TwoDMemrefI32_t *src, TwoDMemrefI32_t *dst);
 void _mlir_ciface_memrefCopy32bit_O_104x1(TwoDMemrefI32_t *src, TwoDMemrefI32_t *dst);
 void _mlir_ciface_memrefCopy32bit_O_8x8(TwoDMemrefI32_t *src, TwoDMemrefI32_t *dst);
+void _mlir_ciface_print_memref_8_bit(TwoDMemrefI8_t *src);
+void _mlir_ciface_print_memref_32_bit(TwoDMemrefI32_t *src);
+void setValMemref8Bit(TwoDMemrefI8_t *src, int8_t val);
+void _mlir_ciface_print_memref_8_bit_FLAT(TwoDMemrefI8_t *src);
+void _mlir_ciface_print_memref_8_bit_NOT_FLAT(TwoDMemrefI8_t *src);
