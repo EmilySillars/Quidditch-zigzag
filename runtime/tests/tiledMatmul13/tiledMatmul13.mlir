@@ -1,18 +1,24 @@
 #map = affine_map<(d0, d1, d2) -> (d0, d2)>
 #map1 = affine_map<(d0, d1, d2) -> (d2, d1)>
-#map2 = affine_map<(d0, d1, d2) -> ()>
-#map3 = affine_map<(d0, d1, d2) -> (d0, d1)>
+#map2 = affine_map<(d0, d1, d2) -> (d0, d1)>
 "builtin.module"() ({
 // declaring external MLIR functions (implementations in C)
+"func.func"() <{function_type = () -> index, sym_name = "myID", sym_visibility = "private"}> ({}) {llvm.emit_c_interface}: () -> ()
+
 "func.func"() <{function_type = (
-    i32, // coreID
-    memref<104x104xi8, strided<[104, 1], offset: ?>>, // input
-    memref<104x1xi8, strided<[1, 104], offset: ?>>,   // weight slice
-    memref<104x1xi32, strided<[104, 1], offset: ?>>)  // output slice
-    -> (), sym_name = "dispatch_to_accelerator", sym_visibility = "private"}> ({}) {llvm.emit_c_interface}: () -> ()
-"func.func"() <{function_type = (
-    i32) // coreID
+    index) // coreID
     -> (), sym_name = "wait_for_accelerator", sym_visibility = "private"}> ({}) {llvm.emit_c_interface}: () -> ()
+"func.func"() <{function_type = () -> (), sym_name = "wait_for_all_accelerators", sym_visibility = "private"}> ({}) {llvm.emit_c_interface}: () -> ()
+"func.func"() <{function_type = ( index,index,index,index,index,index,index,index) 
+    -> (), sym_name = "save_outer_loop_counters", sym_visibility = "private"}> ({}) {llvm.emit_c_interface}: () -> ()
+
+"func.func"() <{function_type = (
+          index, 
+          memref<104x104xi8, strided<[104, 1], offset: ?>>,  // input
+          memref<26x104xi8, strided<[104, 1], offset: ?>>,   // weight slice
+          memref<8x8xi32, strided<[8, 1], offset: ?>>)       // output slice
+      -> (), sym_name = "dispatch_to_accelerator", sym_visibility = "private"}> ({}) {llvm.emit_c_interface}: () -> ()
+
 "func.func"() <{function_type =  (
   memref<2x16xi8>, 
   memref<16x2xi8, strided<[1,16]>>, 
@@ -23,6 +29,21 @@
   memref<104x13xi8, strided<[1, 104], offset: ?>>) 
   -> (), sym_name = "memrefCopy8bit", sym_visibility = "private"}> ({}) {llvm.emit_c_interface}: () -> ()
 
+//print_memref_8_bit
+"func.func"() <{function_type = (
+  memref<26x104xi8, strided<[1, 104], offset: ?>>) 
+  -> (), sym_name = "print_memref_8_bit", sym_visibility = "private"}> ({}) {llvm.emit_c_interface}: () -> ()
+
+"func.func"() <{function_type = (
+  memref<104x104xi32, strided<[8,1], offset: ?>>) 
+  -> (), sym_name = "print_memref_32_bit", sym_visibility = "private"}> ({}) {llvm.emit_c_interface}: () -> ()
+
+"func.func"() <{function_type = (index) 
+  -> (), sym_name = "print_index", sym_visibility = "private"}> ({}) {llvm.emit_c_interface}: () -> ()
+
+"func.func"() <{function_type = (i32) 
+  -> (), sym_name = "print_i32", sym_visibility = "private"}> ({}) {llvm.emit_c_interface}: () -> ()
+
 "func.func"() <{function_type = (
   memref<104x104xi8, strided<[104, 1], offset: ?>>, 
   memref<104x104xi8, strided<[104, 1], offset: ?>>) 
@@ -31,6 +52,19 @@
   memref<104x104xi8, strided<[1, 104], offset: ?>>, 
   memref<104x104xi8, strided<[1, 104], offset: ?>>) 
   -> (), sym_name = "memrefCopy8bit_W_104x104", sym_visibility = "private"}> ({}) {llvm.emit_c_interface}: () -> ()
+"func.func"() <{function_type = (
+  memref<26x104xi8, strided<[104, 1], offset: ?>>, 
+  memref<26x104xi8, strided<[104, 1], offset: ?>>) 
+  -> (), sym_name = "memrefCopy8bit_W_26x104", sym_visibility = "private"}> ({}) {llvm.emit_c_interface}: () -> ()
+"func.func"() <{function_type = (
+  memref<8x8xi32, strided<[104, 1], offset: ?>>, 
+  memref<8x8xi32, strided<[8, 1], offset: ?>>) 
+  -> (), sym_name = "memrefCopy32bit_O_8x8_down", sym_visibility = "private"}> ({}) {llvm.emit_c_interface}: () -> ()
+
+"func.func"() <{function_type = (
+  memref<8x8xi32, strided<[8, 1], offset: ?>>, 
+  memref<8x8xi32, strided<[104, 1], offset: ?>>) 
+  -> (), sym_name = "memrefCopy32bit_O_8x8_up", sym_visibility = "private"}> ({}) {llvm.emit_c_interface}: () -> ()
 
 "func.func"() <{function_type = (
   memref<104x1xi32, strided<[104, 1], offset: ?>>, 
@@ -42,535 +76,216 @@
   memref<104x13xi32, strided<[104, 1], offset: ?>>) 
   -> (), sym_name = "memrefCopy32bit_O_104x13", sym_visibility = "private"}> ({}) {llvm.emit_c_interface}: () -> ()
 
-
 "func.func"() <{function_type = (
   memref<104x1xi32, strided<[104, 1], offset: ?>>, 
   memref<104x1xi32, strided<[104, 1], offset: ?>>) 
   -> (), sym_name = "memrefCopy32bit_O_104x1", sym_visibility = "private"}> ({}) {llvm.emit_c_interface}: () -> ()
 
+"func.func"() <{function_type = (index, index, i32) 
+  -> (), sym_name = "print_weight_elt", sym_visibility = "private"}> ({}) {llvm.emit_c_interface}: () -> ()
+
+"func.func"() <{function_type = (index, index, i32, index, index, index, index, index, index) 
+  -> (), sym_name = "print_weight_elt2", sym_visibility = "private"}> ({}) {llvm.emit_c_interface}: () -> ()
+
+
+  "func.func"() <{function_type = (memref<104x104xi8>, memref<104x104xi8>, memref<104x104xi32>) -> (), sym_name = "regular_matmul"}>  ({
+  ^bb0(%arg0: memref<104x104xi8>, %arg1: memref<104x104xi8>, %arg2: memref<104x104xi32>):
+    "linalg.generic"(%arg0, %arg1, %arg2) ({
+    ^bb0(%arg3: i8, %arg4: i8, %arg5: i32):
+      %0 = "arith.extsi"(%arg3) : (i8) -> i32
+      %1 = "arith.extsi"(%arg4) : (i8) -> i32
+      %2 = "arith.muli"(%0, %1) : (i32, i32) -> i32
+      %3 = "arith.addi"(%arg5, %2) : (i32, i32) -> i32
+      "linalg.yield"(%3) : (i32) -> ()
+    }) {indexing_maps = [#map, #map1, #map2], iterator_types = [#linalg.iterator_type<parallel>, #linalg.iterator_type<parallel>, #linalg.iterator_type<reduction>], operand_segment_sizes = array<i32: 2, 1>} : (memref<104x104xi8>, memref<104x104xi8>, memref<104x104xi32>) -> ()
+    "func.return"() : () -> ()
+  }) {llvm.emit_c_interface} : () -> ()
+
 
 "func.func"() <{function_type = 
-    (i32,                                               // coreID
+    (index,                                             // coreID
     memref<104x104xi8, strided<[104, 1], offset: ?>>,   // input L3
-    memref<104x104xi8, strided<[1, 104], offset: ?>>,   // weight L3
+    memref<104x104xi8, strided<[104, 1], offset: ?>>,   // weight L3
     memref<104x104xi32, strided<[104, 1], offset: ?>>,  // output L3
-    memref<104x104xi8, strided<[104,1], offset: ?>>,    // input slice L1
-    memref<104x104xi8, strided<[1, 104], offset: ?>>,   // weight slice L1
-    memref<104x104xi32, strided<[104, 1], offset: ?>>)  // output slice  L1
-    -> (), sym_name = "tiledMatmul13"}> ({
-  ^bb0(%coreID : i32,
-       %arg0: memref<104x104xi8, strided<[104, 1], offset: ?>>, 
-       %arg1: memref<104x104xi8, strided<[1,104], offset: ?>>, 
-       %arg2: memref<104x104xi32, strided<[104,1], offset: ?>>, 
+    memref<104x104xi8, strided<[104, 1], offset: ?>>,    // input L1
+    memref<104x104xi8, strided<[104, 1], offset: ?>>,   // weight L1
+    memref<8x8xi32, strided<[8, 1], offset: ?>>)    // output L1
+    -> (), sym_name = "dmaCore"}> ({
+  ^bb0(%coreID : index,
+       %input: memref<104x104xi8, strided<[104, 1], offset: ?>>, 
+       %weight: memref<104x104xi8, strided<[104,1], offset: ?>>, 
+       %output: memref<104x104xi32, strided<[104,1], offset: ?>>, 
        %inputL1: memref<104x104xi8, strided<[104,1], offset: ?>>,
-       %weightL1: memref<104x104xi8, strided<[1,104], offset: ?>>,
-       %outputL1: memref<104x104xi32, strided<[104,1], offset: ?>>): 
+       %weightL1: memref<104x104xi8, strided<[104,1], offset: ?>>,
+       %slice_O_L1: memref<8x8xi32, strided<[8,1], offset: ?>>): 
 
-       // we start by moving the Input and Weight operands into L1:
-      func.call @memrefCopy8bit_I_104x104(%arg0,  %inputL1) 
-      : (memref<104x104xi8, strided<[104, 1], offset: ?>>, memref<104x104xi8, strided<[104, 1], offset: ?>>) -> ()
-       func.call @memrefCopy8bit_W_104x104(%arg1,  %weightL1) 
-      : (memref<104x104xi8, strided<[1,104], offset: ?>>, memref<104x104xi8, strided<[1,104], offset: ?>>) -> ()
-      
-        // indices
+      // indices
       %zero = arith.constant 0 : index
-      %one = arith.constant 1: index
-      %eight = arith.constant 8 : index
+      %one = arith.constant 1 : index
+      %four = arith.constant 4 : index
+      %two = arith.constant  2 : index
+      %eight = arith.constant  8 : index
       %thirteen = arith.constant 13 : index  
-      %oneOhFour = arith.constant 104 : index
-  
-      %b0_0_bk_sz = arith.constant 13 : index
-      //%b1_0_bk_sz = arith.constant 8: index
-    
+      // tile sizes
+      %a1_bk_sz = arith.constant 8 : index
+      %b1_bk_sz = arith.constant 8 : index
+      %c1_bk_sz = arith.constant 13 : index
+      %c2_bk_sz = arith.constant 26 : index
+      %b0_bk_sz = arith.constant 1 : index
+      %c0_bk_sz = arith.constant 1 : index
+      %a0_bk_sz = arith.constant 1 : index
       // constants
-      %zero_i32 = arith.constant 0: i32
-      %sixTwentyFour_i32 = arith.constant 624: i32
-      %one_i32 = arith.constant 1 : i32
-       %three_i8 = arith.constant 3 : i8
+      %sixTwentyFour = arith.constant 624: index
+      %three = arith.constant 3: i8
+      %nine = arith.constant 9: i8
 
-    // enter scf FOR LOOP
-    // select slices of W and O with dimensions (104 x 13)
-    scf.for %b0_0 = %zero to %eight step %one iter_args() -> () { // this loop uses both L3 and L1    
-    %b0 = arith.muli %b0_0, %b0_0_bk_sz : index   
-    // Weight Operand
-    // slice of L1 Weight @(104x13)
-    %sliceWL1 = memref.subview %weightL1[%zero, %zero][104,13][1,1] 
-    :  memref<104x104xi8, strided<[1,104], offset: ?>> to memref<104x13xi8, strided<[1, 104], offset: ?>>
-    // Output Operand 
-    // slice of L3 Output @(104x13)
-    %sliceOL3 = memref.subview %arg2[%zero, %b0][104,13][1,1] 
-    : memref<104x104xi32, strided<[104,1], offset: ?>> to memref<104x13xi32, strided<[104, 1], offset: ?>>
-    // slice of L1 Output @(104x13)
-    %sliceOL1 = memref.subview %outputL1[%zero,%zero][104,13][1,1]
-    : memref<104x104xi32, strided<[104,1], offset: ?>> to memref<104x13xi32, strided<[104,1], offset: ?>>
+      // copy input from L3 to L1
+      func.call @memrefCopy8bit_I_104x104(%input,  %inputL1) 
+      : (memref<104x104xi8, strided<[104, 1], offset: ?>>, memref<104x104xi8, strided<[104, 1], offset: ?>>) -> ()
+     
 
-    // enter scf FOR LOOP
-    // select slices of W and O with dimensions (104x1) 
-    scf.for %b1_0 = %zero to %thirteen step %one iter_args() -> () { // this loop uses both L3 and L1
-    // Weight Operand
-    // slice of L1 Weight @(104x1)
-    %sliceWL1_2 = memref.subview %sliceWL1[%zero,%b1_0][104,1][1,1]
-    : memref<104x13xi8, strided<[1, 104], offset: ?>> to memref<104x1xi8, strided<[1, 104], offset: ?>>     
-    // Output Operand    
-    // slice of slice of L3 Output @(104x1)
-    %sliceOL3_2 = memref.subview %sliceOL3[%zero, %b1_0][104,1][1,1] 
-    :  memref<104x13xi32, strided<[104, 1], offset: ?>> to memref<104x1xi32, strided<[104, 1], offset: ?>>
-    // slice of L1 output @(104x1)
-    %sliceOL1_2 = memref.subview %sliceOL1[%zero, %b1_0][104,1][1,1]
-    : memref<104x13xi32, strided<[104, 1], offset: ?>> to memref<104x1xi32, strided<[104, 1], offset: ?>>
-    
-    // We copy this slice of operand Output from L3 to L1
-    func.call @memrefCopy32bit_O_104x1(%sliceOL3_2, %sliceOL1_2) : 
-    (memref<104x1xi32, strided<[104, 1], offset: ?>>, memref<104x1xi32, strided<[104, 1], offset: ?>>) -> ()
+      // FOR LOOPS START HERE
+      scf.for %c2 = %zero to %four step %one iter_args() -> () {
 
-    // Now that all the slices are in L1, give the rest of the work to a core
-    func.call @dispatch_to_accelerator(%coreID, %inputL1, %sliceWL1_2, %sliceOL1_2)
-    : (
-    i32, // coreID
-    memref<104x104xi8, strided<[104, 1], offset: ?>>, // input
-    memref<104x1xi8, strided<[1, 104], offset: ?>>,   // weight slice
-    memref<104x1xi32, strided<[104, 1], offset: ?>>)  // output slice
-    -> ()
+      // select 26 x 104 subview of L3 weight matrix
+      %slice_W_L3_offset = arith.muli %c2, %c2_bk_sz : index
+      %slice_W_L3 = memref.subview %weight[%slice_W_L3_offset, %zero][26,104][1,1]
+      :  memref<104x104xi8, strided<[104,1], offset: ?>> to memref<26x104xi8, strided<[104,1], offset: ?>>      
+      
+      // select 26 x 104 subview of L1 weight matrix
+      %slice_W_L1 = memref.subview %weightL1[%zero, %zero][26,104][1,1] // is this offset correct?
+      :  memref<104x104xi8, strided<[104,1], offset: ?>> to memref<26x104xi8, strided<[104,1], offset: ?>>
+      
+      // copy weights from L3 to L1
+      func.call @memrefCopy8bit_W_26x104( %slice_W_L3, %slice_W_L1)
+      : (memref<26x104xi8, strided<[104, 1], offset: ?>>,memref<26x104xi8, strided<[104, 1], offset: ?>>) -> ()
 
-    func.call @wait_for_accelerator(%coreID) : (i32) -> ()
+      scf.for %c1 = %zero to %two step %one iter_args() -> () {
+      scf.for %b1 = %zero to %thirteen step %one iter_args() -> () {
+      scf.for %a1 = %zero to %thirteen step %one iter_args() -> () {
+      
+      // select 8x8 subview of L3 output matrix
+      %slice_O_L3_offset_r = arith.muli %a1, %a1_bk_sz : index
+      %slice_O_L3_offset_c = arith.muli %b1, %b1_bk_sz : index
+      %slice_O_L3 = memref.subview %output[%slice_O_L3_offset_r,%slice_O_L3_offset_c][8,8][1,1]
+      : memref<104x104xi32, strided<[104, 1], offset: ?>>  to  memref<8x8xi32, strided<[104, 1], offset: ?>>
+      
+      // copy output tile 8x8 from L3 to L1.
+      func.call @memrefCopy32bit_O_8x8_down(%slice_O_L3, %slice_O_L1)
+      : (memref<8x8xi32, strided<[104, 1], offset: ?>>, memref<8x8xi32, strided<[8, 1], offset: ?>>) -> ()
+      
+      // after this point, the computation should be dispatched to compute cores.
+      func.call @save_outer_loop_counters(%a1,%b1,%c1,%c2,%a1_bk_sz,%b1_bk_sz,%c1_bk_sz,%c2_bk_sz)
+      : (index,index,index,index,index,index,index,index) -> ()
 
-    // We copy L1 Output back to L3
-    func.call @memrefCopy32bit_O_104x1(%sliceOL1_2, %sliceOL3_2) : 
-    (memref<104x1xi32, strided<[104, 1], offset: ?>>, memref<104x1xi32, strided<[104, 1], offset: ?>>) -> ()
+      scf.for %a0 = %zero to %eight step %one iter_args() -> () { // spatial unrolling loop
 
-    // zero-out the Output L1 slice; there has to be a better way to do this, right?
-    scf.for %i = %zero to %oneOhFour step %one iter_args() -> () { 
-     memref.store %zero_i32, %sliceOL1_2[%i, %zero] : memref<104x1xi32, strided<[104, 1], offset: ?>>
-    } // end of %i for
-    } // end of b1_0 for
+      func.call @dispatch_to_accelerator(%a0, %inputL1, %slice_W_L1, %slice_O_L1)
+      : (
+          index, 
+          memref<104x104xi8, strided<[104, 1], offset: ?>>,  // input
+          memref<26x104xi8, strided<[104, 1], offset: ?>>,   // weight slice
+          memref<8x8xi32, strided<[8, 1], offset: ?>>)       // output slice
+      -> ()
+      } // end of spatial unrolling loop  
 
-    
-    } // end of b0_0 for
+      func.call @wait_for_all_accelerators() : () -> ()
+
+      // copy L1 output tile back to L3 
+      func.call @memrefCopy32bit_O_8x8_up(%slice_O_L1, %slice_O_L3)
+      : (memref<8x8xi32, strided<[8, 1], offset: ?>>, memref<8x8xi32, strided<[104, 1], offset: ?>>) -> ()      
+      }}}  
+      }      
   "func.return"() : () -> ()
   }) {llvm.emit_c_interface}: () -> ()
 
-
-// computation performed by accelerator as part of tiled matmul
-  "func.func"() <{function_type = (
-    memref<104x104xi8, strided<[104, 1], offset: ?>>, // input
-    memref<104x1xi8, strided<[1, 104], offset: ?>>,   // weight slice
-    memref<104x1xi32, strided<[104, 1], offset: ?>>)  // output slice
-    -> (), sym_name = "tiledMatmul13_kernel"}> ({
-  ^bb0(
-    %arg0: memref<104x104xi8, strided<[104, 1], offset: ?>>, 
-    %arg1: memref<104x1xi8, strided<[1, 104], offset: ?>>, 
-    %arg2: memref<104x1xi32, strided<[104, 1], offset: ?>>):
-
-    // indices
-    %zero = arith.constant 0 : index
-    %one = arith.constant 1 : index
-    %oneOhFour = arith.constant 104 : index
-    %eight = arith.constant 8 : index
-    %thirteen = arith.constant 13 : index
-    %four = arith.constant 4 : index
-    %two = arith.constant 2 : index
-
-    // integers
-    %sixTwentyFour_i32 = arith.constant 624: i32
-    %zero_i32 = arith.constant 0: i32
-
-    // tile sizes
-    %a0_bk_sz = arith.constant 13 : index
-    %c0_bk_sz = arith.constant 8 : index
-    %c1_bk_sz = arith.constant 2 : index
-    %c2_bk_sz = arith.constant 1 : index
-    %a1_bk_sz = arith.constant 1 : index
-
-    // ignore register level tiling for now
-    scf.for %a0 = %zero to %eight step %one iter_args() -> () { 
-      scf.for %c0 = %zero to %thirteen step %one iter_args() -> () {
-        scf.for %c1 = %zero to %four step %one iter_args() -> () { 
-          scf.for %c2 = %zero to %two step %one iter_args() -> () { 
-            scf.for %a1 = %zero to %thirteen step %one iter_args() -> () { 
-              %prod_a0 = arith.muli %a0, %a0_bk_sz : index
-              %prod_c0 = arith.muli %c0, %c0_bk_sz : index
-              %prod_c1 = arith.muli %c1, %c1_bk_sz : index
-              %prod_c2 = arith.muli %c2, %c2_bk_sz : index
-              %prod_a1 = arith.muli %a1, %a1_bk_sz : index
-              %sum_c_0_1 = arith.addi %prod_c0, %prod_c1 : index
-              %a = arith.addi %prod_a0, %prod_a1 : index 
-              %c = arith.addi %sum_c_0_1, %prod_c2 : index
-
-              // recall:  O[a][b]+=I[a][c]*W[c][b]
-
-              %inputElt = memref.load %arg0[%a, %c] : memref<104x104xi8, strided<[104, 1], offset: ?>>
-              %inputEltCasted = arith.extsi  %inputElt : i8 to i32 
-
-              %weightElt = memref.load %arg1[%c, %zero] : memref<104x1xi8, strided<[1, 104], offset: ?>>
-              %weightEltCasted = arith.extsi  %weightElt : i8 to i32 
-
-              %outputElt = memref.load %arg2[%a, %zero] : memref<104x1xi32, strided<[104, 1], offset: ?>>
-              
-              %prod = arith.muli %inputEltCasted, %weightEltCasted : i32
-              %newOutputElt = arith.addi %prod, %outputElt : i32
-
-              memref.store %newOutputElt, %arg2[%a, %zero] : memref<104x1xi32, strided<[104, 1], offset: ?>>
-            } 
-          } 
-        }  
-      } 
-    } 
-    "func.return"() : () -> ()
-  }) {llvm.emit_c_interface}: () -> ()
-
-// perform tiled matrix multiplication,
-// dispatching part of the work to the accelerator!
-  "func.func"() <{function_type = 
-  (memref<104x104xi8, strided<[104, 1], offset: ?>>,                        // arg0 (input)
-   memref<104x104xi8, strided<[1, 104]>>,     // arg1 (weight)
-   memref<104x104xi32, strided<[104,1]>>,     // arg2 (output)
-   memref<104x104xi32, strided<[104,1]>>,     // arg3 (output space on l1)
-   memref<104x104xi8, strided<[1, 104]>>      // arg4 (weight space on l1)
-  ) -> (), sym_name = "pineapple"}> ({
-  ^bb0(%arg0: memref<104x104xi8, strided<[104, 1], offset: ?>>, 
-       %arg1: memref<104x104xi8, strided<[1,104]>>, 
-       %arg2: memref<104x104xi32, strided<[104,1]>>, 
-       %outputL1: memref<104x104xi32, strided<[104,1]>>,
-       %weightL1: memref<104x104xi8, strided<[1,104]>>): 
-
-    // indices
-    %zero = arith.constant 0 : index
-    %one = arith.constant 1: index
-    %eight = arith.constant 8 : index
-    %thirteen = arith.constant 13 : index  
-    %oneOhFour = arith.constant 104 : index
- 
-    %b0_0_bk_sz = arith.constant 13 : index
-    //%b1_0_bk_sz = arith.constant 8: index
-   
-    // constants
-    %zero_i32 = arith.constant 0: i32
-    %sixTwentyFour_i32 = arith.constant 624: i32
-    %one_i32 = arith.constant 1 : i32
-    %five_i32 = arith.constant 1 : i32
-
-    // enter scf FOR LOOP
-    // select vertical slices of O and W with dimensions (104 x 13)
-    scf.for %b0_0 = %zero to %eight step %one iter_args() -> () { // this loop uses both L3 and L1    
-    %b0 = arith.muli %b0_0, %b0_0_bk_sz : index   
-
-    // Output Operand 
-    // slice of L3 Output @(104x13)
-    %verticalSliceOL3 = memref.subview %arg2[%zero, %b0][104,13][1,1] 
-    :  memref<104x104xi32, strided<[104,1]>> to memref<104x13xi32, strided<[104, 1], offset: ?>>
-    // slice of L1 Output @(104x13)
-    %verticalSliceOL1 = memref.subview %outputL1[%zero,%zero][104,13][1,1]
-    : memref<104x104xi32, strided<[104,1]>> to memref<104x13xi32, strided<[104,1], offset: ?>>
-
-    // Weight Operand
-    // slice of L3 Weight @(104x13)
-    %verticalSliceWL3 = memref.subview %arg1[%zero, %b0][104,13][1,1] 
-    :  memref<104x104xi8, strided<[1, 104]>> to memref<104x13xi8, strided<[1, 104], offset: ?>>
-    // slice of L1 Weight @(104x13)
-    %verticalSliceWL1 = memref.subview %weightL1[%zero, %zero][104,13][1,1] 
-    :  memref<104x104xi8, strided<[1, 104]>> to memref<104x13xi8, strided<[1, 104], offset: ?>>
-    // copy L3 Weight to L1
-    func.call @memrefCopy8bit(%verticalSliceWL3,  %verticalSliceWL1) 
-    : (memref<104x13xi8, strided<[1, 104], offset: ?>>, memref<104x13xi8, strided<[1, 104], offset: ?>>) -> ()
-    
-    // enter scf FOR LOOP
-    // select vertical slices of each of O and W's vertical slices with dimensions (104x1) 
-    scf.for %b1_0 = %zero to %thirteen step %one iter_args() -> () { // this loop uses both L3 and L1
-        
-    // slice of slice of L3 Output @(104x1)
-    %vSliceOL3 = memref.subview %verticalSliceOL3[%zero, %b1_0][104,1][1,1] 
-    :  memref<104x13xi32, strided<[104, 1], offset: ?>> to memref<104x1xi32, strided<[104, 1], offset: ?>>
-    // slice of L1 output @(104x1)
-    %vSliceOL1 = memref.subview %verticalSliceOL1[%zero, %b1_0][104,1][1,1]
-    : memref<104x13xi32, strided<[104, 1], offset: ?>> to memref<104x1xi32, strided<[104, 1], offset: ?>>
-    // copy L3 Output to L1
-    func.call @memrefCopy32bit(%vSliceOL3,%vSliceOL1) : 
-    (memref<104x1xi32, strided<[104, 1], offset: ?>>, memref<104x1xi32, strided<[104, 1], offset: ?>>) -> ()
-    
-    // slice of L1 Weight @(104x1)
-    %vSliceWL1 = memref.subview %verticalSliceWL1[%zero,%b1_0][104,1][1,1]
-    : memref<104x13xi8, strided<[1, 104], offset: ?>> to memref<104x1xi8, strided<[1, 104], offset: ?>> 
-
-    func.call @dispatch_to_accelerator(%five_i32, %arg0, %vSliceWL1, %vSliceOL1)
-    : (
-    i32, // coreID
-    memref<104x104xi8, strided<[104, 1], offset: ?>>, // input
-    memref<104x1xi8, strided<[1, 104], offset: ?>>,   // weight slice
-    memref<104x1xi32, strided<[104, 1], offset: ?>>)  // output slice
-    -> ()
-
-    // copy Output L1 back to L3
-    func.call @memrefCopy32bit(%vSliceOL1,%vSliceOL3) : 
-    (memref<104x1xi32, strided<[104, 1], offset: ?>>, memref<104x1xi32, strided<[104, 1], offset: ?>>) -> ()
-    
-    // zero-out the Output L1 slice; there has to be a better way to do this, right?
-    scf.for %i = %zero to %oneOhFour step %one iter_args() -> () { 
-     memref.store %zero_i32, %vSliceOL1[%i, %zero] : memref<104x1xi32, strided<[104, 1], offset: ?>>
-    } // end of %i for
-
-    } // end of b1_0 for
-    } // end of b0_0 for
-    "func.return"() : () -> ()
-  }) {llvm.emit_c_interface}: () -> ()
-
   // computation performed by accelerator as part of tiled matmul
   "func.func"() <{function_type = (
-    memref<104x104xi8, strided<[104, 1], offset: ?>>, // input
-    memref<104x1xi8, strided<[1, 104], offset: ?>>,   // weight slice
-    memref<104x1xi32, strided<[104, 1], offset: ?>>)  // output slice
-    -> (), sym_name = "mango"}> ({
+    memref<104x104xi8, strided<[104, 1], offset: ?>>,  // input
+    memref<26x104xi8, strided<[104, 1], offset: ?>>,   // weight slice
+    memref<8x8xi32, strided<[8, 1], offset: ?>>,       // output slice
+    index,index,index,index,index,index,index,index)  
+    -> (), sym_name = "computeCore"}> ({
   ^bb0(
-    %arg0: memref<104x104xi8, strided<[104, 1], offset: ?>>, 
-    %arg1: memref<104x1xi8, strided<[1, 104], offset: ?>>, 
-    %arg2: memref<104x1xi32, strided<[104, 1], offset: ?>>):
+    %slice_I_L1: memref<104x104xi8, strided<[104, 1], offset: ?>>, 
+    %slice_W_L1: memref<26x104xi8, strided<[104, 1], offset: ?>>, 
+    %slice_O_L1: memref<8x8xi32, strided<[8, 1], offset: ?>>,
+    %a1 : index, 
+    %b1 : index, 
+    %c1 : index, 
+    %c2 : index, 
+    %a1_bk_sz_fooey : index, 
+    %b1_bk_sz_fooey : index, 
+    %c1_bk_sz_fooey : index, 
+    %c2_bk_sz_fooey : index
+    ):
 
-    // tile sizes
-    %a0_0_bk_sz = arith.constant 13 : index
-    %c0_0_bk_sz = arith.constant 8 : index
-    
     // indices
-    %zero = arith.constant 0 : index
-    %one = arith.constant 1: index
-    %eight = arith.constant 8 : index
-    %thirteen = arith.constant 13 : index
+      %zero = arith.constant 0 : index
+      %one = arith.constant 1 : index
+      %four = arith.constant 4 : index
+      %two = arith.constant  2 : index
+      %eight = arith.constant  8 : index
+      %thirteen = arith.constant 13 : index  
+      // tile sizes
+      %a1_bk_sz = arith.constant 8 : index
+      %b1_bk_sz = arith.constant 8 : index
+      %c1_bk_sz = arith.constant 13 : index
+      %c2_bk_sz = arith.constant 26 : index
+      %b0_bk_sz = arith.constant 1 : index
+      %c0_bk_sz = arith.constant 1 : index
+      %a0_bk_sz = arith.constant 1 : index
+      // constants
+      %sixTwentyFour = arith.constant 624: index
+      %three = arith.constant 3: i8
+      %nine = arith.constant 9: i8
 
-    //constants
-    %sixTwentyFour_i32 = arith.constant 624: i32
-    %one_i32 = arith.constant 1 : i32
+    %a0 = func.call @myID() : () -> (index) // spacial unrolling of a0
+    scf.for %b0 = %zero to %eight step %one iter_args() -> () { 
+    scf.for %c0 = %zero to %thirteen step %one iter_args() -> () {
 
-    // all the following inner loops should be executed on the accelerator
-    scf.for %a0_0 = %zero to %eight step %one iter_args() -> () {  
-    scf.for %c0_0 = %zero to %thirteen step %one iter_args () -> () {
-    scf.for %c1_0 = %zero to %eight step %one iter_args() -> () {       
-    scf.for %a1_0 = %zero to %thirteen step %one iter_args () -> () { 
-      
-      %prod0 = arith.muli %a0_0, %a0_0_bk_sz : index
-      %a0 = arith.addi %prod0, %a1_0 : index
+      // index calculation
+      %a_prod_0 = arith.muli %a0, %a0_bk_sz : index 
+      %a_prod_1 = arith.muli %a1, %a1_bk_sz : index 
+      %b_prod_0 = arith.muli %b0, %b0_bk_sz : index 
+      %b_prod_1 = arith.muli %b1, %b1_bk_sz : index 
+      %c_prod_0 = arith.muli %c0, %c0_bk_sz : index
+      %c_prod_1 = arith.muli %c1, %c1_bk_sz : index
+      %c_prod_2 = arith.muli %c2, %c2_bk_sz : index
+      %c_sum_2_1 = arith.addi %c_prod_2, %c_prod_1 : index
+      // indices into weight matrix slice
+      %w_c = arith.addi %c_prod_1, %c_prod_0 : index 
+      %w_b = arith.addi %b_prod_1, %b_prod_0 : index
+      // indices into output matrix slice
+      %o_a = arith.muli %a0, %a0_bk_sz : index 
+      %o_b = arith.muli %b0, %b0_bk_sz : index 
+      // indices into input matrix slice
+      %i_a = arith.addi %a_prod_1, %a_prod_0 : index
+      %i_c = arith.addi %c_sum_2_1, %c_prod_0 : index
 
-      %b0 = arith.constant 0 : index
-
-      %prod1 = arith.muli %c0_0, %c0_0_bk_sz : index
-      %c0 = arith.addi %prod1, %c1_0 : index
-
-      // O[a][b]+=I[a][c]*W[c][b]
-     
-      %inputElt = memref.load %arg0[%a0, %c0] : memref<104x104xi8, strided<[104, 1], offset: ?>>
+      // load the input element
+      %inputElt = memref.load %slice_I_L1[%i_a, %i_c] : memref<104x104xi8, strided<[104, 1], offset: ?>>
       %inputEltCasted = arith.extsi  %inputElt : i8 to i32 
-      
-      %weightElt = memref.load %arg1[%c0, %b0] : memref<104x1xi8, strided<[1, 104], offset: ?>>
+
+      // load the weight element
+      %weightElt = memref.load %slice_W_L1[%w_c, %w_b] : memref<26x104xi8, strided<[104,1], offset: ?>>
       %weightEltCasted = arith.extsi  %weightElt : i8 to i32 
 
-      %outputElt = memref.load %arg2[%a0, %b0] : memref<104x1xi32, strided<[104, 1], offset: ?>>
-      %prod = arith.muli %inputEltCasted, %weightEltCasted : i32
+      // load the output element
+      %outputElt = memref.load %slice_O_L1[%o_a, %o_b] : memref<8x8xi32, strided<[8, 1], offset: ?>>  
       
-      %newOutputElt = arith.addi %prod, %outputElt : i32 
-      memref.store %newOutputElt, %arg2[%a0, %b0] : memref<104x1xi32, strided<[104, 1], offset: ?>> 
-    } // end of d1_2 for
-    } // end of d0_2 for
-    } // end of d2_1 for
-    } // end of d1_1 for
-    "func.return"() : () -> ()
-  }) {llvm.emit_c_interface}: () -> ()
-
-  // computation performed by accelerator as part of tiled matmul
-  "func.func"() <{function_type = (
-    memref<104x104xi8, strided<[104, 1], offset: ?>>, // input
-    memref<104x1xi8, strided<[1, 104], offset: ?>>,   // weight slice
-    memref<104x1xi32, strided<[104, 1], offset: ?>>)  // output slice
-    -> (), sym_name = "mangoDummy"}> ({
-  ^bb0(
-    %arg0: memref<104x104xi8, strided<[104, 1], offset: ?>>, 
-    %arg1: memref<104x1xi8, strided<[1, 104], offset: ?>>, 
-    %arg2: memref<104x1xi32, strided<[104, 1], offset: ?>>):
-
-    %zero = arith.constant 0 : index
-    %one = arith.constant 1 : index
-    %oneOhFour = arith.constant 104 : index
-    %sixTwentyFour_i32 = arith.constant 624: i32
-
-    // zero-out the Output L1 slice; there has to be a better way to do this, right?
-    scf.for %i = %zero to %oneOhFour step %one iter_args() -> () { 
-     memref.store %sixTwentyFour_i32, %arg2[%i, %zero] : memref<104x1xi32, strided<[104, 1], offset: ?>>
-    } // end of %i for
-    "func.return"() : () -> ()
-  }) {llvm.emit_c_interface}: () -> ()
-
-
-// DUMMY KERNEL THAT ALWAYS RETURNS CORRECT SQUARE MATMUL ANSWER
-  "func.func"() <{function_type = (
-    memref<104x104xi8>, 
-    memref<104x104xi8, strided<[1, 104]>>, 
-    memref<104x104xi32, strided<[104,1]>>, 
-    memref<104x104xi32, strided<[104,1]>>) -> (), sym_name = "dummy"}> ({
-  ^bb0(%arg0: memref<104x104xi8>, %arg1: memref<104x104xi8, strided<[1,104]>>, %arg2: memref<104x104xi32, strided<[104,1]>>, %l1OSlice: memref<104x104xi32, strided<[104,1]>>):
-    // tile sizes
-    %d0_1_bk_sz = arith.constant 8 : index
-    %d1_1_bk_sz = arith.constant 8 : index
-    %d2_1_bk_sz = arith.constant 8 : index
-    
-    // indices
-    %zero = arith.constant 0 : index
-    %one = arith.constant 1: index
-    %eight = arith.constant 8 : index
-    %thirteen = arith.constant 13 : index
-
-    // enter scf nested FOR LOOP
-    scf.for %d0_1 = %zero to %thirteen step %one iter_args() -> () { // this loop uses both L3 and L1
-
-    %outputTile = memref.subview %arg2[%d0_1,%zero][8,104][1,1] :  memref<104x104xi32, strided<[104,1]>> to memref<8x104xi32, strided<[104, 1], offset: ?>>
-
-    %inputTile = memref.subview %arg0[%d0_1,%zero][8,104][1,1] : memref<104x104xi8> to memref<8x104xi8, strided<[104, 1], offset: ?>>
-
-    // weight operand unchanged
-
-    // all the following inner loops should be executed on the accelerator
-    scf.for %d1_1 = %zero to %thirteen step %one iter_args() -> () {  
-    scf.for %d2_1 = %zero to %thirteen step %one iter_args () -> () {
-    // the inner 3 loops will be spatially unrolled on the accelerator
-    scf.for %d0_2 = %zero to %eight step %one iter_args() -> () {       
-    scf.for %d1_2 = %zero to %eight step %one iter_args () -> () { 
-    scf.for %d2_2 = %zero to %eight step %one iter_args () -> () {
-      %prod0 = arith.muli %d0_1, %d0_1_bk_sz : index
-      %d0 = arith.addi %prod0, %d0_2 : index
-
-      %prod1 = arith.muli %d1_1, %d1_1_bk_sz : index
-      %d1 = arith.addi %prod1, %d1_2 : index
-
-      %prod2 = arith.muli %d2_1, %d2_1_bk_sz : index
-      %d2 = arith.addi %prod2, %d2_2 : index
-
-      %inputElt = memref.load %arg0[%d0, %d2] : memref<104x104xi8>
-      %inputEltCasted = arith.extsi  %inputElt : i8 to i32 
-      
-      %weightElt = memref.load %arg1[%d2, %d1] : memref<104x104xi8, strided<[1,104]>>
-      %weightEltCasted = arith.extsi  %weightElt : i8 to i32 
-
-      %outputElt = memref.load %arg2[%d0, %d1] : memref<104x104xi32, strided<[104,1]>> 
+      // perform the multiply-accumulate operation
       %prod = arith.muli %inputEltCasted, %weightEltCasted : i32
+      %newOutputElt = arith.addi %prod, %outputElt : i32
 
-      %newOutputElt = arith.addi %prod, %outputElt : i32 
-      memref.store %newOutputElt, %arg2[%d0, %d1] : memref<104x104xi32, strided<[104,1]>>
-
-    } // end of d2_2 for
-    } // end of d1_2 for
-    } // end of d0_2 for
-    } // end of d2_1 for
-    } // end of d1_1 for
-    } // end of d0_1 for
-    "func.return"() : () -> ()
-  }) {llvm.emit_c_interface}: () -> ()
-
-// regular matmul
-"func.func"() <{function_type = (
-  memref<104x104xi8>, 
-  memref<104x104xi8, strided<[1, 104]>>, 
-  memref<104x104xi32>) -> (), sym_name = "kernel_matmul"}> ({
-  ^bb0(%arg0: memref<104x104xi8>, %arg1: memref<104x104xi8, strided<[1, 104]>>, %arg2: memref<104x104xi32>):
-    %0 = "arith.constant"() <{value = 0 : i32}> : () -> i32
-    "linalg.generic"(%arg0, %arg1, %0, %0, %arg2) <{indexing_maps = [affine_map<(d0, d1, d2) -> (d0, d2)>, affine_map<(d0, d1, d2) -> (d2, d1)>, affine_map<(d0, d1, d2) -> ()>, affine_map<(d0, d1, d2) -> ()>, affine_map<(d0, d1, d2) -> (d0, d1)>], iterator_types = [#linalg.iterator_type<parallel>, #linalg.iterator_type<parallel>, #linalg.iterator_type<reduction>], operandSegmentSizes = array<i32: 4, 1>}> ({
-    ^bb0(%arg3: i8, %arg4: i8, %arg5: i32, %arg6: i32, %arg7: i32):
-      %1 = "arith.extsi"(%arg3) : (i8) -> i32
-      %2 = "arith.subi"(%1, %arg5)  : (i32, i32) -> i32
-      %3 = "arith.extsi"(%arg4) : (i8) -> i32
-      %4 = "arith.subi"(%3, %arg6)  : (i32, i32) -> i32
-      %5 = "arith.muli"(%2, %4)  : (i32, i32) -> i32
-      %6 = "arith.addi"(%arg7, %5) : (i32, i32) -> i32
-      "linalg.yield"(%6) : (i32) -> ()
-    }) : (memref<104x104xi8>, memref<104x104xi8, strided<[1, 104]>>, i32, i32, memref<104x104xi32>) -> ()
+      // update the L1 output tile with the newly computed value
+      memref.store %newOutputElt, %slice_O_L1[%o_a, %o_b] : memref<8x8xi32, strided<[8, 1], offset: ?>>
+    }
+    }
     "func.return"() : () -> ()
   }) {llvm.emit_c_interface}: () -> ()
 
 
-  // "func.func"() <{function_type = 
-  //   (i32,                                             // coreID
-  //   memref<104x104xi8, strided<[104,1], offset: ?>>, // input L3
-  //   memref<104x104xi8, strided<[1,104], offset: ?>>,   // weight L3
-  //   memref<104x104xi32,strided<[104,1], offset: ?>>,  // output L3
-  //   memref<104x104xi8, strided<[104,1], offset: ?>>,                               // input slice L1
-  //   memref<104x104xi8, strided<[1, 104], offset: ?>>,   // weight slice L1
-  //   memref<104x104xi32,strided<[104, 1], offset: ?>>)  // output slice  L1
-  //   -> (), sym_name = "tiledMatmul12"}> ({
-  // ^bb0(%coreID : i32,
-  //      %arg0: memref<104x104xi8, strided<[104, 1], offset: ?>>, 
-  //      %arg1: memref<104x104xi8, strided<[1,104], offset: ?>>, 
-  //      %arg2: memref<104x104xi32, strided<[104,1], offset: ?>>, 
-  //      %inputL1: memref<104x104xi8, strided<[1,104], offset: ?>>,
-  //      %weightL1: memref<104x104xi8, strided<[1,104], offset: ?>>,
-  //      %outputL1: memref<104x104xi32, strided<[104,1], offset: ?>>): 
 
-// ANOTHER DUMMY KERNEL THAT ALWAYS RETURNS CORRECT SQUARE MATMUL ANSWER
-  "func.func"() <{function_type = (
-    i32,
-    memref<104x104xi8, strided<[104,1], offset: ?>>, 
-    memref<104x104xi8, strided<[1,104], offset: ?>>, 
-    memref<104x104xi32,strided<[104,1], offset: ?>>, 
-    memref<104x104xi8, strided<[104,1], offset: ?>>, 
-    memref<104x104xi8, strided<[1,104], offset: ?>>, 
-    memref<104x104xi32,strided<[104,1], offset: ?>>) 
-    -> (), sym_name = "dummy2"}> ({
-  ^bb0(
-    %coreID : i32,
-    %arg0: memref<104x104xi8, strided<[104,1], offset: ?>>, 
-    %arg1: memref<104x104xi8, strided<[1,104], offset: ?>>, 
-    %arg2: memref<104x104xi32,strided<[104,1], offset: ?>>, 
-    %arg0L1: memref<104x104xi8, strided<[104,1], offset: ?>>, 
-    %arg1L1: memref<104x104xi8, strided<[1,104], offset: ?>>, 
-    %l1OSlice: memref<104x104xi32,strided<[104,1], offset: ?>>):
-    // tile sizes
-    %d0_1_bk_sz = arith.constant 8 : index
-    %d1_1_bk_sz = arith.constant 8 : index
-    %d2_1_bk_sz = arith.constant 8 : index
-    
-    // indices
-    %zero = arith.constant 0 : index
-    %one = arith.constant 1: index
-    %eight = arith.constant 8 : index
-    %thirteen = arith.constant 13 : index
-
-    // enter scf nested FOR LOOP
-    scf.for %d0_1 = %zero to %thirteen step %one iter_args() -> () { // this loop uses both L3 and L1
-
-    %outputTile = memref.subview %arg2[%d0_1,%zero][8,104][1,1] :   memref<104x104xi32,strided<[104,1], offset: ?>> to memref<8x104xi32, strided<[104, 1], offset: ?>>
-
-    %inputTile = memref.subview %arg0[%d0_1,%zero][8,104][1,1] : memref<104x104xi8, strided<[104,1], offset: ?>> to memref<8x104xi8, strided<[104, 1], offset: ?>>
-
-    // weight operand unchanged
-
-    // all the following inner loops should be executed on the accelerator
-    scf.for %d1_1 = %zero to %thirteen step %one iter_args() -> () {  
-    scf.for %d2_1 = %zero to %thirteen step %one iter_args () -> () {
-    // the inner 3 loops will be spatially unrolled on the accelerator
-    scf.for %d0_2 = %zero to %eight step %one iter_args() -> () {       
-    scf.for %d1_2 = %zero to %eight step %one iter_args () -> () { 
-    scf.for %d2_2 = %zero to %eight step %one iter_args () -> () {
-      %prod0 = arith.muli %d0_1, %d0_1_bk_sz : index
-      %d0 = arith.addi %prod0, %d0_2 : index
-
-      %prod1 = arith.muli %d1_1, %d1_1_bk_sz : index
-      %d1 = arith.addi %prod1, %d1_2 : index
-
-      %prod2 = arith.muli %d2_1, %d2_1_bk_sz : index
-      %d2 = arith.addi %prod2, %d2_2 : index
-
-      %inputElt = memref.load %arg0[%d0, %d2] : memref<104x104xi8, strided<[104,1], offset: ?>>
-      %inputEltCasted = arith.extsi  %inputElt : i8 to i32 
-      
-      %weightElt = memref.load %arg1[%d2, %d1] :  memref<104x104xi8, strided<[1,104], offset: ?>>
-      %weightEltCasted = arith.extsi  %weightElt : i8 to i32 
-
-      %outputElt = memref.load %arg2[%d0, %d1] : memref<104x104xi32,strided<[104,1], offset: ?>> 
-      %prod = arith.muli %inputEltCasted, %weightEltCasted : i32
-
-      %newOutputElt = arith.addi %prod, %outputElt : i32 
-      memref.store %newOutputElt, %arg2[%d0, %d1] : memref<104x104xi32,strided<[104,1], offset: ?>>
-
-    } // end of d2_2 for
-    } // end of d1_2 for
-    } // end of d0_2 for
-    } // end of d2_1 for
-    } // end of d1_1 for
-    } // end of d0_1 for
-    "func.return"() : () -> ()
-  }) {llvm.emit_c_interface}: () -> ()
 
 }) : () -> ()

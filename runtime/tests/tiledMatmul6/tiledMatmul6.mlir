@@ -143,8 +143,22 @@
   }) {llvm.emit_c_interface} : () -> ()
 
   // an MLIR func that we would like to have eventually call C code
-  "func.func"() <{function_type = (memref<104x104xi8>, memref<104x104xi8, strided<[1, 104]>>, memref<104x104xi32>) -> (), sym_name = "matmul"}> ({
-  ^bb0(%arg0: memref<104x104xi8, 0 : i32>, %arg1: memref<104x104xi8, strided<[1,104]>, 0 : i32>, %arg2: memref<104x104xi32>):
+  "func.func"() <{function_type = 
+  (memref<104x104xi8>, 
+  memref<104x104xi8, strided<[1, 104]>>, 
+  memref<104x104xi32>,
+  index,index,index,index,index,index,index,index) -> (), sym_name = "matmul"}> ({
+  ^bb0(%arg0: memref<104x104xi8, 0 : i32>, 
+       %arg1: memref<104x104xi8, strided<[1,104]>, 0 : i32>, 
+       %arg2: memref<104x104xi32>,
+       %ignore1 : index,
+       %ignore2 : index,
+       %ignore3 : index,
+       %ignore4 : index,
+       %ignore5 : index,
+       %ignore6 : index,
+       %ignore7 : index,
+       %ignore8 : index):
     %arg2_diff_stride = memref.cast %arg2 : memref<104x104xi32> to memref<104x104xi32, strided<[104, 1]>>
     func.call @simple_matmul(%arg0, %arg1, %arg2) : (memref<104x104xi8>, memref<104x104xi8, strided<[1, 104]>>, memref<104x104xi32>) -> ()
 "func.return"() : () -> ()

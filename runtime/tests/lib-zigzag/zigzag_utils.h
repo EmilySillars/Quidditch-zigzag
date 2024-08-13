@@ -105,3 +105,5 @@ void _mlir_ciface_print_memref_32_bit(TwoDMemrefI32_t *src);
 void setValMemref8Bit(TwoDMemrefI8_t *src, int8_t val);
 void _mlir_ciface_print_memref_8_bit_FLAT(TwoDMemrefI8_t *src);
 void _mlir_ciface_print_memref_8_bit_NOT_FLAT(TwoDMemrefI8_t *src);
+void _mlir_ciface_print_memref_8_bit_python(char *name, TwoDMemrefI8_t *src);
+void _mlir_ciface_print_memref_32_bit_python(char *name, TwoDMemrefI32_t *src);

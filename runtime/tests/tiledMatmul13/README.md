@@ -12,30 +12,77 @@
 #### a. MLIR (someday, use linalg-to-stream tool to convert to yaml...)
 
 ```
-// matrices are 104 x 104
+func.func @simple_matmul(%arg0: memref<104x104xi8>, %arg1: memref<104x104xi8>, %arg2: memref<104x104xi32>) {
+linalg.matmul ins(%arg0, %arg1 : memref<104x104xi8>, memref<104x104xi8>) outs(%arg2 : memref<104x104xi32>)
+return
+}
+```
+
+Print in generic MLIR syntax with `--mlir-print-op-generic`
+
+```
 #map = affine_map<(d0, d1, d2) -> (d0, d2)>
 #map1 = affine_map<(d0, d1, d2) -> (d2, d1)>
-#map2 = affine_map<(d0, d1, d2) -> ()>
-#map3 = affine_map<(d0, d1, d2) -> (d0, d1)>
+#map2 = affine_map<(d0, d1, d2) -> (d0, d1)>
 "builtin.module"() ({
- 
-"func.func"() <{function_type = (memref<104x104xi8>, memref<104x104xi8, strided<[1, 104]>>, memref<104x104xi32>) -> (), sym_name = "simple_matmul"}> ({
-  ^bb0(%arg0: memref<104x104xi8>, %arg1: memref<104x104xi8, strided<[1, 104]>>, %arg2: memref<104x104xi32>):
-    %0 = "arith.constant"() <{value = 0 : i32}> : () -> i32
-    "linalg.generic"(%arg0, %arg1, %0, %0, %arg2) <{indexing_maps = [affine_map<(d0, d1, d2) -> (d0, d2)>, affine_map<(d0, d1, d2) -> (d2, d1)>, affine_map<(d0, d1, d2) -> ()>, affine_map<(d0, d1, d2) -> ()>, affine_map<(d0, d1, d2) -> (d0, d1)>], iterator_types = [#linalg.iterator_type<parallel>, #linalg.iterator_type<parallel>, #linalg.iterator_type<reduction>], operandSegmentSizes = array<i32: 4, 1>}> ({
-    ^bb0(%arg3: i8, %arg4: i8, %arg5: i32, %arg6: i32, %arg7: i32):
-      %1 = "arith.extsi"(%arg3) : (i8) -> i32
-      %2 = "arith.subi"(%1, %arg5)  : (i32, i32) -> i32
-      %3 = "arith.extsi"(%arg4) : (i8) -> i32
-      %4 = "arith.subi"(%3, %arg6)  : (i32, i32) -> i32
-      %5 = "arith.muli"(%2, %4)  : (i32, i32) -> i32
-      %6 = "arith.addi"(%arg7, %5) : (i32, i32) -> i32
-      "linalg.yield"(%6) : (i32) -> ()
-    }) : (memref<104x104xi8>, memref<104x104xi8, strided<[1, 104]>>, i32, i32, memref<104x104xi32>) -> ()
+  "func.func"() ({
+  ^bb0(%arg0: memref<104x104xi8>, %arg1: memref<104x104xi8>, %arg2: memref<104x104xi32>):
+    "linalg.matmul"(%arg0, %arg1, %arg2) ({
+    ^bb0(%arg3: i8, %arg4: i8, %arg5: i32):
+      %0 = "arith.extsi"(%arg3) : (i8) -> i32
+      %1 = "arith.extsi"(%arg4) : (i8) -> i32
+      %2 = "arith.muli"(%0, %1) : (i32, i32) -> i32
+      %3 = "arith.addi"(%arg5, %2) : (i32, i32) -> i32
+      "linalg.yield"(%3) : (i32) -> ()
+    }) {linalg.memoized_indexing_maps = [#map, #map1, #map2], operand_segment_sizes = array<i32: 2, 1>} : (memref<104x104xi8>, memref<104x104xi8>, memref<104x104xi32>) -> ()
+    "func.return"() : () -> ()
+  }) {function_type = (memref<104x104xi8>, memref<104x104xi8>, memref<104x104xi32>) -> (), sym_name = "simple_matmul"} : () -> ()
+}) : () -> ()
+```
+
+Lower specific linalg operation to linalg generic operation with `-linalg-generalize-named-ops`
+
+```
+#map = affine_map<(d0, d1, d2) -> (d0, d2)>
+#map1 = affine_map<(d0, d1, d2) -> (d2, d1)>
+#map2 = affine_map<(d0, d1, d2) -> (d0, d1)>
+"builtin.module"() ({
+  "func.func"() ({
+  ^bb0(%arg0: memref<104x104xi8>, %arg1: memref<104x104xi8>, %arg2: memref<104x104xi32>):
+    "linalg.generic"(%arg0, %arg1, %arg2) ({
+    ^bb0(%arg3: i8, %arg4: i8, %arg5: i32):
+      %0 = "arith.extsi"(%arg3) : (i8) -> i32
+      %1 = "arith.extsi"(%arg4) : (i8) -> i32
+      %2 = "arith.muli"(%0, %1) : (i32, i32) -> i32
+      %3 = "arith.addi"(%arg5, %2) : (i32, i32) -> i32
+      "linalg.yield"(%3) : (i32) -> ()
+    }) {indexing_maps = [#map, #map1, #map2], iterator_types = [#linalg.iterator_type<parallel>, #linalg.iterator_type<parallel>, #linalg.iterator_type<reduction>], operand_segment_sizes = array<i32: 2, 1>} : (memref<104x104xi8>, memref<104x104xi8>, memref<104x104xi32>) -> ()
+    "func.return"() : () -> ()
+  }) {function_type = (memref<104x104xi8>, memref<104x104xi8>, memref<104x104xi32>) -> (), sym_name = "simple_matmul"} : () -> ()
+}) : () -> ()
+```
+
+Add MLIR-C interface attribute to the matmul function:
+
+```
+#map = affine_map<(d0, d1, d2) -> (d0, d2)>
+#map1 = affine_map<(d0, d1, d2) -> (d2, d1)>
+#map2 = affine_map<(d0, d1, d2) -> (d0, d1)>
+"func.func"() <{function_type = (memref<104x104xi8>, memref<104x104xi8>, memref<104x104xi32>) -> (), sym_name = "regular_matmul"}>  ({
+  ^bb0(%arg0: memref<104x104xi8>, %arg1: memref<104x104xi8>, %arg2: memref<104x104xi32>):
+    "linalg.generic"(%arg0, %arg1, %arg2) ({
+    ^bb0(%arg3: i8, %arg4: i8, %arg5: i32):
+      %0 = "arith.extsi"(%arg3) : (i8) -> i32
+      %1 = "arith.extsi"(%arg4) : (i8) -> i32
+      %2 = "arith.muli"(%0, %1) : (i32, i32) -> i32
+      %3 = "arith.addi"(%arg5, %2) : (i32, i32) -> i32
+      "linalg.yield"(%3) : (i32) -> ()
+    }) {indexing_maps = [#map, #map1, #map2], iterator_types = [#linalg.iterator_type<parallel>, #linalg.iterator_type<parallel>, #linalg.iterator_type<reduction>], operand_segment_sizes = array<i32: 2, 1>} : (memref<104x104xi8>, memref<104x104xi8>, memref<104x104xi32>) -> ()
     "func.return"() : () -> ()
   }) {llvm.emit_c_interface} : () -> ()
-  }) : () -> ()
 ```
+
+
 
 #### b. Equivalent yaml Workload Object (directly passed to zigzag)
 
@@ -57,193 +104,331 @@
     W: 0
 ```
 
-#### c. C code Equivalent (cannot feed to zigzag; just for reference)
-
-C-ish pseudocode (ignoring sign extension and subtracting 0 instructions)
+#### c. C-ish pseudocode Equivalent (cannot feed to zigzag; just for reference)
 
 ```
-for d0; d0 < 104; d0++:
-for d1; d1 < 104; d1++;
-for d2; d2 < 104; d2++;
-  arg7[d0][d1] += arg3[d0][d2] * arg4[d2][d1]; // and this is a MAC!
+for (a = 0; a < 104; a++){
+	for (b = 0; b < 104; b++) {
+		for (c = 0; c < 104; c++) {
+			output[a][b] += input[a][c] weights[c][b];		
+		}
+	}
+}
 ```
 
-#### d. Snitch Compute Core Hardware Description
+#### d. Hardware Description
 
-![hardware](../../../zigzag-fork/pngs/cluster.png)
+![hardware](../../../zigzag-fork/pngs/snitch-cluster-ints.png)
 
 - [This is the yaml fed to ZigZag](https://github.com/EmilySillars/zigzag/blob/manual-examples/zigzag/inputs/hardware/snitch-cluster-only-integers.yaml)
 
-- Full documentation of feeding to ZigZag and getting output [here](https://github.com/EmilySillars/zigzag/blob/58e38adf8191e2b983c5e0ec97480ed97ef797dd/modeling-snitch-with-zigzag.md).
+- Full documentation of feeding to ZigZag and getting output [here](https://github.com/EmilySillars/zigzag/blob/manual-examples/modeling-snitch-with-zigzag.md).
 
 ## II. Output from ZigZag
 
 ```
 Loop ordering for matmul_104_104
-=============================================================================================
-Temporal Loops                      W                  O                  I                  
-=============================================================================================
-for B in [0, 13):                   l1                 l3                 l1                 
----------------------------------------------------------------------------------------------
-  for A in [0, 8):                  l1                 l1                 l1                 
----------------------------------------------------------------------------------------------
-    for C in [0, 13):               l1                 rf_x1_thru_x31     l1                 
----------------------------------------------------------------------------------------------
-      for C in [0, 4):              rf_x1_thru_x31     rf_x1_thru_x31     l1                 
----------------------------------------------------------------------------------------------
-        for C in [0, 2):            rf_x1_thru_x31     rf_x1_thru_x31     rf_x1_thru_x31     
----------------------------------------------------------------------------------------------
-          for A in [0, 13):         rf_x1_thru_x31     rf_x1_thru_x31     rf_x1_thru_x31     
----------------------------------------------------------------------------------------------
-=============================================================================================
-Spatial Loops                                                                                
-=============================================================================================
-            parfor B in [0, 8):                                                              
----------------------------------------------------------------------------------------------
-            parfor B in [0, 1):                                                              
----------------------------------------------------------------------------------------------
+===========================================================================================
+Temporal Loops                    I                  O                  W                  
+===========================================================================================
+for C in [0, 4):                  l1                 l3                 l3                 
+-------------------------------------------------------------------------------------------
+  for C in [0, 2):                l1                 l3                 l1                 
+-------------------------------------------------------------------------------------------
+    for B in [0, 13):             l1                 l3                 l1                 
+-------------------------------------------------------------------------------------------
+      for A in [0, 13):           l1                 l3                 rf_x1_thru_x31     
+-------------------------------------------------------------------------------------------
+        for B in [0, 8):          rf_x1_thru_x31     l1                 rf_x1_thru_x31     
+-------------------------------------------------------------------------------------------
+          for C in [0, 13):       rf_x1_thru_x31     rf_x1_thru_x31     rf_x1_thru_x31     
+-------------------------------------------------------------------------------------------
+===========================================================================================
+Spatial Loops                                                                              
+===========================================================================================
+            parfor A in [0, 8):                                                            
+-------------------------------------------------------------------------------------------
 ```
 
-![hardware](../../../zigzag-fork/pngs/host-acc-div-tiledMatmul12.png)
+<img src="../../../zigzag-fork/pngs/tiledMatmul12-mapping-diagram.png" alt="hardware"  />
 
-Comments:
-
-|           |           | `B=8` |           | `B=13` |             | `A=8` |                 | `C=13` |         | `C=4` |           | `C=2` |             | `A=13`        |       |
-| --------- | --------- | ----- | --------- | ------ | ----------- | ----- | --------------- | ------ | ------- | ----- | --------- | ----- | ----------- | ------------- | ----- |
-| `I[a][c]` | `104x104` | `->`  | `104x104` | `->`   | `104x104`   | `->`  | `13x104`        | `->`   | `13x8`  | `->`  | `13x2`    | `->`  | `13x1`      | `->`          | `1x1` |
-| `W[c][b]` | `104x104` | `->`  | `104x13`  | `->`   | `104x1`     | `->`  | `104x1`         | `->`   | `8x1`   | `->`  | `2x1`     | `->`  | `1x1`       | `->`          | `1x1` |
-| `O[a][b]` | `104x104` | `->`  | `104x13`  | `->`   | `104x1`     | `->`  | `13x1`          | `->`   | `13x1`  | `->`  | `13x1`    | `->`  | `13x1`      | `->`          | `1x1` |
-| **RF**    |           |       | 0         |        | 0           |       | 0               |        | 104     |       | 15        |       | 27          |               | 3     |
-| **L1**    |           |       | 1352      |        | 10816 + 104 |       | 1352 + 104 + 13 |        | 21      |       | 26        |       | 0           |               | 0     |
-| **L3**    |           |       | 10816     |        | 104         |       | 0               |        | 0       |       | 0         |       | 0           |               | 0     |
-| `I tile`  |           |       | 1         |        | 1           |       | 8,1             |        | 13,8,1  |       | 4,13,8,1  |       | 2,4,13,8,1  | 13,2,4,13,8,1 |       |
-| `W tile`  |           |       | 8         |        | 13,8        |       | 13,8            |        | 13,13,8 |       | 4,13,13,8 |       | 2,4,13,13,8 | 2,4,13,13,8   |       |
-| `O tile`  |           |       | 8         |        | 13, 8       |       | 8,13,8          |        | 8,13,8  |       | 8,13,8    |       | 8,13,8      | 13,8,13,8     |       |
-
-
+![hardware](../../../zigzag-fork/pngs/host-acc-divide.png)
 
 ## III. Manual Transformation
 
-#### a. C-ish pseudocode transformed based on "host vs. accelerator" divide
-
-Host:
+recall:
 
 ```
 // recall:  O[a][b]+=I[a][c]*W[c][b]
-void dmaCore (Matrix_104x104 i, Matrix_104x104 w, Matrix_104x104 o,) {
-    // loop bounds
-    size_t B_S = 8;
-    size_t B_0 = 13;
-
-    // block sizes
-    size_t b_s_bk_sz = 13;
-    size_t b_0_bk_sz = 1;
-    
-	// assume i and w are already in L1, and o is in L3
-    for (size_t b_s = 0; b_s < B_S; b_s++) {
-        size_t start = b_s * b_s_bk_sz;
-        Matrix_104_13 w_tile = subtile(w, start, 104x13);
-        Matrix_104_13 o_tile = subtile(o, start, 104x13);
-        
-        for (size_t b_0 = 0; b_0 < B_0; b_0++) {
-            size_t start = b_0 * b_0_bk_sz;
-            Matrix_104_1 o_tile2 = subtile(o, start, 104x1)
-            Matrix_104_1 w_tile2 = subtile(w, start, 104x1)	
-
-            // copy o_tile from L3 to L1
-            Matrix_104_13 o_tile_L1;
-            copyFromL3(o_tile2, o_tile2_L1);
-
-            // deploy rest of work on compute core with id b_s
-            computeCore(i, w_tile2, o_tile2_L1, b_s);
-
-            // save pointers to o_tile2 and o_tile2_L1
-    	}
-    }
-    
-    // synchronization
-    // copy results from each compute core back to L3
-    for (size_t b_s = 0; b_s < B_S; b_s++) {
-                
-        // deploy rest of work on compute core with id b_s
-		waitForComputeCore(b_s);
-		
-		// copy o_tile2 from L1 back to L3
-		copyFromL1(o_tile2_L1, o_tile2);
-    }
-}
+===========================================================================================
+Temporal Loops                     I                  O                  W                  
+===========================================================================================
+for c2 in [0, 4):                  l1                 l3                 l3                  C2 = 4
+-------------------------------------------------------------------------------------------
+  for c1 in [0, 2):                l1                 l3                 l1                  C1 = 2
+-------------------------------------------------------------------------------------------
+    for b1 in [0, 13):             l1                 l3                 l1                  B1 = 13
+-------------------------------------------------------------------------------------------
+      for a1 in [0, 13):           l1                 l3                 rf_x1_thru_x31      A1 = 13
+-------------------------------------------------------------------------------------------
+        for b0 in [0, 8):          rf_x1_thru_x31     l1                 rf_x1_thru_x31      B0 = 8
+-------------------------------------------------------------------------------------------
+          for c0 in [0, 13):       rf_x1_thru_x31     rf_x1_thru_x31     rf_x1_thru_x31      C0 = 13
+-------------------------------------------------------------------------------------------
+===========================================================================================
+Spatial Loops                                                                              
+===========================================================================================
+            parfor a0 in [0, 8):                                                             A0 = 8    
+-------------------------------------------------------------------------------------------
 ```
 
-Accelerator:
+#### a. C-ish pseudocode based on "host-accelerator divide" / "L3-L1 divide"
 
 ```
-// recall:  O[a][b]+=I[a][c]*W[c][b]
-// this example does not differentiate between L1 and registers, 
-// because will not model register level loads at this level, nor the MLIR level
-
-void computeCore (Matrix_104x104 i, Matrix_104x1 w, Matrix_104x1 o, int coreID) {
-	if (myCoreId() != coreID) { return; }
-	
-	// loop bounds
-	size_t A_0 = 8;
-    size_t C_0 = 13;
-    size_t C_1 = 4;
-    size_t C_2 = 2;
-    size_t A_1 = 13;
-    
-	// loop blocks
-	size_t a_0_bk_sz = 13;
-	size_t c_0_bk_sz = 8;
-	size_t c_1_bk_sz = 2;
-	size_t c_2_bk_sz = 1;
-	size_t a_1_bk_sz = 1;
-	
-	
-        for (size_t a_0 = 0; a_0 < A_0; a_0++) {
-            start = a_0 * a_0_bk_sz;
-            Matrix_13_104 i_tile = subtile(i, start, 13x104);
-            Matrix_13_1 o_tile_tile = subtile(o, start, 13x1);	
-            for (size_t c_0 = 0; c_0 < C_0; c_0++) {
-                start = c_0 * c_0_bk_sz;
-                Matrix_13_8 i_tile_tile = subtile(i_tile, start, 13x8);
-                Matrix_8_1 w_tile_tile = subtile(w, start, 8x1);
-                for (size_t c_1 = 0; c_1 < C_1; c_1++) {
-                	start = c_1 * c_1_bk_sz;
-                	Matrix_13_2 i_tile_tile_tile = subtile(i_tile_tile, start, 13x2);
-                	Matrix_2_1 w_tile_tile_tile - subtile(w_tile_tile, start, 2x1);
-                    for (size_t c_2 = 0; c_2 < C_2; c_2++) {
-                    	start = c_2 * c_2_bk_sz;
-                    	Matrix_13x1 i_tile_4 = subtile(i_tile_tile_tile, start, 13x1);
-                    	Matrix_1_1 w_tile_4 = subtile(w_tile_tile_tile, start, 1x1);                    
-                        for (size_t a_1 = 0; a_1 < A_1; a_1++) {
-                        	start = a_1 * a_1_bk_sz;
-                        	Matrix_1_1 i_tile_5 = subtile(i_tile_4, start, 1x1);
-                        	Matrix_1_1 o_tile_3 = subtile(o_tile_tile, start, 1x1)
-                        	o_tile_3 += (i_tile_5 * w_tile_4);
-                        }
+DMAcore(input, weight, output){
+	a1_bk_sz = 8
+	b1_bk_sz = 8
+    c1_bk_sz = 13
+    c2_bk_sz = 26	
+	// copy all input from L3 to L1;
+    for (c2 = 0; c2 < 4; c2++){
+        // copy weight tile from L3 to L1
+        copyFromL3toL1(weight[c2*c2_bk_sz][0], shape[c2_bk_sz][104])
+        for(c1 = 0; c1 < 2; c1++){
+            for(b1 = 0; b1 < 13; b1++){
+                for (a1 = 0; a1 < 13; a1++) {
+                    // copy output tile from L3 to L1.
+                    copyFromL3toL1(output[a1*a1_bk_sz][b1*b1_bk_sz], shape[a1_bk_sz][b1_bk_sz])
+                    for (coreID = 0; coreID < 8; coreID ++) {
+                        dispatchToComputeCore(coreID);    
                     }
+                    waitForAllComputeCores();
+                    // copy output tile from L1 to L3.
+                    copyFromL1toL3(output[a1*a1_bk_sz][b1*b1_bk_sz], shape[a1_bk_sz][b1_bk_sz])
                 }
             }
         }
-	
+    }
+}
+
+computeCore(a1, b1, c1, c2, a1_bk_sz, b1_bk_sz, c1_bk_sz, c2_bk_sz, inputTile, weightTile, outputTile){
+	b0_bk_sz = b1_bk_sz / 8;
+	c0_bk_sz = c1_bk_sz / 13;
+	a0_bk_sz =  a1_bk_sz / 8;
+    for (b0 = 0; b0 < 8; b0++) {
+        for (c0 = 0; c0 < 13; c0++) {
+            a0 = computeCoreID();
+            o_a = a0*a0_bk_sz;
+            o_b = b0*b0_bk_sz;
+            i_a = a1*a1_bk_sz + a0*a0_bk_sz;
+            i_c = c2*c2_bk_sz + c1*c1_bk_sz + c0*c0_bk_sz;
+            w_c = c1*c1_bk_sz + c0*c0_bk_sz;
+            w_b = b1*b1_bk_sz + b0*b0_bk_sz;
+            // update output cell.
+            outputTile[o_a][o_b] += inputTile[i_a][i_c] * weightTile[w_c][w_b]
+        }
+    }
 }
 ```
 
-#### c. MLIR transformed based on L1 - L3 split ("host" vs "accelerator" divide)
+#### b. MLIR Equivalent
 
 Host:
 
 ```
-TODO
+"func.func"() <{function_type = 
+    (index,                                             // coreID
+    memref<104x104xi8, strided<[104, 1], offset: ?>>,   // input L3
+    memref<104x104xi8, strided<[104, 1], offset: ?>>,   // weight L3
+    memref<104x104xi32, strided<[104, 1], offset: ?>>,  // output L3
+    memref<104x104xi8, strided<[104, 1], offset: ?>>,    // input L1
+    memref<104x104xi8, strided<[104, 1], offset: ?>>,   // weight L1
+    memref<8x8xi32, strided<[8, 1], offset: ?>>)    // output L1
+    -> (), sym_name = "dmaCore"}> ({
+  ^bb0(%coreID : index,
+       %input: memref<104x104xi8, strided<[104, 1], offset: ?>>, 
+       %weight: memref<104x104xi8, strided<[104,1], offset: ?>>, 
+       %output: memref<104x104xi32, strided<[104,1], offset: ?>>, 
+       %inputL1: memref<104x104xi8, strided<[104,1], offset: ?>>,
+       %weightL1: memref<104x104xi8, strided<[104,1], offset: ?>>,
+       %slice_O_L1: memref<8x8xi32, strided<[8,1], offset: ?>>): 
+
+      // indices
+      %zero = arith.constant 0 : index
+      %one = arith.constant 1 : index
+      %four = arith.constant 4 : index
+      %two = arith.constant  2 : index
+      %eight = arith.constant  8 : index
+      %thirteen = arith.constant 13 : index  
+      // tile sizes
+      %a1_bk_sz = arith.constant 8 : index
+      %b1_bk_sz = arith.constant 8 : index
+      %c1_bk_sz = arith.constant 13 : index
+      %c2_bk_sz = arith.constant 26 : index
+      %b0_bk_sz = arith.constant 1 : index
+      %c0_bk_sz = arith.constant 1 : index
+      %a0_bk_sz = arith.constant 1 : index
+      // constants
+      %sixTwentyFour = arith.constant 624: index
+      %three = arith.constant 3: i8
+      %nine = arith.constant 9: i8
+
+      // copy input from L3 to L1
+      func.call @memrefCopy8bit_I_104x104(%input,  %inputL1) 
+      : (memref<104x104xi8, strided<[104, 1], offset: ?>>, memref<104x104xi8, strided<[104, 1], offset: ?>>) -> ()
+     
+
+      // FOR LOOPS START HERE
+      scf.for %c2 = %zero to %four step %one iter_args() -> () {
+
+      // select 26 x 104 subview of L3 weight matrix
+      %slice_W_L3_offset = arith.muli %c2, %c2_bk_sz : index
+      %slice_W_L3 = memref.subview %weight[%slice_W_L3_offset, %zero][26,104][1,1]
+      :  memref<104x104xi8, strided<[104,1], offset: ?>> to memref<26x104xi8, strided<[104,1], offset: ?>>      
+      
+      // select 26 x 104 subview of L1 weight matrix
+      %slice_W_L1 = memref.subview %weightL1[%zero, %zero][26,104][1,1] // is this offset correct?
+      :  memref<104x104xi8, strided<[104,1], offset: ?>> to memref<26x104xi8, strided<[104,1], offset: ?>>
+      
+      // copy weights from L3 to L1
+      func.call @memrefCopy8bit_W_26x104( %slice_W_L3, %slice_W_L1)
+      : (memref<26x104xi8, strided<[104, 1], offset: ?>>,memref<26x104xi8, strided<[104, 1], offset: ?>>) -> ()
+
+      scf.for %c1 = %zero to %two step %one iter_args() -> () {
+      scf.for %b1 = %zero to %thirteen step %one iter_args() -> () {
+      scf.for %a1 = %zero to %thirteen step %one iter_args() -> () {
+      
+      // select 8x8 subview of L3 output matrix
+      %slice_O_L3_offset_r = arith.muli %a1, %a1_bk_sz : index
+      %slice_O_L3_offset_c = arith.muli %b1, %b1_bk_sz : index
+      %slice_O_L3 = memref.subview %output[%slice_O_L3_offset_r,%slice_O_L3_offset_c][8,8][1,1]
+      : memref<104x104xi32, strided<[104, 1], offset: ?>>  to  memref<8x8xi32, strided<[104, 1], offset: ?>>
+      
+      // copy output tile 8x8 from L3 to L1.
+      func.call @memrefCopy32bit_O_8x8_down(%slice_O_L3, %slice_O_L1)
+      : (memref<8x8xi32, strided<[104, 1], offset: ?>>, memref<8x8xi32, strided<[8, 1], offset: ?>>) -> ()
+      
+      // after this point, the computation should be dispatched to compute cores.
+      func.call @save_outer_loop_counters(%a1,%b1,%c1,%c2,%a1_bk_sz,%b1_bk_sz,%c1_bk_sz,%c2_bk_sz)
+      : (index,index,index,index,index,index,index,index) -> ()
+
+      scf.for %a0 = %zero to %eight step %one iter_args() -> () { // spatial unrolling loop
+
+      func.call @dispatch_to_accelerator(%a0, %inputL1, %slice_W_L1, %slice_O_L1)
+      : (
+          index, 
+          memref<104x104xi8, strided<[104, 1], offset: ?>>,  // input
+          memref<26x104xi8, strided<[104, 1], offset: ?>>,   // weight slice
+          memref<8x8xi32, strided<[8, 1], offset: ?>>)       // output slice
+      -> ()
+      } // end of spatial unrolling loop  
+
+      func.call @wait_for_all_accelerators() : () -> ()
+
+      // copy L1 output tile back to L3 
+      func.call @memrefCopy32bit_O_8x8_up(%slice_O_L1, %slice_O_L3)
+      : (memref<8x8xi32, strided<[8, 1], offset: ?>>, memref<8x8xi32, strided<[104, 1], offset: ?>>) -> ()      
+      }}}  
+      }      
+  "func.return"() : () -> ()
+  }) {llvm.emit_c_interface}: () -> ()
 ```
 
 Accelerator:
 
 ```
- TODO
+ "func.func"() <{function_type = (
+    memref<104x104xi8, strided<[104, 1], offset: ?>>,  // input
+    memref<26x104xi8, strided<[104, 1], offset: ?>>,   // weight slice
+    memref<8x8xi32, strided<[8, 1], offset: ?>>,       // output slice
+    index,index,index,index,index,index,index,index)  
+    -> (), sym_name = "computeCore"}> ({
+  ^bb0(
+    %slice_I_L1: memref<104x104xi8, strided<[104, 1], offset: ?>>, 
+    %slice_W_L1: memref<26x104xi8, strided<[104, 1], offset: ?>>, 
+    %slice_O_L1: memref<8x8xi32, strided<[8, 1], offset: ?>>,
+    %a1 : index, 
+    %b1 : index, 
+    %c1 : index, 
+    %c2 : index, 
+    %a1_bk_sz_fooey : index, 
+    %b1_bk_sz_fooey : index, 
+    %c1_bk_sz_fooey : index, 
+    %c2_bk_sz_fooey : index
+    ):
+
+    // indices
+      %zero = arith.constant 0 : index
+      %one = arith.constant 1 : index
+      %four = arith.constant 4 : index
+      %two = arith.constant  2 : index
+      %eight = arith.constant  8 : index
+      %thirteen = arith.constant 13 : index  
+      // tile sizes
+      %a1_bk_sz = arith.constant 8 : index
+      %b1_bk_sz = arith.constant 8 : index
+      %c1_bk_sz = arith.constant 13 : index
+      %c2_bk_sz = arith.constant 26 : index
+      %b0_bk_sz = arith.constant 1 : index
+      %c0_bk_sz = arith.constant 1 : index
+      %a0_bk_sz = arith.constant 1 : index
+      // constants
+      %sixTwentyFour = arith.constant 624: index
+      %three = arith.constant 3: i8
+      %nine = arith.constant 9: i8
+
+    %a0 = func.call @myID() : () -> (index) // spacial unrolling of a0
+    scf.for %b0 = %zero to %eight step %one iter_args() -> () { 
+    scf.for %c0 = %zero to %thirteen step %one iter_args() -> () {
+
+      // index calculation
+      %a_prod_0 = arith.muli %a0, %a0_bk_sz : index 
+      %a_prod_1 = arith.muli %a1, %a1_bk_sz : index 
+      %b_prod_0 = arith.muli %b0, %b0_bk_sz : index 
+      %b_prod_1 = arith.muli %b1, %b1_bk_sz : index 
+      %c_prod_0 = arith.muli %c0, %c0_bk_sz : index
+      %c_prod_1 = arith.muli %c1, %c1_bk_sz : index
+      %c_prod_2 = arith.muli %c2, %c2_bk_sz : index
+      %c_sum_2_1 = arith.addi %c_prod_2, %c_prod_1 : index
+      // indices into weight matrix slice
+      %w_c = arith.addi %c_prod_1, %c_prod_0 : index 
+      %w_b = arith.addi %b_prod_1, %b_prod_0 : index
+      // indices into output matrix slice
+      %o_a = arith.muli %a0, %a0_bk_sz : index 
+      %o_b = arith.muli %b0, %b0_bk_sz : index 
+      // indices into input matrix slice
+      %i_a = arith.addi %a_prod_1, %a_prod_0 : index
+      %i_c = arith.addi %c_sum_2_1, %c_prod_0 : index
+
+      // load the input element
+      %inputElt = memref.load %slice_I_L1[%i_a, %i_c] : memref<104x104xi8, strided<[104, 1], offset: ?>>
+      %inputEltCasted = arith.extsi  %inputElt : i8 to i32 
+
+      // load the weight element
+      %weightElt = memref.load %slice_W_L1[%w_c, %w_b] : memref<26x104xi8, strided<[104,1], offset: ?>>
+      %weightEltCasted = arith.extsi  %weightElt : i8 to i32 
+
+      // load the output element
+      %outputElt = memref.load %slice_O_L1[%o_a, %o_b] : memref<8x8xi32, strided<[8, 1], offset: ?>>  
+      
+      // perform the multiply-accumulate operation
+      %prod = arith.muli %inputEltCasted, %weightEltCasted : i32
+      %newOutputElt = arith.addi %prod, %outputElt : i32
+
+      // update the L1 output tile with the newly computed value
+      memref.store %newOutputElt, %slice_O_L1[%o_a, %o_b] : memref<8x8xi32, strided<[8, 1], offset: ?>>
+    }
+    }
+    "func.return"() : () -> ()
+  }) {llvm.emit_c_interface}: () -> ()
 ```
 
-## IV. Running the transformed MLIR on Snitch
+## IV. Run the example
+
+1. `cd runtime/tests`
+2. `. regression-tests.sh -t tiledMatmul12.mlir`
+
+## V. Run the example outside of the test suite
 
 ```
 cd runtime/tests
@@ -252,12 +437,12 @@ cd runtime/tests
 spike: 
 
 ```
-sh zigzag-spike-build-and-run.sh tiledMatmul12.mlir
+. zigzag-spike-build-and-run.sh tiledMatmul13.mlir
 ```
 
 verilator:
 
 ```
-sh zigzag-verilator-build-and-run.sh tiledMatmul12.mlir
+. zigzag-verilator-build-and-run.sh tiledMatmul13.mlir
 ```
 

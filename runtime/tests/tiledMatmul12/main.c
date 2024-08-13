@@ -114,6 +114,7 @@ int main() {
   for (size_t i = 0; i < MAT_WIDTH_SQUARED; i++) {
     memrefB.aligned_data[i] = (int8_t)3;
   }
+  memrefB.aligned_data[85] = 87;
   for (size_t i = 0; i < MAT_WIDTH_SQUARED; i++) {
     memrefC.aligned_data[i] = (int32_t)0;
   }

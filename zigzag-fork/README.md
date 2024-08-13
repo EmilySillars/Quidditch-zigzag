@@ -23,6 +23,7 @@ cd runtime/tests
 | Test + Description                                           | Matrix Size | Allocation | Values | Tiling Method                                                | Verilator | Spike |
 | :----------------------------------------------------------- | ----------- | ---------- | ------ | ------------------------------------------------------------ | --------- | ----- |
 | **Tiled Matrix Multiplication 12**<br />````. regression-tests.sh -t tiledMatmul12.mlir````<br /><br />Dispatches to cluster of 8 compute cores.<br />Uses L3 and L1<br />Full details [here](../runtime/tests/tiledMatmul12/README.md) | 104 x 104   | dynamic    | Fixed  | ZigZag w/ [snitch compute cluster](https://github.com/EmilySillars/zigzag/blob/manual-examples/zigzag/inputs/hardware/snitch-cluster-only-integers.yaml) | TODO      | yes   |
+| **Tiled Matrix Multiplication 13**<br />````. regression-tests.sh -t tiledMatmul12.mlir````<br /><br />Dispatches to cluster of 8 compute cores.<br />Uses L3 and L1<br />Full details [here](../runtime/tests/tiledMatmul13/README.md) | 104 x 104   | dynamic    | Fixed  | ZigZag w/ [snitch compute cluster](https://github.com/EmilySillars/zigzag/blob/manual-examples/zigzag/inputs/hardware/snitch-cluster-only-integers.yaml) | TODO      | yes   |
 
 #### Snitch DMA Core + 1 Compute Core
 
